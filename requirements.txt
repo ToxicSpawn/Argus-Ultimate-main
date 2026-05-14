@@ -55,7 +55,7 @@ opentelemetry-exporter-prometheus==0.45b0
 redis==5.0.4
 psycopg2-binary==2.9.9
 sqlalchemy==2.0.30
-alembic==1.13.1           # DB migrations
+alembic==1.18.4           # DB migrations
 
 # -----------------------------------------------------------------------
 # Config / validation
