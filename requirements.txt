@@ -95,7 +95,7 @@ hypothesis==6.100.2       # property-based testing
 black==24.4.2
 ruff==0.4.4
 mypy==1.10.0
-pre-commit==3.7.1
+pre-commit==4.6.0
 bandit==1.7.8             # security linting
 
 # -----------------------------------------------------------------------
