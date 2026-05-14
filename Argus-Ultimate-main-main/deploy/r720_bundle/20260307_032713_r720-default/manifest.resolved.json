@@ -1,0 +1,56 @@
+{
+  "source_manifest": "F:\\Argus-Ultimate-main\\docs\\hardware\\R720_PREBUILD_MANIFEST.yaml",
+  "resolved_values": {
+    "HOSTNAME": "argus-r720",
+    "ARGUS_USER": "argus",
+    "REPO_DIR": "/opt/argus/repo",
+    "LOG_DIR": "/opt/argus/logs",
+    "IFACE_PRIMARY": "enp3s0f0",
+    "IFACE_SECONDARY": "enp3s0f1",
+    "IP_PRIMARY_CIDR": "192.168.10.100/24",
+    "IP_SECONDARY_CIDR": "192.168.10.101/24",
+    "GATEWAY4": "192.168.10.1",
+    "DNS_SERVERS_CSV": "1.1.1.1, 8.8.8.8",
+    "MTU": "9000",
+    "PTP_IFACE": "enp3s0f0",
+    "OS_CPUS": "0-3",
+    "EXEC_CPUS": "4-15",
+    "CPU_ISOLATION": "4-15",
+    "NTP_SERVER_1": "time.cloudflare.com",
+    "NTP_SERVER_2": "time.google.com",
+    "PROFILE_NAME": "r720-default"
+  },
+  "manifest_raw": {
+    "host": {
+      "hostname": "argus-r720",
+      "argus_user": "argus",
+      "repo_dir": "/opt/argus/repo",
+      "log_dir": "/opt/argus/logs"
+    },
+    "network": {
+      "iface_primary": "enp3s0f0",
+      "iface_secondary": "enp3s0f1",
+      "ip_primary_cidr": "192.168.10.100/24",
+      "ip_secondary_cidr": "192.168.10.101/24",
+      "gateway4": "192.168.10.1",
+      "dns_servers": [
+        "1.1.1.1",
+        "8.8.8.8"
+      ],
+      "mtu": 9000,
+      "ptp_iface": "enp3s0f0"
+    },
+    "cpu": {
+      "os_cpus": "0-3",
+      "exec_cpus": "4-15",
+      "cpu_isolation": "4-15"
+    },
+    "timing": {
+      "ntp_server_1": "time.cloudflare.com",
+      "ntp_server_2": "time.google.com"
+    },
+    "build": {
+      "profile_name": "r720-default"
+    }
+  }
+}

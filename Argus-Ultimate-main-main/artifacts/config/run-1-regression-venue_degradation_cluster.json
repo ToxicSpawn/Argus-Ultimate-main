@@ -1,0 +1,11 @@
+{
+  "config": {
+    "ladder_stage": "PAPER",
+    "manifest_hash": "run-1-regression-venue_degradation_cluster",
+    "profile": "paper",
+    "runtime_path": "intent->liquidity->constitution->governance->route->submit->reconcile->attribute->replay_audit->proving_review",
+    "strict_governance": true
+  },
+  "config_hash": "sha256:edd6f4b930f56282660de44a9b041d32295e8c8a4a107f9d09c97f06e29dc45e",
+  "run_id": "run-1-regression-venue_degradation_cluster"
+}

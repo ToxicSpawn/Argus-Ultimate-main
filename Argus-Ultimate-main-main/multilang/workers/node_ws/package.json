@@ -1,0 +1,12 @@
+{
+  "name": "argus-ws-mux",
+  "version": "0.1.0",
+  "description": "ARGUS WebSocket multiplexer — connects to multiple exchange feeds, re-broadcasts on localhost:9999",
+  "main": "ws_mux.js",
+  "scripts": {
+    "start": "node ws_mux.js"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  }
+}

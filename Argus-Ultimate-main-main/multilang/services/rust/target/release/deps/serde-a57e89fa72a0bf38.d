@@ -1,0 +1,14 @@
+F:\Argus-Ultimate-main\multilang\services\rust\target\release\deps\serde-a57e89fa72a0bf38.d: C:\Users\hinge\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\hinge\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\hinge\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\hinge\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\hinge\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs F:\Argus-Ultimate-main\multilang\services\rust\target\release\build\serde-180ebbca8f096f60\out/private.rs
+
+F:\Argus-Ultimate-main\multilang\services\rust\target\release\deps\libserde-a57e89fa72a0bf38.rlib: C:\Users\hinge\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\hinge\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\hinge\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\hinge\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\hinge\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs F:\Argus-Ultimate-main\multilang\services\rust\target\release\build\serde-180ebbca8f096f60\out/private.rs
+
+F:\Argus-Ultimate-main\multilang\services\rust\target\release\deps\libserde-a57e89fa72a0bf38.rmeta: C:\Users\hinge\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\hinge\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\hinge\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\hinge\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\hinge\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs F:\Argus-Ultimate-main\multilang\services\rust\target\release\build\serde-180ebbca8f096f60\out/private.rs
+
+C:\Users\hinge\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs:
+C:\Users\hinge\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs:
+C:\Users\hinge\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs:
+C:\Users\hinge\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs:
+C:\Users\hinge\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs:
+F:\Argus-Ultimate-main\multilang\services\rust\target\release\build\serde-180ebbca8f096f60\out/private.rs:
+
+# env-dep:OUT_DIR=F:\\Argus-Ultimate-main\\multilang\\services\\rust\\target\\release\\build\\serde-180ebbca8f096f60\\out

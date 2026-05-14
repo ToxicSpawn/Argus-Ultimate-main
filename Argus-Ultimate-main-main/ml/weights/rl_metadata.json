@@ -1,0 +1,17 @@
+{
+  "symbol": "BTC/USD",
+  "timesteps": 50000,
+  "n_envs": 8,
+  "device": "cuda",
+  "training_minutes": 0.4,
+  "model_path": "models/rl_agent.zip",
+  "best_model_path": "models/rl_agent_best.zip",
+  "state_dim": 2016,
+  "actions": [
+    "HOLD",
+    "BUY_SMALL",
+    "BUY_LARGE",
+    "SELL_SMALL",
+    "SELL_LARGE"
+  ]
+}

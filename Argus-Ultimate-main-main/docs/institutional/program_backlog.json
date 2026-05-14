@@ -1,0 +1,192 @@
+{
+  "version": 1,
+  "generated_utc": "2026-03-06T00:00:00Z",
+  "policy": {
+    "live_permissions": "Do not broaden trading permissions; keep live gated and off by default.",
+    "ambiguity_handling": "Prefer halting safely over trying to recover in ambiguous states."
+  },
+  "items": [
+    {
+      "id": "INST-001",
+      "pr_id": "PR-21",
+      "title": "Governance + compliance control pack",
+      "stream": "governance",
+      "owner_role": "COMP",
+      "priority": "P0",
+      "phase": "30d",
+      "status": "pending",
+      "external_dependency": true,
+      "acceptance": "Compliance program, legal attestation, and recordkeeping policy approved.",
+      "evidence": [
+        "docs/institutional/artifacts/governance/compliance_program.md",
+        "docs/institutional/artifacts/governance/legal_attestation.md"
+      ]
+    },
+    {
+      "id": "INST-002",
+      "pr_id": "PR-22",
+      "title": "Independent risk gate and maker-checker approvals",
+      "stream": "risk",
+      "owner_role": "RISK",
+      "priority": "P0",
+      "phase": "30d",
+      "status": "pending",
+      "external_dependency": false,
+      "acceptance": "Risk owner approval required for limit changes and live promotion.",
+      "evidence": [
+        "docs/institutional/artifacts/risk/limit_hierarchy.yaml",
+        "docs/institutional/artifacts/risk/exception_register.csv"
+      ]
+    },
+    {
+      "id": "INST-003",
+      "pr_id": "PR-23",
+      "title": "Segregation of duties and RBAC",
+      "stream": "security",
+      "owner_role": "SEC",
+      "priority": "P0",
+      "phase": "30d",
+      "status": "pending",
+      "external_dependency": false,
+      "acceptance": "No single actor can change limits and deploy live without independent approval.",
+      "evidence": [
+        "docs/institutional/artifacts/security/access_control_policy.md"
+      ]
+    },
+    {
+      "id": "INST-004",
+      "pr_id": "PR-24",
+      "title": "SLO/SLI and error budget enforcement",
+      "stream": "ops",
+      "owner_role": "OPS",
+      "priority": "P1",
+      "phase": "60d",
+      "status": "pending",
+      "external_dependency": false,
+      "acceptance": "SLO dashboard and error budget policy enforce release gating.",
+      "evidence": [
+        "docs/institutional/artifacts/operations/slo_policy.md"
+      ]
+    },
+    {
+      "id": "INST-005",
+      "pr_id": "PR-25",
+      "title": "DR and failover drills",
+      "stream": "ops",
+      "owner_role": "OPS",
+      "priority": "P0",
+      "phase": "60d",
+      "status": "pending",
+      "external_dependency": false,
+      "acceptance": "Quarterly DR drill proves target RTO/RPO.",
+      "evidence": [
+        "docs/institutional/artifacts/operations/dr_plan.md",
+        "docs/institutional/artifacts/operations/dr_drill_latest.md"
+      ]
+    },
+    {
+      "id": "INST-006",
+      "pr_id": "PR-26",
+      "title": "Deterministic market data replay",
+      "stream": "data",
+      "owner_role": "ENG",
+      "priority": "P1",
+      "phase": "60d",
+      "status": "pending",
+      "external_dependency": false,
+      "acceptance": "Replay tests reproduce decision traces on fixed datasets.",
+      "evidence": [
+        "docs/institutional/artifacts/data/replay_policy.md"
+      ]
+    },
+    {
+      "id": "INST-007",
+      "pr_id": "PR-27",
+      "title": "Model registry + independent validation",
+      "stream": "model_risk",
+      "owner_role": "RISK",
+      "priority": "P1",
+      "phase": "60d",
+      "status": "pending",
+      "external_dependency": false,
+      "acceptance": "Every strategy/model has owner, limits, validation record, and decommission path.",
+      "evidence": [
+        "docs/institutional/artifacts/model/model_registry.csv",
+        "docs/institutional/artifacts/model/validation_policy.md"
+      ]
+    },
+    {
+      "id": "INST-008",
+      "pr_id": "PR-28",
+      "title": "Signed releases and immutable deployment approvals",
+      "stream": "change_management",
+      "owner_role": "ENG",
+      "priority": "P1",
+      "phase": "60d",
+      "status": "pending",
+      "external_dependency": false,
+      "acceptance": "Release bundle hash and approver record mandatory for live promotion.",
+      "evidence": [
+        "docs/institutional/artifacts/governance/change_management_policy.md"
+      ]
+    },
+    {
+      "id": "INST-009",
+      "pr_id": "PR-29",
+      "title": "Treasury and counterparty concentration controls",
+      "stream": "treasury",
+      "owner_role": "RISK",
+      "priority": "P1",
+      "phase": "90d",
+      "status": "pending",
+      "external_dependency": true,
+      "acceptance": "Counterparty exposure limits and contingency routing policy approved.",
+      "evidence": [
+        "docs/institutional/artifacts/treasury/counterparty_policy.md"
+      ]
+    },
+    {
+      "id": "INST-010",
+      "pr_id": "PR-30",
+      "title": "Audit pack exporter and monthly controls attestation",
+      "stream": "audit",
+      "owner_role": "COMP",
+      "priority": "P1",
+      "phase": "90d",
+      "status": "pending",
+      "external_dependency": true,
+      "acceptance": "Monthly attestation package generated and approved by owners.",
+      "evidence": [
+        "docs/institutional/artifacts/reports/monthly_controls_attestation.md"
+      ]
+    },
+    {
+      "id": "INST-011",
+      "title": "30-day soak pass",
+      "stream": "ops",
+      "owner_role": "OPS",
+      "priority": "P0",
+      "phase": "90d",
+      "status": "pending",
+      "external_dependency": false,
+      "acceptance": "Soak gate PASS with no unresolved reconciliation ownership failures.",
+      "evidence": [
+        "reports/soak_gate_latest.json"
+      ]
+    },
+    {
+      "id": "INST-012",
+      "title": "Walk-forward promotion pass",
+      "stream": "model_risk",
+      "owner_role": "QA",
+      "priority": "P0",
+      "phase": "90d",
+      "status": "pending",
+      "external_dependency": false,
+      "acceptance": "Walk-forward gate PASS and fresh report.",
+      "evidence": [
+        "reports/walk_forward_latest.json"
+      ]
+    }
+  ]
+}

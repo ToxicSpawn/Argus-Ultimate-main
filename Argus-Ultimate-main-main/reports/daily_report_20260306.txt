@@ -1,0 +1,9 @@
+generated_at=2026-03-05T21:06:40.205695+00:00
+trade_count=33
+decision_count=9
+slippage_p50_bps=0.0000
+slippage_p90_bps=0.0000
+net_edge_p50_bps=0.0000
+net_edge_p90_bps=0.0000
+fee_churn_ratio=0.00016400
+reject_histogram={"MIN_CONFIDENCE": 3, "DUPLICATE_SIGNAL": 6}

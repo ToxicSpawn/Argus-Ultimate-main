@@ -1,0 +1,16 @@
+{{- if .Values.argus.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "argus.fullname" . }}-data
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "argus.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - {{ .Values.argus.persistence.accessMode }}
+  storageClassName: {{ .Values.argus.persistence.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.argus.persistence.size }}
+{{- end }}

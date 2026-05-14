@@ -1,0 +1,106 @@
+[
+  {
+    "idea": {
+      "name": "rsi_oversold_bounce",
+      "description": "Buy when RSI drops below 30 (oversold), sell when RSI exceeds 70 (overbought).",
+      "entry_logic": "RSI(14) < 30",
+      "exit_logic": "RSI(14) > 70",
+      "regime_preference": "ranging",
+      "risk_params": {
+        "stop_loss_pct": 2.0,
+        "take_profit_pct": 6.0,
+        "position_size_pct": 10.0
+      },
+      "confidence": 0.65,
+      "timestamp": "2026-04-12T12:26:37.269556+00:00"
+    },
+    "backtest": {
+      "idea_name": "rsi_oversold_bounce",
+      "total_return_pct": 0.0989,
+      "sharpe_ratio": 0.1171,
+      "max_drawdown_pct": 5.9955,
+      "win_rate": 0.3333,
+      "trade_count": 3,
+      "passed": false
+    },
+    "promoted_at": "2026-04-12T12:26:37.270559+00:00"
+  },
+  {
+    "idea": {
+      "name": "macd_crossover",
+      "description": "Enter long on MACD line crossing above signal line; exit on cross below.",
+      "entry_logic": "MACD_line crosses above Signal_line",
+      "exit_logic": "MACD_line crosses below Signal_line",
+      "regime_preference": "trending",
+      "risk_params": {
+        "stop_loss_pct": 2.25,
+        "take_profit_pct": 5.0,
+        "position_size_pct": 8.399999999999999
+      },
+      "confidence": 0.6,
+      "timestamp": "2026-04-12T12:26:37.271061+00:00"
+    },
+    "backtest": {
+      "idea_name": "macd_crossover",
+      "total_return_pct": 16.2547,
+      "sharpe_ratio": 14.8915,
+      "max_drawdown_pct": 2.6072,
+      "win_rate": 0.6667,
+      "trade_count": 3,
+      "passed": false
+    },
+    "promoted_at": "2026-04-12T12:26:37.278097+00:00"
+  },
+  {
+    "idea": {
+      "name": "volume_breakout",
+      "description": "Enter when volume exceeds 2x 20-period average and price breaks above recent high.",
+      "entry_logic": "volume > 2 * SMA(volume, 20) AND close > highest(close, 20)",
+      "exit_logic": "close < SMA(close, 10) OR volume < SMA(volume, 20)",
+      "regime_preference": "breakout",
+      "risk_params": {
+        "stop_loss_pct": 4.5,
+        "take_profit_pct": 8.0,
+        "position_size_pct": 7.0
+      },
+      "confidence": 0.58,
+      "timestamp": "2026-04-12T12:26:37.278601+00:00"
+    },
+    "backtest": {
+      "idea_name": "volume_breakout",
+      "total_return_pct": 10.7312,
+      "sharpe_ratio": 0.0,
+      "max_drawdown_pct": 0.0,
+      "win_rate": 1.0,
+      "trade_count": 1,
+      "passed": false
+    },
+    "promoted_at": "2026-04-12T12:26:37.284118+00:00"
+  },
+  {
+    "idea": {
+      "name": "rsi_oversold_bounce",
+      "description": "Buy when RSI drops below 30 (oversold), sell when RSI exceeds 70 (overbought).",
+      "entry_logic": "RSI(14) < 30",
+      "exit_logic": "RSI(14) > 70",
+      "regime_preference": "ranging",
+      "risk_params": {
+        "stop_loss_pct": 1.5,
+        "take_profit_pct": 6.0,
+        "position_size_pct": 12.0
+      },
+      "confidence": 0.65,
+      "timestamp": "2026-04-12T12:26:37.284118+00:00"
+    },
+    "backtest": {
+      "idea_name": "rsi_oversold_bounce",
+      "total_return_pct": 0.0989,
+      "sharpe_ratio": 0.1171,
+      "max_drawdown_pct": 5.9955,
+      "win_rate": 0.3333,
+      "trade_count": 3,
+      "passed": false
+    },
+    "promoted_at": "2026-04-12T12:26:37.289142+00:00"
+  }
+]

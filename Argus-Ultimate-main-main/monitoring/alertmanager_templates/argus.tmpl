@@ -1,0 +1,21 @@
+{{ define "argus.title" }}
+[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .GroupLabels.SortedPairs.Values | join " " }}
+{{ end }}
+
+{{ define "argus.message" }}
+{{ if gt (len .Alerts.Firing) 0 }}
+🚨 *Firing Alerts ({{ .Alerts.Firing | len }})*
+{{ range .Alerts.Firing }}
+• *{{ .Labels.alertname }}* [{{ .Labels.severity | toUpper }}]
+  {{ .Annotations.summary }}
+  {{ if .Annotations.description }}{{ .Annotations.description }}{{ end }}
+  {{ if .Annotations.runbook }}📖 Runbook: {{ .Annotations.runbook }}{{ end }}
+{{ end }}
+{{ end }}
+{{ if gt (len .Alerts.Resolved) 0 }}
+✅ *Resolved ({{ .Alerts.Resolved | len }})*
+{{ range .Alerts.Resolved }}
+• {{ .Labels.alertname }} — {{ .Annotations.summary }}
+{{ end }}
+{{ end }}
+{{ end }}

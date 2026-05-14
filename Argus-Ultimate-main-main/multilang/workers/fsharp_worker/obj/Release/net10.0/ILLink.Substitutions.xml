@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<linker>
+  <assembly fullname="fsharp_worker">
+    <resource name="FSharpSignatureData.fsharp_worker" action="remove"></resource>
+    <resource name="FSharpSignatureCompressedData.fsharp_worker" action="remove"></resource>
+    <resource name="FSharpSignatureDataB.fsharp_worker" action="remove"></resource>
+    <resource name="FSharpSignatureCompressedDataB.fsharp_worker" action="remove"></resource>
+    <resource name="FSharpOptimizationData.fsharp_worker" action="remove"></resource>
+    <resource name="FSharpOptimizationCompressedData.fsharp_worker" action="remove"></resource>
+    <resource name="FSharpOptimizationDataB.fsharp_worker" action="remove"></resource>
+    <resource name="FSharpOptimizationCompressedDataB.fsharp_worker" action="remove"></resource>
+    <resource name="FSharpOptimizationInfo.fsharp_worker" action="remove"></resource>
+    <resource name="FSharpSignatureInfo.fsharp_worker" action="remove"></resource>
+  </assembly>
+</linker>

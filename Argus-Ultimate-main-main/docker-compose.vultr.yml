@@ -1,0 +1,123 @@
+# ============================================================================
+# Argus Execution Stack — Vultr Singapore Bare Metal
+# Usage:
+#   cp .env.vultr.template .env.vultr   # fill in API keys
+#   docker compose -f docker-compose.vultr.yml up -d
+# ============================================================================
+
+version: "3.9"
+
+services:
+
+  # ── Argus execution engine ─────────────────────────────────────────────────
+  argus-execution:
+    build:
+      context: .
+      dockerfile: Dockerfile.execution
+    image: argus-execution:latest
+    container_name: argus-execution
+    restart: always
+    env_file:
+      - .env.vultr
+    environment:
+      # Execution mode
+      ARGUS_MODE: "live"
+      ARGUS_CONFIG: "unified_config.yaml"
+      ARGUS_API_PORT: "8080"
+      # Solarflare disabled on Vultr (no SFN8522 NICs)
+      ARGUS_SOLARFLARE_ENABLED: "false"
+      # Singapore timezone
+      TZ: "Asia/Singapore"
+      # Python optimisations
+      PYTHONUNBUFFERED: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONASYNCIODEBUG: "0"
+      # uvloop for faster asyncio
+      ARGUS_USE_UVLOOP: "true"
+    volumes:
+      # Persistent SQLite DBs and model artifacts
+      - argus-db:/app/data/db
+      - argus-models:/app/data/models
+      - argus-artifacts:/app/artifacts
+      - argus-logs:/app/logs
+      # Mount config override (edit on VPS without rebuilding)
+      - ./unified_config.yaml:/app/unified_config.yaml:ro
+    ports:
+      # REST API dashboard — accessible from Sydney workstation
+      - "8080:8080"
+    networks:
+      - argus-net
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          # Leave headroom for OS — E-2388G has 8c/16t
+          cpus: "6.0"
+          memory: 24G
+        reservations:
+          cpus: "2.0"
+          memory: 4G
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  # ── Redis sidecar (signal pub/sub + fast state cache) ──────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: argus-redis
+    restart: always
+    command: >
+      redis-server
+      --maxmemory 2gb
+      --maxmemory-policy allkeys-lru
+      --save ""
+      --appendonly no
+      --tcp-keepalive 60
+      --timeout 0
+    volumes:
+      - redis-data:/data
+    networks:
+      - argus-net
+    expose:
+      - "6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2G
+
+# ── Named volumes ──────────────────────────────────────────────────────────────
+volumes:
+  argus-db:
+    driver: local
+  argus-models:
+    driver: local
+  argus-artifacts:
+    driver: local
+  argus-logs:
+    driver: local
+  redis-data:
+    driver: local
+
+# ── Network ────────────────────────────────────────────────────────────────────
+networks:
+  argus-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16

@@ -1,0 +1,74 @@
+# =============================================================================
+# Argus v6.4.0 — R7525 SERVER NODE (Dell R7525, Home LAN)
+# =============================================================================
+# LIVE trading node. Runs 24/7. ECC RAM for reliability.
+# This node executes real orders, manages exchange connections, and pushes
+# state to the 'argus-state' Git branch every 5 minutes.
+#
+# DO NOT set paper_trading: true on this node.
+# DO NOT run ML training on this node — delegate to the PC via LAN.
+# =============================================================================
+
+node:
+  role: "live"                        # maps to NodeRole.LIVE_SERVER
+  hostname: "argus-r7525"             # used for role auto-detection via hostname
+  node_id: "r7525-live"               # unique identifier stamped into orders/state
+  live_server_hostname: "argus-r7525" # DuplicateOrderGuard reference
+
+hardware:
+  cpu: "AMD EPYC 7002 series"
+  ram: "ECC DDR4"                     # ECC for 24/7 reliability — no silent bit flips
+  gpu: null                           # No GPU — ML inference arrives over LAN from PC
+  role_description: "Pure execution — order management, exchange connections, risk monitoring"
+  notes: >
+    AMD EPYC supports up to 1TB ECC RAM. Pin Argus to NUMA node 0 for memory
+    locality. Use isolcpus in GRUB to give Argus dedicated cores with no OS
+    scheduler interference.
+
+lan_bridge:
+  signal_receiver_port: 9200          # TCP port for DeepLOB signals from PC
+  signal_receiver_bind: "0.0.0.0"     # listen on all LAN interfaces
+  expected_signal_interval_ms: 100    # alert if no signal received for >500 ms
+  signal_timeout_action: "hold"       # "hold" | "close" — what to do on signal loss
+
+state_sync:
+  branch: "argus-state"               # orphan Git branch for state exchange
+  push_interval_s: 300                # push every 5 minutes
+  auto_push: true
+  auto_pull: false                    # R7525 is the source of truth; it does not pull
+  git_user_name: "Argus State Bot"
+  git_user_email: "argus-bot@argus.local"
+
+trading:
+  paper_trading: false                # LIVE execution — real orders, real capital
+  initial_capital_usd: 620.0
+  max_open_positions: 8
+  max_position_size_pct: 0.15         # 15% of capital per position
+  duplicate_order_guard: true
+
+exchanges:
+  primary: "binance"
+  fallback: "bybit"
+  connection_timeout_s: 10
+  retry_attempts: 3
+
+risk:
+  max_daily_drawdown_pct: 5.0         # halt trading if daily DD > 5%
+  max_total_drawdown_pct: 15.0        # emergency stop
+  position_hard_stop_pct: 3.0        # per-position stop-loss
+
+performance_tuning:
+  cpu_affinity_cores: [0, 1, 2, 3]   # pin Argus process to first 4 physical cores
+  numa_node: 0                        # pin to NUMA node 0 for memory locality
+  process_priority: -10               # nice value (-20 = max priority)
+  isolcpus_recommended: true          # suggest adding isolcpus=0-3 to GRUB cmdline
+  tcp_nodelay: true                   # disable Nagle for exchange WebSocket latency
+  so_busy_poll: 50                    # microseconds — kernel busy-poll for low latency
+
+logging:
+  level: "INFO"
+  file: "/var/log/argus/argus.log"
+  max_size_mb: 100
+  backup_count: 5
+  include_timestamps: true
+  structured_json: true               # JSON logging for log aggregators

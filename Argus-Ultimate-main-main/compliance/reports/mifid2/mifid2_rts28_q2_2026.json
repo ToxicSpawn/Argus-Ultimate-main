@@ -1,0 +1,93 @@
+{
+  "report_type": "MiFIDII_RTS28_QUARTERLY_REPORT",
+  "generated_at": "2026-04-21T11:01:05.042763+00:00",
+  "entity_name": "ARGUS Trading",
+  "quarter": "Q2",
+  "year": 2026,
+  "period_start": "2026-04-01T00:00:00+00:00",
+  "period_end": "2026-07-01T00:00:00+00:00",
+  "trade_count": 1,
+  "rts28": {
+    "top_5_execution_venues_by_volume": [
+      {
+        "venue": "kraken",
+        "volume": 100.0,
+        "trade_count": 1
+      }
+    ],
+    "price_improvement_statistics": {
+      "average": 1.0,
+      "median_proxy": 1.0,
+      "max": 1.0,
+      "min": 1.0,
+      "positive_rate": 1.0
+    },
+    "execution_speed_metrics": {
+      "average_latency_ms": 1000.0,
+      "max_latency_ms": 1000.0,
+      "min_latency_ms": 1000.0,
+      "p95_latency_ms": 1000.0
+    },
+    "analysis_of_quality_of_execution": {
+      "average_total_cost": 1.02,
+      "average_spread_cost": 0.02,
+      "average_market_impact_cost": 0.0,
+      "average_price_improvement": 1.0,
+      "best_scoring_venue": "kraken",
+      "summary": "Best execution quality currently favours kraken."
+    }
+  },
+  "venue_quality": {
+    "generated_at": "2026-04-21T11:01:05.042763+00:00",
+    "venue_count": 1,
+    "venues": {
+      "kraken": {
+        "trade_count": 1,
+        "volume": 100.0,
+        "average_total_cost": 1.02,
+        "average_price_improvement": 1.0,
+        "average_latency_ms": 1000.0,
+        "average_fill_ratio": 1.0,
+        "live_venue_score": 0.0,
+        "quality_score": 0.541449,
+        "quality_of_execution": "Execution quality is stable but should be monitored for incremental optimisation."
+      }
+    },
+    "ranking": [
+      "kraken"
+    ]
+  },
+  "systemic_internaliser_metrics": {
+    "generated_at": "2026-04-21T11:01:05.042763+00:00",
+    "total_trades": 1,
+    "internalised_trade_count": 0,
+    "internalised_notional": 0,
+    "internalised_ratio": 0.0,
+    "internalised_notional_ratio": 0.0,
+    "by_symbol": {}
+  },
+  "regulatory_submission": {
+    "schema": "RTS28_QUARTERLY",
+    "submission_ready": true,
+    "payload": {
+      "entity_name": "ARGUS Trading",
+      "quarter": "Q2",
+      "year": 2026,
+      "venues": [
+        {
+          "venue": "kraken",
+          "volume": 100.0,
+          "trade_count": 1
+        }
+      ],
+      "quality_of_execution": {
+        "average_total_cost": 1.02,
+        "average_spread_cost": 0.02,
+        "average_market_impact_cost": 0.0,
+        "average_price_improvement": 1.0,
+        "best_scoring_venue": "kraken",
+        "summary": "Best execution quality currently favours kraken."
+      }
+    }
+  }
+}

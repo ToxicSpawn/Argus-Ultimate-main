@@ -1,0 +1,58 @@
+# Argus Ultimate — Prometheus Recording Rules
+# Push 84
+#
+# Pre-compute expensive queries to keep dashboard queries fast.
+# Evaluated every 30s and stored as new time series.
+
+groups:
+
+- name: argus_recording
+  interval: 30s
+  rules:
+
+  # Rolling Sharpe approximation (1h window)
+  - record: argus:strategy_sharpe:1h
+    expr: |
+      (
+        avg_over_time(argus_strategy_pnl_total[1h])
+        /
+        (stddev_over_time(argus_strategy_pnl_total[1h]) + 0.0001)
+      )
+
+  # Portfolio-wide PnL
+  - record: argus:portfolio_pnl_total
+    expr: sum(argus_strategy_pnl_total)
+
+  # Portfolio-wide win rate (weighted average)
+  - record: argus:portfolio_win_rate
+    expr: avg(argus_strategy_win_rate)
+
+  # Order latency p95 (5m)
+  - record: argus:order_latency_p95_ms:5m
+    expr: |
+      histogram_quantile(0.95, rate(argus_order_latency_seconds_bucket[5m])) * 1000
+
+  # Order latency p99 (5m)
+  - record: argus:order_latency_p99_ms:5m
+    expr: |
+      histogram_quantile(0.99, rate(argus_order_latency_seconds_bucket[5m])) * 1000
+
+  # Signal rate per strategy (1m)
+  - record: argus:signal_rate:1m
+    expr: rate(argus_signals_total[1m]) * 60
+
+  # WS message rate (1m)
+  - record: argus:ws_message_rate:1m
+    expr: rate(argus_ws_messages_total[1m])
+
+  # Active strategies count
+  - record: argus:active_strategy_count
+    expr: count(argus_strategy_active == 1) or vector(0)
+
+  # Mean spread across all symbols (bps)
+  - record: argus:mean_spread_bps
+    expr: avg(argus_orderbook_spread_bps)
+
+  # Max drawdown across all strategies
+  - record: argus:portfolio_max_drawdown
+    expr: min(argus_strategy_drawdown_current)

@@ -1,0 +1,11 @@
+{
+  "config": {
+    "ladder_stage": "PAPER",
+    "manifest_hash": "regression-thin_book",
+    "profile": "paper",
+    "runtime_path": "intent->liquidity->constitution->governance->route->submit->reconcile->attribute->replay_audit->proving_review",
+    "strict_governance": true
+  },
+  "config_hash": "sha256:9756ed57f36141ac983d14e2c7cb6266747b94f85b82008e6f4f5a60c78b7aa4",
+  "run_id": "regression-thin_book"
+}

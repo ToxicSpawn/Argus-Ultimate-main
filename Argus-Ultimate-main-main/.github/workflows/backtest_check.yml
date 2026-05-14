@@ -1,0 +1,72 @@
+# backtest_check.yml
+# CI backtest gate — runs on every push and pull request.
+# Fails the build if walk-forward backtest mean Sharpe < 0 or
+# positive-fold rate < 40%, protecting main from regressing strategies.
+
+name: Backtest Gate
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["main", "develop"]
+
+jobs:
+  backtest:
+    name: Walk-Forward Backtest Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      # ----------------------------------------------------------------
+      # 1. Checkout
+      # ----------------------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ----------------------------------------------------------------
+      # 2. Python setup
+      # ----------------------------------------------------------------
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      # ----------------------------------------------------------------
+      # 3. Install dependencies
+      # ----------------------------------------------------------------
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pandas
+          # Install optional but desired deps; ignore failures for missing extras
+          pip install lightgbm scikit-learn optuna || true
+          # Install project in editable mode if setup exists
+          if [ -f pyproject.toml ] || [ -f setup.py ]; then
+            pip install -e . --no-deps || true
+          fi
+
+      # ----------------------------------------------------------------
+      # 4. Run backtest gate
+      # ----------------------------------------------------------------
+      - name: Run walk-forward backtest gate
+        id: backtest_gate
+        run: python .github/scripts/run_backtest_gate.py
+        env:
+          BACKTEST_MIN_SHARPE: "0.0"
+          BACKTEST_MIN_POSITIVE_FOLDS_PCT: "40.0"
+          BACKTEST_TRAIN_BARS: "300"
+          BACKTEST_TEST_BARS: "60"
+          BACKTEST_TOTAL_BARS: "1200"
+
+      # ----------------------------------------------------------------
+      # 5. Upload backtest report artifact
+      # ----------------------------------------------------------------
+      - name: Upload backtest report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backtest-report
+          path: backtest_report.json
+          retention-days: 30

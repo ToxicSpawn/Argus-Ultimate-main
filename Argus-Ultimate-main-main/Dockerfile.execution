@@ -1,0 +1,120 @@
+# ============================================================================
+# Argus Execution Image — Vultr Singapore Bare Metal
+# Slim image: exchange connectivity + execution loop only.
+# No GPU, no PyTorch, no training dependencies.
+# Build: docker build -f Dockerfile.execution -t argus-execution:latest .
+# ============================================================================
+
+FROM python:3.11-slim-bookworm AS base
+
+LABEL maintainer="ToxicSpawn" \
+      description="Argus HFT execution image for Vultr SGP bare metal" \
+      version="1.1"
+
+# ── system deps ──────────────────────────────────────────────────────────────
+# libgmp-dev + libsecp256k1-dev required for eth-account / coincurve
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        curl \
+        ca-certificates \
+        git \
+        libssl-dev \
+        libffi-dev \
+        libgmp-dev \
+        libsecp256k1-dev \
+        pkg-config \
+        ethtool \
+        net-tools \
+        iproute2 \
+        procps \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── non-root user ────────────────────────────────────────────────────────────
+RUN groupadd -r argus && useradd -r -g argus -d /app -s /bin/bash argus
+
+WORKDIR /app
+
+# ── Python deps (execution-only subset) ──────────────────────────────────────
+COPY requirements.txt requirements-execution.txt* ./
+
+# Install execution-only deps — fast build, minimal image size
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir \
+        # Exchange connectivity
+        ccxt>=4.0.0 \
+        websockets>=12.0 \
+        aiohttp>=3.9.0 \
+        aiohttp-cors>=0.7.0 \
+        # Data handling
+        numpy>=1.26.0 \
+        pandas>=2.1.0 \
+        # Async / concurrency
+        uvloop>=0.19.0 \
+        # Config
+        pyyaml>=6.0.1 \
+        python-dotenv>=1.0.0 \
+        # DB
+        aiosqlite>=0.19.0 \
+        # HTTP client
+        httpx>=0.27.0 \
+        # Crypto / signing (base)
+        cryptography>=42.0.0 \
+        # ── Hyperliquid wallet signing ────────────────────────────────────
+        # eth-account: signs Hyperliquid exchange actions with private key
+        # coincurve: fast secp256k1 ECDSA (C extension, needs libsecp256k1)
+        # eth-hash + pysha3: keccak hashing for EIP-191 message signing
+        eth-account>=0.11.0 \
+        eth-hash>=0.7.0 \
+        pysha3>=1.0.2 \
+        coincurve>=19.0.0 \
+        # hexbytes: byte handling for eth types
+        hexbytes>=0.3.0 \
+        # ─────────────────────────────────────────────────────────────────
+        # Monitoring
+        prometheus-client>=0.20.0 \
+        # Utilities
+        orjson>=3.9.0 \
+        tenacity>=8.2.0 \
+        structlog>=24.0.0
+
+# ── copy source ───────────────────────────────────────────────────────────────
+# Copy only execution-relevant packages — keeps image lean
+COPY api/                   api/
+COPY config/                config/
+COPY core/                  core/
+COPY data/                  data/
+COPY exchanges/             exchanges/
+COPY execution/             execution/
+COPY hft_engine/            hft_engine/
+COPY infra/                 infra/
+COPY monitoring/            monitoring/
+COPY risk/                  risk/
+COPY services/              services/
+COPY strategies/            strategies/
+COPY utils/                 utils/
+# Root-level modules
+COPY unified_trading_system.py  ./
+COPY unified_execution_engine.py ./
+COPY unified_config.yaml        ./
+COPY config.yaml                ./
+COPY main.py                    ./
+COPY version.py                 ./
+COPY unified_types.py           ./
+
+# ── runtime dirs ─────────────────────────────────────────────────────────────
+RUN mkdir -p /app/data/db /app/data/models /app/logs /app/artifacts && \
+    chown -R argus:argus /app
+
+# ── verify eth-account installed correctly ────────────────────────────────────
+RUN python -c "from eth_account import Account; print('eth-account OK:', Account.__module__)"
+
+# ── health check ─────────────────────────────────────────────────────────────
+# Polls the aiohttp REST API /health endpoint every 30s
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -sf http://localhost:${ARGUS_API_PORT:-8080}/health || exit 1
+
+USER argus
+
+# ── entrypoint ────────────────────────────────────────────────────────────────
+# Default: run main.py in live mode. Override via docker-compose command:
+CMD ["python", "-u", "main.py", "--mode", "live", "--config", "unified_config.yaml"]

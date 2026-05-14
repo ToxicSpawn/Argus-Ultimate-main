@@ -1,0 +1,11 @@
+{
+  "config": {
+    "ladder_stage": "PAPER",
+    "manifest_hash": "run-1-regression-stale_quote_news_shock",
+    "profile": "paper",
+    "runtime_path": "intent->liquidity->constitution->governance->route->submit->reconcile->attribute->replay_audit->proving_review",
+    "strict_governance": true
+  },
+  "config_hash": "sha256:e2adf86b572aa3f1f36095a1fb69808c5917f156ebae80786642d0cd80c3a013",
+  "run_id": "run-1-regression-stale_quote_news_shock"
+}

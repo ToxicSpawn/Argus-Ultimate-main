@@ -1,0 +1,52 @@
+# Argus Ultimate — Advanced Features Optional Dependencies
+# Install: pip install -r requirements-advanced.txt
+# These are optional — core system works without them, but some advanced features
+# will fall back to simpler implementations or be disabled.
+
+# -----------------------------------------------------------------------
+# ML & Deep Learning (GNN, Multi-task Learning, Diffusion Models)
+# -----------------------------------------------------------------------
+torch==2.3.0              # PyTorch for neural networks (matching main requirements)
+torch-geometric==2.5.0    # Graph Neural Networks (GNN)
+torch-scatter==2.1.0      # Scatter operations for GNN
+torch-sparse==0.6.0       # Sparse tensor support
+
+# -----------------------------------------------------------------------
+# NLP & LLM (Sentiment Analysis)
+# -----------------------------------------------------------------------
+transformers==4.35.0      # Hugging Face transformers (FinBERT)
+sentencepiece==0.1.99     # Tokenizer for transformer models
+accelerate==0.25.0        # Model acceleration
+
+# -----------------------------------------------------------------------
+# Quantum Computing (Portfolio Optimization)
+# -----------------------------------------------------------------------
+qiskit==1.0.0             # IBM Quantum SDK
+qiskit-aer==0.14.0        # Quantum simulators
+qiskit-optimization==0.5.0 # QAOA for portfolio optimization
+
+# -----------------------------------------------------------------------
+# Advanced Statistics & Optimization
+# -----------------------------------------------------------------------
+statsmodels==0.14.0       # Statistical models (Granger causality, etc.)
+pymc==5.10.0              # Bayesian inference (optional, heavy)
+arviz==0.17.0             # Bayesian visualization
+
+# -----------------------------------------------------------------------
+# Distributed Tracing (OpenTelemetry exporters)
+# -----------------------------------------------------------------------
+opentelemetry-api==1.24.0       # OpenTelemetry API
+opentelemetry-sdk==1.24.0       # OpenTelemetry SDK
+opentelemetry-exporter-jaeger==1.21.0  # Jaeger exporter
+opentelemetry-exporter-otlp==1.21.0    # OTLP exporter
+
+# -----------------------------------------------------------------------
+# Feature Store & Event Sourcing
+# -----------------------------------------------------------------------
+redis==5.0.4              # Redis for feature caching (matching main requirements)
+sqlite-utils==3.36.0      # SQLite utilities for event store
+
+# -----------------------------------------------------------------------
+# Install all advanced features at once:
+# pip install -r requirements-advanced.txt
+# -----------------------------------------------------------------------

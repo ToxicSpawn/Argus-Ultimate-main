@@ -1,0 +1,374 @@
+# =============================================================================
+# ARGUS ULTIMATE - Dell R7525 EMC Server Configuration
+# =============================================================================
+# Optimized for AMD EPYC 7002/7003 Series (up to 128 cores, 4TB RAM)
+# 
+# Dell R7525 Specs (typical configuration):
+# - CPU: 2x AMD EPYC 7763 (64 cores/128 threads each) = 128 cores total
+# - RAM: Up to 4TB DDR4-3200 (16 DIMMs per socket)
+# - Storage: NVMe SSDs (up to 24x 2.5" drives)
+# - Network: 2x 25GbE SFP28 + 2x 10GbE
+# - GPU: Optional (up to 4x double-width GPUs)
+# =============================================================================
+
+# =============================================================================
+# SYSTEM CONFIGURATION
+# =============================================================================
+system:
+  mode: "live"  # or "paper" for testing
+  capital_aud: 10000.0  # Scaled for server deployment
+  currency: "AUD"
+  
+  # Server-specific settings
+  server_mode: true
+  daemon_mode: true
+  log_level: "INFO"
+  log_rotation: "daily"
+  max_log_size_mb: 100
+
+# =============================================================================
+# CPU & THREADING (128 cores available)
+# =============================================================================
+threading:
+  enabled: true
+  max_workers: 64  # Use half cores (leave room for OS + other services)
+  io_workers: 16
+  strategy_workers: 32
+  ml_workers: 16
+  
+  # NUMA-aware threading (critical for EPYC)
+  numa_aware: true
+  pin_threads: true
+  
+  # Async configuration
+  async_thread_pool_size: 32
+  max_concurrent_tasks: 1000
+
+# =============================================================================
+# MEMORY (Up to 4TB available)
+# =============================================================================
+memory:
+  max_heap_gb: 64  # Python heap limit
+  cache_size_gb: 128  # Market data cache
+  ohlcv_buffer_gb: 32  # Historical data buffer
+  orderbook_buffer_gb: 16  # L2/L3 orderbook data
+  
+  # NUMA memory allocation
+  numa_memory_policy: "preferred"
+  huge_pages: true
+  huge_pages_gb: 64
+
+# =============================================================================
+# STORAGE (NVMe SSDs - microsecond latency)
+# =============================================================================
+storage:
+  data_path: "/data/argus"
+  db_path: "/data/argus/db"
+  ohlcv_path: "/data/argus/ohlcv"
+  backup_path: "/backup/argus"
+  
+  # SQLite optimization for NVMe
+  sqlite_journal_mode: "wal"
+  sqlite_cache_size_mb: 64
+  sqlite_mmap_size_gb: 4
+  sqlite_synchronous: "normal"
+  
+  # Write optimization
+  batch_writes: true
+  write_buffer_size_mb: 32
+  fsync_interval_seconds: 5
+
+# =============================================================================
+# NETWORK (25GbE + 10GbE)
+# =============================================================================
+network:
+  # Primary exchange connection
+  exchange:
+    websocket_enabled: true
+    rest_timeout_ms: 5000
+    retry_attempts: 3
+    keepalive_interval_s: 30
+    
+  # API server
+  api:
+    host: "0.0.0.0"
+    port: 8080
+    workers: 4
+    max_connections: 1000
+    
+  # WebSocket dashboard
+  websocket:
+    host: "0.0.0.0"
+    port: 8081
+    max_connections: 100
+    
+  # Monitoring endpoints
+  prometheus_port: 9090
+  health_check_port: 8082
+
+# =============================================================================
+# QUANTUM COMPUTING (CPU-simulated)
+# =============================================================================
+quantum:
+  enabled: true
+  mode: "simulator"  # simulator, hardware (requires IBM/D-Wave account)
+  
+  # Qubit allocation (more CPU = more qubits)
+  max_qubits: 24  # Can simulate up to 2^24 = 16M states
+  
+  # Quantum Singularity Engine
+  singularity_enabled: true
+  entanglement_qubits: 16
+  grover_iterations: 50
+  qpe_precision_bits: 12
+  
+  # Quantum Omega Engine
+  omega_enabled: true
+  logical_qubits: 20  # 2^20 = 1M states
+  physical_qubits: 80  # 4:1 error correction ratio
+  superposition_strategies: 128
+  tunneling_enabled: true
+  error_correction_enabled: true
+  teleportation_enabled: true
+  
+  # Performance
+  shots_per_measurement: 16384
+  monte_carlo_samples: 50000
+  parallel_quantum_circuits: 8
+
+# =============================================================================
+# TRADING CONFIGURATION (Aggressive for Server)
+# =============================================================================
+trading:
+  # Cycle timing
+  cycle_seconds: 3.0  # Faster cycles with server CPU
+  
+  # Position sizing (scaled for $10K capital)
+  max_position_pct: 25.0
+  max_position_aud: 2500.0
+  min_position_aud: 100.0
+  max_concurrent_positions: 10
+  
+  # Leverage
+  max_leverage: 10.0
+  margin_call_threshold: 0.80
+  
+  # Risk limits
+  max_daily_loss_pct: 40.0
+  max_drawdown_pct: 50.0
+  stop_loss_pct: 1.5
+  take_profit_pct: 3.0
+  
+  # Confidence thresholds
+  min_signal_confidence: 0.40
+  min_quantum_confidence: 0.35
+
+# =============================================================================
+# STRATEGIES (Full Suite)
+# =============================================================================
+strategies:
+  # Enabled strategies
+  momentum_scalper: true
+  breakout_scalper: true
+  mean_reversion: true
+  funding_rate_arb: true
+  flash_crash_sniper: true
+  market_making: true
+  cross_exchange_arb: true
+  liquidation_hunter: true
+  
+  # Strategy parameters
+  momentum:
+    rsi_period: 14
+    macd_fast: 12
+    macd_slow: 26
+    bb_period: 20
+    bb_std: 2.0
+    
+  scalping:
+    timeframe: "1m"
+    min_spread_bps: 5
+    max_hold_seconds: 300
+    
+  arbitrage:
+    min_spread_pct: 0.1
+    max_slippage_pct: 0.05
+    execution_timeout_ms: 1000
+
+# =============================================================================
+# ML & AI (Full GPU/CPU utilization)
+# =============================================================================
+ml:
+  enabled: true
+  gpu_enabled: false  # Set true if GPUs installed
+  
+  # Model training
+  training_interval_hours: 6
+  retrain_on_drift: true
+  drift_threshold: 0.15
+  
+  # Ensemble
+  ensemble_size: 10
+  ensemble_method: "stacking"
+  
+  # Online learning
+  online_learning: true
+  learning_rate: 0.001
+  batch_size: 32
+  
+  # Feature store
+  feature_store_enabled: true
+  feature_store_ttl_hours: 24
+  
+  # Models
+  regime_detection: "hmm"
+  sentiment_model: "finbert"
+  anomaly_detection: "isolation_forest"
+
+# =============================================================================
+# RISK MANAGEMENT (Server-grade)
+# =============================================================================
+risk:
+  # Circuit breakers
+  circuit_breaker_enabled: true
+  daily_loss_limit_pct: 40.0
+  max_drawdown_pct: 50.0
+  
+  # VaR/CVaR
+  var_confidence: 0.99
+  var_horizon_days: 1
+  cvar_enabled: true
+  
+  # Position limits
+  max_exposure_per_asset_pct: 20.0
+  max_correlated_exposure_pct: 40.0
+  
+  # Stress testing
+  stress_test_enabled: true
+  stress_test_scenarios: 1000
+  
+  # Hedging
+  auto_hedge_enabled: true
+  hedge_ratio: 0.5
+
+# =============================================================================
+# MONITORING & ALERTS
+# =============================================================================
+monitoring:
+  # Prometheus metrics
+  prometheus_enabled: true
+  metrics_interval_seconds: 5
+  
+  # Health checks
+  health_check_interval_seconds: 10
+  
+  # Alerts
+  telegram_enabled: false
+  discord_enabled: false
+  email_enabled: false
+  webhook_enabled: false
+  
+  # Performance tracking
+  track_cycle_times: true
+  track_latency: true
+  track_slippage: true
+
+# =============================================================================
+# ADVANCED FEATURES
+# =============================================================================
+advanced_features:
+  # Real-time adaptation
+  realtime_adaptation_enabled: true
+  adaptation_cycle_seconds: 3.0
+  regime_update_on_tick: true
+  weight_update_every_cycle: true
+  param_tuning_interval_cycles: 3
+  champion_review_interval_cycles: 2
+  decay_check_every_cycle: true
+  
+  # Quantum adaptation
+  quantum_adaptation_enabled: true
+  quantum_walk_enabled: true
+  qaoa_enabled: true
+  vqe_enabled: true
+  qmc_enabled: true
+  qml_enabled: true
+  
+  # Quantum Singularity
+  quantum_singularity_enabled: true
+  grover_search_enabled: true
+  quantum_phase_estimation: true
+  amplitude_amplification: true
+  quantum_reservoir: true
+  quantum_rl: true
+  
+  # Quantum Omega
+  quantum_omega_enabled: true
+  superposition_strategy: true
+  quantum_tunneling: true
+  entangled_portfolio: true
+  quantum_error_correction: true
+  quantum_teleportation: true
+  quantum_time_crystal: true
+  quantum_boltzmann: true
+
+# =============================================================================
+# EXCHANGE CONFIGURATION
+# =============================================================================
+exchanges:
+  primary:
+    name: "kraken"
+    api_key_env: "KRAKEN_API_KEY"
+    api_secret_env: "KRAKEN_API_SECRET"
+    sandbox: false
+    websocket: true
+    
+  secondary:
+    name: "coinbase_advanced"
+    api_key_env: "COINBASE_API_KEY"
+    api_secret_env: "COINBASE_API_SECRET"
+    sandbox: false
+    websocket: true
+    
+  # Additional exchanges (optional)
+  binance:
+    enabled: false
+    api_key_env: "BINANCE_API_KEY"
+    api_secret_env: "BINANCE_API_SECRET"
+
+# =============================================================================
+# TRADING PAIRS
+# =============================================================================
+trading_pairs:
+  - "BTC/USD"
+  - "ETH/USD"
+  - "SOL/USD"
+  - "ADA/USD"
+  - "DOT/USD"
+  - "AVAX/USD"
+  - "MATIC/USD"
+  - "LINK/USD"
+  - "BTC/EUR"
+  - "ETH/EUR"
+  - "BTC/GBP"
+  - "ETH/GBP"
+
+# =============================================================================
+# DEPLOYMENT
+# =============================================================================
+deployment:
+  # Docker
+  docker_enabled: true
+  container_name: "argus-omega"
+  restart_policy: "always"
+  
+  # Systemd
+  systemd_enabled: true
+  service_name: "argus-trading"
+  user: "argus"
+  group: "argus"
+  
+  # Resources
+  cpu_limit: "64"  # cores
+  memory_limit: "128G"
+  disk_limit: "500G"

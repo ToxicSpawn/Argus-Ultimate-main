@@ -1,0 +1,57 @@
+{
+  "folds": [
+    {
+      "fold": 1,
+      "samples": 4375,
+      "active_trades": 4306,
+      "coverage": 0.9842285714285715,
+      "accuracy": 0.5954285714285714,
+      "active_accuracy": 0.598467254993033,
+      "balanced_accuracy": 0.34739025626122405,
+      "mean_directional_return": -3.468886130341207e-05
+    },
+    {
+      "fold": 2,
+      "samples": 4375,
+      "active_trades": 4305,
+      "coverage": 0.984,
+      "accuracy": 0.6205714285714286,
+      "active_accuracy": 0.6246225319396052,
+      "balanced_accuracy": 0.35098198858199,
+      "mean_directional_return": 0.00014019144314215577
+    },
+    {
+      "fold": 3,
+      "samples": 4375,
+      "active_trades": 4267,
+      "coverage": 0.9753142857142857,
+      "accuracy": 0.5773714285714285,
+      "active_accuracy": 0.5814389500820248,
+      "balanced_accuracy": 0.35386333801073544,
+      "mean_directional_return": 0.00012382520844712034
+    },
+    {
+      "fold": 4,
+      "samples": 4375,
+      "active_trades": 4360,
+      "coverage": 0.9965714285714286,
+      "accuracy": 0.7184,
+      "active_accuracy": 0.7197247706422019,
+      "balanced_accuracy": 0.3365890961607041,
+      "mean_directional_return": 1.3924051161046573e-05
+    },
+    {
+      "fold": 5,
+      "samples": 4375,
+      "active_trades": 4266,
+      "coverage": 0.9750857142857143,
+      "accuracy": 0.6139428571428571,
+      "active_accuracy": 0.6214252226910455,
+      "balanced_accuracy": 0.3491770151140808,
+      "mean_directional_return": -7.792810701958366e-05
+    }
+  ],
+  "mean_active_accuracy": 0.6291357460695821,
+  "mean_coverage": 0.9830399999999999,
+  "mean_directional_return": 3.306474688546539e-05
+}

@@ -1,0 +1,58 @@
+# Free Quantum Computing Configuration
+# Maximizes performance while using free resources only
+
+quantum:
+  # Free mode settings
+  free_mode: true
+  monthly_budget: 0.0  # $0 = free only
+  prefer_simulator: true
+  
+  # Performance optimization
+  caching:
+    enabled: true
+    ttl_seconds: 86400  # 24 hours cache
+    max_cache_size: 10000
+  
+  # Execution optimization
+  parallel_execution: true
+  max_workers: 4
+  
+  # Shot optimization (use minimum needed)
+  shot_optimization: true
+  default_shots: 512  # Reduced from 1024 for free usage
+  
+  # Problem-specific shot counts
+  shot_requirements:
+    qaoa: 512
+    vqe: 512
+    game_theory: 256
+    quantum_ml: 1024
+    quantum_annealing: 256
+    grover_search: 128
+  
+  # Vendor settings (free tiers only)
+  vendors:
+    simulator:
+      enabled: true
+      priority: 1  # Highest priority (free)
+    
+    ibm:
+      enabled: true
+      use_free_tier: true  # Use IBM free tier if available
+      priority: 2
+    
+    google:
+      enabled: false  # No free tier available
+      priority: 99
+    
+    ionq:
+      enabled: false  # No free tier available
+      priority: 99
+    
+    rigetti:
+      enabled: false  # No free tier available
+      priority: 99
+    
+    dwave:
+      enabled: false  # No free tier available
+      priority: 99

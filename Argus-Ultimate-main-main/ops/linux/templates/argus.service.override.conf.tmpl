@@ -1,0 +1,14 @@
+[Service]
+User=${ARGUS_USER}
+Group=${ARGUS_USER}
+WorkingDirectory=${REPO_DIR}
+CPUAffinity=${EXEC_CPUS}
+Nice=-10
+IOSchedulingClass=realtime
+IOSchedulingPriority=0
+LimitMEMLOCK=infinity
+Environment=ARGUS_OS_CPUS=${OS_CPUS}
+Environment=ARGUS_EXEC_CPUS=${EXEC_CPUS}
+Environment=ARGUS_CPU_ISOLATION=${CPU_ISOLATION}
+Environment=ARGUS_IFACE=${IFACE_PRIMARY}
+Environment=ARGUS_LOG_DIR=${LOG_DIR}

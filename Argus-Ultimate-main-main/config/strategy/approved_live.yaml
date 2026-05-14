@@ -1,0 +1,11 @@
+approved_live:
+  strategies:
+    - dca_kraken
+    - portfolio_target_engine_v1
+    - execution_alpha_v2
+  advisory_only:
+    - champion_challenger
+    - self_optimizing_meta
+    - quantum
+    - strategy_node
+    - research

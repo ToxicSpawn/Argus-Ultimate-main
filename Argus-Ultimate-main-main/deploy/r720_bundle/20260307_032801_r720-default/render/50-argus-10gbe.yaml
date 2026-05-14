@@ -1,0 +1,19 @@
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    enp3s0f0:
+      dhcp4: false
+      addresses:
+        - 192.168.10.100/24
+      gateway4: 192.168.10.1
+      nameservers:
+        addresses: [1.1.1.1, 8.8.8.8]
+      mtu: 9000
+      optional: true
+    enp3s0f1:
+      dhcp4: false
+      addresses:
+        - 192.168.10.101/24
+      mtu: 9000
+      optional: true

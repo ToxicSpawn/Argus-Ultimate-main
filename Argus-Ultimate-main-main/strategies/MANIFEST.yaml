@@ -1,0 +1,139 @@
+# Argus Ultimate — Strategy Manifest Schema
+# ============================================
+# Every strategy module should ship a MANIFEST.yaml in its directory.
+# This file is validated by strategies/manifest_validator.py.
+#
+# Required fields are marked (required).
+# All other fields are optional but strongly recommended.
+#
+# Usage:
+#   python strategies/manifest_validator.py strategies/MANIFEST.yaml
+#   python strategies/manifest_validator.py strategies/  # validate all MANIFEST.yaml recursively
+
+# ---------------------------------------------------------------------------
+# Identity  (required)
+# ---------------------------------------------------------------------------
+name: "ExampleStrategy"           # (required) Unique strategy identifier
+version: "1.0.0"                   # (required) SemVer string
+author: "ToxicMoss"                # (required) Author handle or team name
+created: "2026-04-16"             # ISO-8601 date
+updated: "2026-04-16"             # ISO-8601 date — bump on every change
+description: >
+  One-paragraph description of what the strategy does, its edge,
+  and the market conditions it is designed for.
+
+# ---------------------------------------------------------------------------
+# Market context  (recommended)
+# ---------------------------------------------------------------------------
+expected_regime:
+  - trend           # trending markets
+  # - mean_reversion
+  # - breakout
+  # - volatility_expansion
+  # - ranging
+  # - any
+
+timeframes:
+  primary: "1h"               # Primary execution timeframe
+  confirmation: ["4h", "1d"]  # Higher-TF confluence timeframes
+  # lower: ["5m", "15m"]     # Lower-TF entry precision
+
+pairs:
+  - "BTC/USDT"
+  - "ETH/USDT"
+  # use "*" to indicate all pairs are supported
+
+exchanges:
+  - kraken
+  - coinbase
+  # - binance
+
+# ---------------------------------------------------------------------------
+# Backtest summary  (required for published strategies)
+# ---------------------------------------------------------------------------
+backtest_summary:
+  period: "2023-01-01 to 2025-12-31"
+  exchange: kraken
+  pair: "BTC/USDT"
+  timeframe: "1h"
+  initial_capital: 10000
+  total_return_pct: 0.0         # Fill in after running backtest
+  sharpe_ratio: 0.0
+  max_drawdown_pct: 0.0
+  win_rate_pct: 0.0
+  total_trades: 0
+  profit_factor: 0.0
+  last_backtest_run: "2026-04-16"
+
+# ---------------------------------------------------------------------------
+# Parameters  (mirrors PARAM_SPACE used by run_optimize.py)
+# ---------------------------------------------------------------------------
+parameters:
+  fast_period:
+    type: int
+    default: 20
+    optimizable: true
+    low: 5
+    high: 50
+    description: "Fast EMA period"
+
+  slow_period:
+    type: int
+    default: 60
+    optimizable: true
+    low: 20
+    high: 200
+    description: "Slow EMA period"
+
+  stop_loss_pct:
+    type: float
+    default: 0.02
+    optimizable: true
+    low: 0.005
+    high: 0.05
+    description: "Stop loss as fraction of entry price"
+
+  take_profit_pct:
+    type: float
+    default: 0.04
+    optimizable: true
+    low: 0.01
+    high: 0.10
+    description: "Take profit as fraction of entry price"
+
+# ---------------------------------------------------------------------------
+# Risk profile  (recommended)
+# ---------------------------------------------------------------------------
+risk:
+  position_size_pct: 2.0        # % of capital per trade
+  max_open_positions: 3
+  max_drawdown_limit_pct: 15.0  # hard-stop: strategy halts if breached
+  leverage: 1                   # 1 = spot, >1 = margin
+  direction: both               # long | short | both
+
+# ---------------------------------------------------------------------------
+# Dependencies  (recommended)
+# ---------------------------------------------------------------------------
+depends_on:
+  modules: []
+  # - argus_live.signal_gate
+  # - argus_live.mtf_bar_router
+  python_packages:
+  - pandas
+  - numpy
+  # - ta
+  # - scipy
+
+# ---------------------------------------------------------------------------
+# Tags  (optional — used for search and community sharing)
+# ---------------------------------------------------------------------------
+tags:
+  - momentum
+  # - mean-reversion
+  # - breakout
+  # - hft
+  # - crypto
+  # - equity
+
+license: MIT
+notes: ""

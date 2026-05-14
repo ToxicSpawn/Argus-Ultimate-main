@@ -1,0 +1,239 @@
+# =============================================================================
+# Argus Ultimate - Auto-Scaling Profile (v8.7.0)
+# Designed to scale seamlessly from $1K → $100K+
+# =============================================================================
+# Run with: py main.py paper --profile auto_scale
+# For live: py main.py live --profile auto_scale
+# =============================================================================
+
+# ============================================================================
+# CAPITAL CONFIGURATION
+# ============================================================================
+capital:
+  # Starting capital - CHANGE THIS as you add funds
+  initial: 1000
+
+  # Auto-scaling settings
+  auto_scale:
+    enabled: true
+
+    # Capital tiers - system automatically adjusts settings at each tier
+    tiers:
+      - name: "micro"
+        min_capital: 500
+        max_capital: 2000
+        pairs: 3
+        max_position_pct: 0.10    # 10% per trade
+        leverage: 1
+        risk_per_trade_pct: 0.01  # 1% risk per trade
+
+      - name: "small"
+        min_capital: 2000
+        max_capital: 10000
+        pairs: 5
+        max_position_pct: 0.15    # 15% per trade
+        leverage: 1
+        risk_per_trade_pct: 0.015 # 1.5% risk
+
+      - name: "medium"
+        min_capital: 10000
+        max_capital: 50000
+        pairs: 8
+        max_position_pct: 0.20    # 20% per trade
+        leverage: 2
+        risk_per_trade_pct: 0.02  # 2% risk
+
+      - name: "large"
+        min_capital: 50000
+        max_capital: 100000
+        pairs: 12
+        max_position_pct: 0.25    # 25% per trade
+        leverage: 2
+        risk_per_trade_pct: 0.025 # 2.5% risk
+
+      - name: "institutional"
+        min_capital: 100000
+        max_capital: 1000000
+        pairs: 20
+        max_position_pct: 0.30    # 30% per trade
+        leverage: 3
+        risk_per_trade_pct: 0.03  # 3% risk
+
+    # Auto-detect tier every N cycles
+    tier_check_interval: 100
+
+    # Compounding settings
+    compounding:
+      enabled: true
+      reinvest_profits: true      # 100% profit reinvestment
+      min_balance_for_withdrawal: 10000  # Only withdraw when above $10K
+      withdrawal_frequency: "monthly"
+
+# ============================================================================
+# KELLY CRITERION - Optimal Position Sizing
+# ============================================================================
+kelly:
+  enabled: true
+  kelly_fraction: 0.5           # Half-Kelly (conservative)
+  n_bootstrap: 2000
+  confidence_level: 0.90
+  min_trades_for_kelly: 10
+  max_position_fraction: 0.25   # Never >25% on one trade
+  # Bootstrap values when < 10 real trades
+  kelly_bootstrap_win_rate: 0.55
+  kelly_bootstrap_avg_win: 0.02   # 2% avg win
+  kelly_bootstrap_avg_loss: 0.015 # 1.5% avg loss
+
+# ============================================================================
+# ADAPTIVE POSITION SIZING
+# ============================================================================
+position_sizing:
+  method: "kelly"             # kelly | adaptive | static
+
+  adaptive:
+    enabled: true
+    # Scale down after losses
+    loss_scale_factor: 0.5      # Halve position after 3 consecutive losses
+    min_scale_factor: 0.25      # Never go below 25% of base size
+    # Scale up after wins (slowly)
+    win_scale_factor: 1.05      # Increase 5% after winning streaks
+    max_scale_factor: 2.0       # Cap at 2x base size
+
+  # Volatility-adjusted sizing
+  volatility_adjustment:
+    enabled: true
+    lookback: 20
+    scale_by_inverse_vol: true  # Smaller positions in high vol
+
+# ============================================================================
+# RISK MANAGEMENT - SCALES WITH CAPITAL
+# ============================================================================
+risk:
+  max_daily_loss_pct: 0.05     # 5% daily loss limit (scales with tier)
+  max_drawdown_pct: 0.15      # 15% max drawdown
+
+  # Dynamic circuit breakers
+  circuit_breakers:
+    # Scale with capital tier
+    consecutive_loss_limit: 3   # Halve positions after 3 losses
+    drawdown_halt_pct: 0.08   # Halt trading at 8% drawdown
+    recovery_trade_delay: 2     # Wait 2 trades before increasing size
+
+# ============================================================================
+# PORTFOLIO REBALANCING
+# ============================================================================
+portfolio:
+  rebalancing:
+    enabled: true
+    method: "kelly"           # kelly | hrp | equal
+
+    # Kelly-based weight optimization
+    kelly_weighting:
+      enabled: true
+      lookback_trades: 50
+      min_weight: 0.05         # 5% minimum per pair
+      max_weight: 0.40         # 40% maximum per pair
+
+    # Rebalance when drift exceeds threshold
+    drift_threshold_pct: 0.10  # 10% drift triggers rebalance
+
+# ============================================================================
+# TRADING - AUTO-OPTIMIZES WITH CAPITAL
+# ============================================================================
+trading:
+  # Pairs scale with capital tier
+  pairs_by_tier:
+    micro: ["BTC/USDT", "ETH/USDT", "SOL/USDT"]
+    small: ["BTC/USDT", "ETH/USDT", "SOL/USDT", "XRP/USDT", "ADA/USDT"]
+    medium: ["BTC/USDT", "ETH/USDT", "SOL/USDT", "XRP/USDT", "ADA/USDT", "LINK/USDT", "AVAX/USDT", "DOT/USDT"]
+    large: ["BTC/USDT", "ETH/USDT", "SOL/USDT", "XRP/USDT", "ADA/USDT", "LINK/USDT", "AVAX/USDT", "DOT/USDT", "MATIC/USDT", "UNI/USDT", "ATOM/USDT", "LTC/USDT"]
+    institutional: "all"        # All available pairs
+
+  # Dynamic pair selection
+  pair_selection:
+    enabled: true
+    liquidity_check: true      # Only trade pairs with sufficient volume
+    min_volume_24h: 50000       # $50K minimum 24h volume
+    max_correlation: 0.85       # Don't overweight correlated pairs
+    rotate_pairs: true           # Rotate to avoid overfitting
+
+  # Execution scales with capital
+  execution:
+    max_slippage_bps: 10       # 10 bps max slippage tolerance
+    use_maker_only: true        # Always try maker first (0% fee!)
+    fallback_to_taker: true     # Take if maker unavailable
+    order_types: ["limit", "post_only"]  # Safe order types
+
+  max_concurrent_positions: 5   # Scales up with tier
+
+# ============================================================================
+# COMPounding & GROWTH
+# ============================================================================
+compounding:
+  enabled: true
+
+  # Profit reinvestment
+  reinvest:
+    threshold_pct: 0.80         # Reinvest 80% of profits
+    min_reinvest_balance: 1500  # Minimum balance before major reinvestment
+
+  # Growth targets
+  targets:
+    monthly_gain_pct: 0.05     # 5% monthly target (conservative)
+    aggressive_monthly_pct: 0.10  # 10% if confident
+
+  # Auto-increase after consistent gains
+  scale_up_after:
+    enabled: true
+    consistent_profit_trades: 20  # After 20 profitable trades
+    profit_streak_days: 7         # Or 7 consecutive profitable days
+    scale_factor: 1.25             # Increase size by 25%
+
+  # Protect gains
+  protection:
+    trailing_stop_pct: 0.15       # Lock in 15% of profits
+    profit_lock_pct: 0.50         # Lock 50% of profits above $X
+
+# ============================================================================
+# MEXC EXCHANGE
+# ============================================================================
+mexc:
+  api_key: "YOUR_MEXC_API_KEY"
+  api_secret: "YOUR_MEXC_API_SECRET"
+  testnet: false
+  enabled: true
+  spot_maker_fee: 0.0          # 0% maker fee!
+  spot_taker_fee: 0.001       # 0.1% taker
+  futures_maker_fee: 0.0
+  min_trade_usd: 10
+  max_trade_usd: 100          # Scales with tier
+
+# ============================================================================
+# HARDWARE (RTX 5080 PC)
+# ============================================================================
+hardware:
+  gpu:
+    enabled: true
+    device: "cuda:0"
+  network:
+    enabled: true
+    driver_mode: "onload"
+    target_latency_us: 1
+
+# ============================================================================
+# MONITORING & ALERTS
+# ============================================================================
+monitoring:
+  tier_change_alerts: true       # Alert when moving to new capital tier
+  profit_milestone_alerts: true   # Alert at $2K, $5K, $10K, etc.
+  performance_dashboard: true
+
+alerts:
+  # Milestone notifications
+  milestones:
+    - 2000    # $2K
+    - 5000    # $5K
+    - 10000   # $10K
+    - 25000   # $25K
+    - 50000   # $50K
+    - 100000  # $100K

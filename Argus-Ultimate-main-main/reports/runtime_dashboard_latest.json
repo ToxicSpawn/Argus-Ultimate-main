@@ -1,0 +1,36 @@
+{
+  "generated_at_utc": "2026-03-07T16:56:33.952229+00:00",
+  "system_health": {
+    "uptime_seconds": 0.0,
+    "engine_state": "unknown",
+    "emergency_state": false
+  },
+  "trading_intelligence": {
+    "strategy_activity": {
+      "target_rebalance": 81,
+      "unified_argus_ai_multilang": 117
+    },
+    "strategy_weights": {
+      "trend_following": 1.0
+    },
+    "regime_state": "range:mid_vol",
+    "target_exposures": {},
+    "microstructure_state": {}
+  },
+  "execution_risk": {
+    "liquidity_score_avg": 0.6005509641873278,
+    "liquidity_score_p10": 0.5454545454545454,
+    "liquidity_clamp_count": 22,
+    "execution_plan_type_counts": {},
+    "slippage_summary_bps": {
+      "avg": 0.0,
+      "p90": 0.0
+    },
+    "intent_state_counts": {
+      "FAILED": 1,
+      "SENT": 25
+    },
+    "recon_required_count": 0,
+    "position_exposure_notional": 48.17450232487376
+  }
+}

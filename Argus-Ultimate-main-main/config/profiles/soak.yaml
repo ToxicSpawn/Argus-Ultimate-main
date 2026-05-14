@@ -1,0 +1,17 @@
+runtime:
+  mode: paper
+  live_require_paper_edge: true
+  soak_gate:
+    enabled: true
+    min_duration_seconds: 7200
+    min_decision_count: 200
+    min_trade_count: 10
+    max_error_rate: 0.05
+    max_timeout_rate: 0.05
+    max_reconciliation_halts: 0
+    max_duplicate_intents: 0
+    max_age_hours: 24
+
+risk:
+  max_daily_loss_pct: 0.025
+  max_drawdown_pct: 0.08

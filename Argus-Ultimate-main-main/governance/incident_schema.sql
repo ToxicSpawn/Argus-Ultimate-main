@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS incidents (
+  incident_id TEXT PRIMARY KEY,
+  ts_open TEXT NOT NULL,
+  ts_last_update TEXT NOT NULL,
+  status TEXT NOT NULL,
+  severity TEXT NOT NULL,
+  class TEXT NOT NULL,
+  subsystem TEXT NOT NULL,
+  entity_type TEXT,
+  entity_id TEXT,
+  title TEXT NOT NULL,
+  summary TEXT NOT NULL,
+  trigger_metric TEXT,
+  trigger_value REAL,
+  threshold_value REAL,
+  ladder_stage TEXT,
+  recommended_action TEXT,
+  auto_action_taken TEXT,
+  operator_action_required INTEGER DEFAULT 0,
+  evidence_blob TEXT,
+  run_id TEXT
+);

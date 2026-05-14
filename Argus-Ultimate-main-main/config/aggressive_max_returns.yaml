@@ -1,0 +1,87 @@
+# Argus Maximum Aggression Configuration
+# Target: 70-150% monthly returns
+# WARNING: High risk - can lose significant capital
+
+# Risk Settings - AGGRESSIVE
+risk:
+  max_daily_loss: 50.0          # Allow 50% daily drawdown (was 25%)
+  max_total_drawdown: 40.0      # Allow 40% total drawdown
+  max_position_size_pct: 25.0   # 25% per position (was 10%)
+  max_correlated_positions: 8   # Allow more correlated positions
+  circuit_breaker_cooldown: 300 # 5 min cooldown (was 60 min)
+  
+# Leverage - MAXIMUM
+leverage:
+  max_leverage: 10.0            # 10x leverage (was 3x)
+  default_leverage: 5.0         # 5x default
+  auto_deleveraging: false      # Don't auto-deleverage
+  
+# Position Sizing - AGGRESSIVE
+position_sizing:
+  method: "kelly"               # Kelly criterion for max growth
+  kelly_fraction: 0.5           # Half-Kelly (full is too risky)
+  min_position_pct: 5.0         # Minimum 5% per trade
+  max_position_pct: 30.0        # Maximum 30% per trade
+  scale_into_winners: true      # Add to winning positions
+  scale_factor: 1.5             # 1.5x scaling
+  
+# Strategy Signals - LOWER THRESHOLDS
+signals:
+  min_confidence: 0.40          # Accept 40% confidence (was 70%)
+  min_signal_strength: 0.30     # Lower threshold
+  max_signals_per_cycle: 10     # More trades
+  enable_all_strategies: true   # Use all strategies
+  
+# Execution - FASTER
+execution:
+  order_type: "market"          # Market orders for speed
+  max_slippage_pct: 1.0         # Accept 1% slippage
+  timeout_ms: 500               # 500ms timeout
+  retry_on_failure: true
+  
+# Timeframes - SHORTER
+timeframes:
+  primary: "5m"                 # 5 minute charts
+  secondary: "15m"
+  tertiary: "1h"
+  signal_timeframe: "5m"        # Generate signals on 5m
+  
+# Take Profit / Stop Loss - TIGHTER
+risk_management:
+  stop_loss_pct: 1.5            # 1.5% stop loss
+  take_profit_pct: 3.0          # 3% take profit (2:1 R:R)
+  trailing_stop_pct: 0.5        # 0.5% trailing stop
+  breakeven_trigger_pct: 1.0    # Move to breakeven at 1%
+  
+# Scalping Settings
+scalping:
+  enabled: true
+  target_profit_pct: 0.5        # 0.5% per scalp
+  max_holding_minutes: 30       # 30 min max hold
+  min_volatility: 0.001         # Minimum volatility to trade
+  
+# Funding Rate Arbitrage
+funding_arb:
+  enabled: true
+  min_funding_rate: 0.0003      # 0.03% minimum
+  max_position_pct: 15.0
+  
+# Flash Crash Sniping
+flash_crash:
+  enabled: true
+  min_drop_pct: 3.0             # Snipe 3% drops (was 5%)
+  buy_amount_pct: 20.0          # 20% of capital per snipe
+  target_rebound_pct: 2.0       # 2% target rebound
+  
+# Compounding
+compounding:
+  enabled: true
+  reinvest_pct: 80              # Reinvest 80% of profits
+  compound_frequency: "daily"
+  
+# Session Multipliers
+session:
+  asian_multiplier: 0.8         # Reduce Asian session
+  london_multiplier: 1.2        # Boost London
+  ny_multiplier: 1.3            # Boost NY
+  overlap_multiplier: 1.5       # Max during overlaps

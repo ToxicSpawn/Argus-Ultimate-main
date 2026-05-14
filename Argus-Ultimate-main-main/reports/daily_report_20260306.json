@@ -1,0 +1,17 @@
+{
+  "generated_at": "2026-03-05T21:06:40.205695+00:00",
+  "source_db": "data/unified_trades.db",
+  "trade_count": 33,
+  "decision_count": 9,
+  "reject_histogram": {
+    "MIN_CONFIDENCE": 3,
+    "DUPLICATE_SIGNAL": 6
+  },
+  "slippage_p50_bps": 0.0,
+  "slippage_p90_bps": 0.0,
+  "net_edge_p50_bps": 0.0,
+  "net_edge_p90_bps": 0.0,
+  "fee_churn_ratio": 0.0001640042558342193,
+  "total_fees": 0.1252537060446718,
+  "total_notional": 763.722291275674
+}

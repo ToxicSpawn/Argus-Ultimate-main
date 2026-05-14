@@ -1,0 +1,193 @@
+# Kubernetes Deployment for Argus Trading System
+# ================================================
+# Production-grade deployment with auto-scaling, health checks, and rolling updates
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argus-trading
+  namespace: trading
+  labels:
+    app: argus
+    component: trading-engine
+    environment: production
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: argus
+      component: trading-engine
+  template:
+    metadata:
+      labels:
+        app: argus
+        component: trading-engine
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9090"
+    spec:
+      containers:
+      - name: argus-trading
+        image: argus/trading:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+          name: dashboard
+        - containerPort: 9090
+          name: metrics
+        env:
+        - name: ARGUS_ENV
+          value: "production"
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: argus-secrets
+              key: redis-url
+        - name: DISCORD_WEBHOOK_URL
+          valueFrom:
+            secretKeyRef:
+              name: argus-secrets
+              key: discord-webhook
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "1000m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /api/status
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/status
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+        volumeMounts:
+        - name: argus-data
+          mountPath: /data/argus
+        - name: argus-config
+          mountPath: /config
+      volumes:
+      - name: argus-data
+        persistentVolumeClaim:
+          claimName: argus-data-pvc
+      - name: argus-config
+        configMap:
+          name: argus-config
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 60
+
+---
+# Service for Dashboard
+apiVersion: v1
+kind: Service
+metadata:
+  name: argus-dashboard
+  namespace: trading
+spec:
+  selector:
+    app: argus
+    component: trading-engine
+  ports:
+  - port: 80
+    targetPort: 8000
+    name: dashboard
+  - port: 9090
+    targetPort: 9090
+    name: metrics
+  type: ClusterIP
+
+---
+# Horizontal Pod Autoscaler
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: argus-hpa
+  namespace: trading
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: argus-trading
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+---
+# Persistent Volume Claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: argus-data-pvc
+  namespace: trading
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+# ConfigMap for Argus configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argus-config
+  namespace: trading
+data:
+  ARGUS_ENV: "production"
+  LOG_LEVEL: "INFO"
+  METRICS_PORT: "9090"
+  DASHBOARD_PORT: "8000"
+
+---
+# Ingress for external access
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argus-ingress
+  namespace: trading
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/websocket-services: "argus-dashboard"
+spec:
+  tls:
+  - hosts:
+    - argus.yourdomain.com
+    secretName: argus-tls
+  rules:
+  - host: argus.yourdomain.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: argus-dashboard
+            port:
+              name: dashboard

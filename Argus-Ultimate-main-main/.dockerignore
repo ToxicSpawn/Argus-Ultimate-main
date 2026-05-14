@@ -1,0 +1,38 @@
+# Push 72 — .dockerignore
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.git/
+.gitignore
+.env
+*.env
+.venv/
+venv/
+env/
+
+# Test artifacts
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+*.log
+
+# Reports / data (mounted as volumes)
+reports/
+logs/
+data/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Models (large — mount as volume in prod)
+models/*.zip
+models/*.pkl

@@ -1,0 +1,27 @@
+{
+  "generated_at": "2026-03-06T16:04:55.154700+00:00",
+  "source_db": "data/unified_trades.db",
+  "trade_count": 33,
+  "decision_count": 66,
+  "reject_histogram": {
+    "MIN_CONFIDENCE": 3,
+    "DUPLICATE_SIGNAL": 6,
+    "ORDER_FAILED": 1,
+    "RECON_REQUIRED_LOCK": 56
+  },
+  "route_histogram": {},
+  "net_edge_p50_bps": 410.0000000000001,
+  "net_edge_p90_bps": 410.0000000000001,
+  "net_edge_p99_bps": 410.0000000000001,
+  "slippage_p50_bps": 0.0,
+  "slippage_p90_bps": 0.0,
+  "slippage_p99_bps": 0.0,
+  "latency_p50_ms": 0.0,
+  "latency_p90_ms": 0.0,
+  "latency_p99_ms": 0.0,
+  "timeout_rate": 0.0,
+  "error_rate": 0.015151515151515152,
+  "fee_churn_ratio": 0.0001640042558342193,
+  "total_fees": 0.1252537060446718,
+  "total_notional": 763.722291275674
+}

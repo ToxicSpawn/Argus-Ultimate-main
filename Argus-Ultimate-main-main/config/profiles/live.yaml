@@ -1,0 +1,24 @@
+runtime:
+  mode: live
+  live_require_paper_edge: true
+  live_min_trades_paper: 40
+  live_min_win_rate_pct: 50
+  soak_gate:
+    enabled: true
+    max_age_hours: 12
+  infra_preflight:
+    enabled: true
+    report_path: reports/infra/infra_preflight_latest.json
+    max_age_hours: 24
+
+reconciliation:
+  require_operator_ack: true
+  live_every_cycle: true
+
+execution_engine:
+  fail_closed_runtime_enabled: true
+  fail_closed_runtime_enforce_paper: false
+
+risk:
+  max_daily_loss_pct: 0.02
+  max_drawdown_pct: 0.08

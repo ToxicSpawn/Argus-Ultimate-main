@@ -1,0 +1,57 @@
+{
+  "timestamp": "20260306_071024",
+  "config": "F:\\Argus-Ultimate-main\\unified_config.yaml",
+  "folds": [
+    {
+      "fold": 1,
+      "train_start": "window_1_train_start",
+      "train_end": "window_1_train_end",
+      "test_start": "window_1_test_start",
+      "test_end": "window_1_test_end",
+      "sharpe": 0.0,
+      "max_drawdown_pct": 0.0,
+      "net_return_pct": 0.0
+    },
+    {
+      "fold": 2,
+      "train_start": "window_2_train_start",
+      "train_end": "window_2_train_end",
+      "test_start": "window_2_test_start",
+      "test_end": "window_2_test_end",
+      "sharpe": 0.0,
+      "max_drawdown_pct": 0.0,
+      "net_return_pct": 0.0
+    },
+    {
+      "fold": 3,
+      "train_start": "window_3_train_start",
+      "train_end": "window_3_train_end",
+      "test_start": "window_3_test_start",
+      "test_end": "window_3_test_end",
+      "sharpe": 0.0,
+      "max_drawdown_pct": 0.0,
+      "net_return_pct": 0.0
+    }
+  ],
+  "summary": {
+    "avg_sharpe": 0.0,
+    "avg_return_pct": 0.0,
+    "max_drawdown_pct": 0.0,
+    "gate": "HOLD"
+  },
+  "bundle_path": "F:\\Argus-Ultimate-main\\deploy\\bundles\\20260306_071024",
+  "bundle_hashes": [
+    {
+      "file": "config.yaml",
+      "sha256": "7e25a14f80982a7ec3c414f317c329a4338b3e93c2cab06169b2cd89041f3e65"
+    },
+    {
+      "file": "params.json",
+      "sha256": "587efac305234b6879b6281fbafa3ba57c373e33cc6c7098c7fef3998f28a1ac"
+    },
+    {
+      "file": "build_info.json",
+      "sha256": "45ce00de4920b17745b86adbe753904592e3341455b389e4ba75c6d1c50d4bb2"
+    }
+  ]
+}

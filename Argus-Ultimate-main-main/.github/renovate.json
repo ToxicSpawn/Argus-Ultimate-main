@@ -1,0 +1,42 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:base"],
+  "timezone": "Australia/Sydney",
+  "schedule": ["before 6am on monday"],
+  "labels": ["dependencies", "automated"],
+  "assignees": ["ToxicSpawn"],
+  "packageRules": [
+    {
+      "matchPackagePatterns": ["*"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": false,
+      "groupName": "all non-major dependencies"
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "labels": ["dependencies", "major", "review-required"]
+    },
+    {
+      "matchPackageNames": ["ccxt"],
+      "automerge": false,
+      "labels": ["dependencies", "ccxt", "review-required"],
+      "reviewers": ["ToxicSpawn"]
+    },
+    {
+      "matchPackageNames": ["torch", "numpy", "pandas"],
+      "automerge": false,
+      "labels": ["dependencies", "ml", "review-required"]
+    }
+  ],
+  "pip_requirements": {
+    "fileMatch": ["requirements.*\\.txt"]
+  },
+  "docker": {
+    "enabled": true,
+    "pinDigests": true
+  },
+  "github-actions": {
+    "enabled": true
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "BTC/USDT": {
+    "total_trades": 0,
+    "winning_trades": 0,
+    "losing_trades": 0,
+    "total_pnl": 0,
+    "max_drawdown": 0.0,
+    "sharpe_ratio": 0.0,
+    "win_rate": 0,
+    "avg_win": 0,
+    "avg_loss": 0,
+    "profit_factor": 0.0,
+    "signal_counts": {},
+    "signal_wins": {}
+  },
+  "ETH/USDT": {
+    "total_trades": 0,
+    "winning_trades": 0,
+    "losing_trades": 0,
+    "total_pnl": 0,
+    "max_drawdown": 0.0,
+    "sharpe_ratio": 0.0,
+    "win_rate": 0,
+    "avg_win": 0,
+    "avg_loss": 0,
+    "profit_factor": 0.0,
+    "signal_counts": {},
+    "signal_wins": {}
+  },
+  "SOL/USDT": {
+    "total_trades": 0,
+    "winning_trades": 0,
+    "losing_trades": 0,
+    "total_pnl": 0,
+    "max_drawdown": 0.0,
+    "sharpe_ratio": 0.0,
+    "win_rate": 0,
+    "avg_win": 0,
+    "avg_loss": 0,
+    "profit_factor": 0.0,
+    "signal_counts": {},
+    "signal_wins": {}
+  },
+  "summary": {
+    "total_pnl": 0,
+    "total_trades": 0,
+    "win_rate": 0
+  }
+}

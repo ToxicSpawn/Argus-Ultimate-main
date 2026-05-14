@@ -1,0 +1,14 @@
+# Grafana dashboard provisioning — Argus Regime + Bandit
+apiVersion: 1
+
+providers:
+  - name: argus-regime-bandit
+    orgId: 1
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards/argus
+      foldersFromFilesStructure: false
+    folder: Argus

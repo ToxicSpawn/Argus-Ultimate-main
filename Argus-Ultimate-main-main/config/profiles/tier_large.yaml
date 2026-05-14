@@ -1,0 +1,94 @@
+# =============================================================================
+# ARGUS Capital Tier: LARGE ($500,000 - $5,000,000)
+# =============================================================================
+# Institutional all-venue config. FPGA + options. 40+ concurrent positions.
+# =============================================================================
+
+tier:
+  name: large
+  min_aud: 500000
+  max_aud: 5000000
+  description: "Institutional all-venue config for $500k-$5M"
+
+# Position sizing
+max_position_pct: 0.15
+min_position_size_aud: 1000.0
+max_concurrent_positions: 40
+max_pyramids_per_position: 4
+
+# Risk
+daily_loss_limit_pct: 0.08
+portfolio_var_limit_pct: 0.05
+portfolio_cvar_limit_pct: 0.07
+circuit_breaker_enabled: true
+
+# Stops / TPs
+stop_loss_pct: 0.008
+take_profit_pct: 0.050
+trailing_stop_enabled: true
+trailing_stop_pct: 0.012
+
+# Venues
+primary_exchange: kraken
+enabled_venues:
+  - kraken
+  - coinbase
+  - bybit
+  - okx
+  - deribit
+  - dydx
+
+# Strategies — all
+enabled_strategies:
+  - all
+
+# Trading universe — 100+ pairs
+trading_universe: extended
+
+# Execution
+maker_enforcement: true
+intelligent_executor: true
+algo_execution: true
+twap_min_notional_usd: 25000
+vwap_min_notional_usd: 50000
+
+# HFT + FPGA
+hft_enabled: true
+fpga_enabled: true  # if Alveo card present
+fpga_strategies:
+  - market_maker
+  - cross_exchange_arb
+  - statistical_arb
+
+# Market making (much more aggressive)
+market_maker:
+  enabled: true
+  symbols:
+    - BTC/USD
+    - ETH/USD
+    - SOL/USD
+    - LINK/USD
+    - AVAX/USD
+    - DOT/USD
+    - MATIC/USD
+    - UNI/USD
+  spread_bps: 4.0
+  inventory_limit_pct: 0.05
+  quote_size_pct: 0.010
+
+# Options (Deribit)
+options_enabled: true
+options_strategies:
+  - vol_risk_premium
+  - delta_hedged_strangle
+  - covered_call
+
+# ML — full ensemble
+ml_ensemble_size: 100
+auto_retrain: true
+retrain_cycles: 500
+gpu_inference: true
+
+# Meta
+confidence_threshold: 0.48
+cycle_seconds: 5

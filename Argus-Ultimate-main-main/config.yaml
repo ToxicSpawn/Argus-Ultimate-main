@@ -1,0 +1,16 @@
+# =============================================================================
+# DEPRECATED CONFIGURATION - DO NOT USE
+# =============================================================================
+# This file has been deprecated and is no longer loaded by the system.
+# 
+# ACTIVE CONFIGURATION FILES:
+# - config/default_config.yml (system defaults)
+# - config/config.yml (user overrides - optional)
+# - Environment variables (ARGUS_* prefix - highest priority)
+#
+# For migration assistance, see: config/MIGRATION.md
+# =============================================================================
+
+# This file intentionally left empty to prevent configuration conflicts.
+# All configuration has been migrated to the proper config/ directory structure.
+# Please use the new configuration system.

@@ -1,0 +1,9 @@
+runtime:
+  mode: paper
+  live_require_paper_edge: false
+  soak_gate:
+    enabled: false
+
+monitoring:
+  alerts:
+    enabled: false

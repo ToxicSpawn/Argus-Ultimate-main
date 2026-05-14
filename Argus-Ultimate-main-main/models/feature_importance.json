@@ -1,0 +1,86 @@
+{
+  "feature_scores": [
+    {
+      "name": "ret_1h",
+      "importance": 0.340644,
+      "rank": 1,
+      "direction": "positive"
+    },
+    {
+      "name": "ret_1d",
+      "importance": 0.226891,
+      "rank": 2,
+      "direction": "positive"
+    },
+    {
+      "name": "vol_1h",
+      "importance": 0.134864,
+      "rank": 3,
+      "direction": "positive"
+    },
+    {
+      "name": "adx_14",
+      "importance": 0.060463,
+      "rank": 4,
+      "direction": "positive"
+    },
+    {
+      "name": "funding_rate",
+      "importance": 0.044886,
+      "rank": 5,
+      "direction": "positive"
+    },
+    {
+      "name": "vol_1d",
+      "importance": 0.029104,
+      "rank": 6,
+      "direction": "positive"
+    },
+    {
+      "name": "volume_ratio",
+      "importance": 0.029104,
+      "rank": 7,
+      "direction": "positive"
+    },
+    {
+      "name": "ret_4h",
+      "importance": 0.02808,
+      "rank": 8,
+      "direction": "positive"
+    },
+    {
+      "name": "ret_7d",
+      "importance": 0.02685,
+      "rank": 9,
+      "direction": "positive"
+    },
+    {
+      "name": "spread_bps",
+      "importance": 0.022751,
+      "rank": 10,
+      "direction": "positive"
+    },
+    {
+      "name": "obi",
+      "importance": 0.020086,
+      "rank": 11,
+      "direction": "positive"
+    },
+    {
+      "name": "vol_7d",
+      "importance": 0.018446,
+      "rank": 12,
+      "direction": "positive"
+    },
+    {
+      "name": "adx_50",
+      "importance": 0.017832,
+      "rank": 13,
+      "direction": "positive"
+    }
+  ],
+  "model_type": "GradientBoostingClassifier",
+  "n_samples": 2000,
+  "n_permutations": 5,
+  "timestamp": "2026-04-12T12:19:53.918175+00:00"
+}

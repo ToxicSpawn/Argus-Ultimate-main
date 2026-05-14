@@ -1,0 +1,30 @@
+{
+  "config_hash": "sha256:8b9f8376ec4802b1a3f27e0f5bc5fc258c8b5b72a4df137eb3a647ebf842c463",
+  "diff": {
+    "changed": {
+      "ladder_stage": {
+        "new": "PAPER",
+        "old": null
+      },
+      "manifest_hash": {
+        "new": "run-1-regression-adverse_selection_spiral",
+        "old": null
+      },
+      "profile": {
+        "new": "paper",
+        "old": null
+      },
+      "runtime_path": {
+        "new": "intent->liquidity->constitution->governance->route->submit->reconcile->attribute->replay_audit->proving_review",
+        "old": null
+      },
+      "strict_governance": {
+        "new": true,
+        "old": null
+      }
+    },
+    "current_key_count": 5,
+    "previous_key_count": 0
+  },
+  "run_id": "run-1-regression-adverse_selection_spiral"
+}

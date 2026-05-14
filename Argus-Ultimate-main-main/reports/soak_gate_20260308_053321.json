@@ -1,0 +1,40 @@
+{
+  "status": "FAIL",
+  "checked_at": "2026-03-07T18:33:21.608008+00:00",
+  "start_ts": 1772886801.60295,
+  "end_ts": 1772908401.607992,
+  "duration_seconds": 21600.005041837692,
+  "metrics": {
+    "trade_count": 0,
+    "decision_count": 284,
+    "error_events": 0,
+    "timeout_events": 0,
+    "reconciliation_halts": 0,
+    "duplicate_intent_count": 0,
+    "error_rate": 0.0,
+    "timeout_rate": 0.0,
+    "max_drawdown_pct": 0.0,
+    "cycle_latency_p90_ms": 937400.9585857408,
+    "cycle_latency_sample_count": 69,
+    "portfolio_point_count": 70
+  },
+  "thresholds": {
+    "min_duration_seconds": 21600.0,
+    "min_decision_count": 300,
+    "min_trade_count": 20,
+    "max_error_rate": 0.03,
+    "max_timeout_rate": 0.03,
+    "max_reconciliation_halts": 0,
+    "max_duplicate_intents": 0,
+    "max_drawdown_pct": 0.1,
+    "max_cycle_latency_p90_ms": 60000.0,
+    "max_age_hours": 8.0,
+    "report_path": "reports/soak_gate_latest.json"
+  },
+  "fail_reasons": [
+    "decision_count=284 below min_decision_count=300",
+    "trade_count=0 below min_trade_count=20",
+    "cycle_latency_p90_ms=937400.959 above max_cycle_latency_p90_ms=60000.000"
+  ],
+  "config_path": "unified_config.yaml"
+}

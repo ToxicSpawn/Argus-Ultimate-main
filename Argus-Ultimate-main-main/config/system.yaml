@@ -1,0 +1,396 @@
+# Argus Ultimate - Unified Configuration
+# =====================================
+# 
+# This is the single source of truth for all Argus configuration.
+# Configuration precedence (highest to lowest):
+#   1. ARGUS_* environment variables
+#   2. config/local.yaml (gitignored, user-specific)
+#   3. This file (config/system.yaml)
+#   4. Default values in code
+
+version: "2.0"
+environment: paper  # paper, live, hybrid
+
+# ============================================================================
+# System Settings
+# ============================================================================
+system:
+  name: "Argus Ultimate"
+  version: "15.0.0"
+  log_level: INFO  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  log_file: "logs/argus.log"
+  data_dir: "data"
+  temp_dir: "temp"
+  
+  # Performance settings
+  max_workers: 4
+  async_workers: 10
+  
+  # Feature flags
+  enable_gpu: true
+  enable_quantum: false
+  enable_neuromorphic: false
+
+# ============================================================================
+# Trading Settings
+# ============================================================================
+trading:
+  mode: paper  # paper, live, hybrid
+  
+  # Initial capital
+  initial_balance: 10000
+  base_currency: USD
+  
+  # Trading limits
+  max_positions: 10
+  max_orders_per_second: 10
+  max_daily_trades: 100
+  
+  # Time settings
+  trading_start_time: "09:30"
+  trading_end_time: "16:00"
+  timezone: "America/New_York"
+  
+  # Symbols to trade
+  symbols:
+    - BTC/USD
+    - ETH/USD
+    - SOL/USD
+    - ADA/USD
+    - DOT/USD
+  
+  # Strategies to enable
+  strategies:
+    - momentum
+    - mean_reversion
+    - ml_ensemble
+
+# ============================================================================
+# Exchange Configuration
+# ============================================================================
+exchanges:
+  # Primary exchange
+  primary:
+    name: binance
+    api_key: ${BINANCE_API_KEY}
+    secret: ${BINANCE_SECRET}
+    sandbox: true  # Set to false for live trading
+    
+    # Trading fees
+    maker_fee: 0.001  # 0.1%
+    taker_fee: 0.001  # 0.1%
+    
+    # Connection settings
+    timeout: 30
+    retry_attempts: 3
+    rate_limit: 1200  # requests per minute
+  
+  # Backup exchanges
+  backup:
+    - name: kraken
+      api_key: ${KRAKEN_API_KEY}
+      secret: ${KRAKEN_SECRET}
+      sandbox: true
+      
+    - name: coinbase
+      api_key: ${COINBASE_API_KEY}
+      secret: ${COINBASE_SECRET}
+      sandbox: true
+
+# ============================================================================
+# Risk Management
+# ============================================================================
+risk:
+  # Position sizing
+  max_position_size: 0.10  # 10% of portfolio per position
+  max_sector_exposure: 0.30  # 30% per sector
+  max_leverage: 1.0  # No leverage by default
+  
+  # Drawdown limits
+  max_daily_drawdown: 0.05  # 5% per day
+  max_total_drawdown: 0.20  # 20% total
+  
+  # Loss limits
+  daily_loss_limit: 500  # USD
+  per_trade_loss_limit: 100  # USD
+  
+  # VaR settings
+  var_confidence: 0.95
+  var_time_horizon: 1  # days
+  
+  # Circuit breakers
+  enable_circuit_breakers: true
+  circuit_breaker_threshold: 0.10  # 10% drawdown triggers circuit breaker
+  
+  # Auto-liquidation
+  auto_liquidate_at: 0.25  # 25% drawdown
+
+# ============================================================================
+# Strategy Configuration
+# ============================================================================
+strategies:
+  # Momentum strategy
+  momentum:
+    enabled: true
+    weight: 0.30
+    
+    parameters:
+      short_window: 10
+      long_window: 40
+      min_strength: 0.002
+      acceleration_threshold: 0.0
+    
+    risk_settings:
+      max_position: 0.05
+      stop_loss: 0.02  # 2%
+      take_profit: 0.06  # 6%
+  
+  # Mean reversion strategy
+  mean_reversion:
+    enabled: true
+    weight: 0.30
+    
+    parameters:
+      lookback: 50
+      base_threshold: 1.5
+      vol_scale: 1.0
+    
+    risk_settings:
+      max_position: 0.05
+      stop_loss: 0.015
+      take_profit: 0.04
+  
+  # ML Ensemble strategy
+  ml_ensemble:
+    enabled: true
+    weight: 0.40
+    
+    parameters:
+      models:
+        - transformer
+        - lstm
+        - xgboost
+      
+      prediction_horizon: 5  # minutes
+      confidence_threshold: 0.65
+      
+      retrain_interval: 86400  # seconds (24 hours)
+      
+    risk_settings:
+      max_position: 0.05
+      stop_loss: 0.02
+      take_profit: 0.05
+
+# ============================================================================
+# Machine Learning
+# ============================================================================
+ml:
+  # Inference settings
+  inference_device: auto  # auto, cpu, gpu
+  batch_size: 32
+  
+  # Training settings
+  training:
+    epochs: 100
+    learning_rate: 0.001
+    early_stopping_patience: 10
+    validation_split: 0.2
+  
+  # Model registry
+  model_registry:
+    backend: local  # local, s3, gcs
+    path: "models/"
+    
+  # Feature engineering
+  features:
+    lookback_windows: [5, 10, 20, 50]
+    technical_indicators:
+      - rsi
+      - macd
+      - bollinger_bands
+      - atr
+
+# ============================================================================
+# Execution
+# ============================================================================
+execution:
+  # Order execution
+  default_order_type: limit
+  
+  # Smart order routing
+  enable_smart_routing: true
+  venue_selection_criteria:
+    - liquidity
+    - fees
+    - latency
+  
+  # Slippage control
+  max_slippage: 0.001  # 0.1%
+  
+  # TWAP settings
+  twap:
+    enabled: true
+    slices: 10
+    duration: 300  # seconds
+  
+  # Iceberg settings
+  iceberg:
+    enabled: true
+    display_qty: 0.1  # Show 10% of order
+
+# ============================================================================
+# Monitoring & Alerting
+# ============================================================================
+monitoring:
+  # Metrics collection
+  enable_metrics: true
+  metrics_interval: 60  # seconds
+  
+  # Prometheus
+  prometheus:
+    enabled: true
+    port: 9090
+    path: /metrics
+  
+  # Grafana
+  grafana:
+    enabled: true
+    port: 3000
+  
+  # Alerting
+  alerts:
+    enabled: true
+    
+    channels:
+      - type: slack
+        webhook: ${SLACK_WEBHOOK_URL}
+        level: warning
+        
+      - type: email
+        smtp_server: ${SMTP_SERVER}
+        smtp_port: 587
+        username: ${SMTP_USERNAME}
+        password: ${SMTP_PASSWORD}
+        to: ${ALERT_EMAIL}
+        level: error
+    
+    # Alert conditions
+    conditions:
+      daily_loss_threshold: 250  # USD
+      drawdown_threshold: 0.10  # 10%
+      error_rate_threshold: 0.01  # 1%
+      latency_threshold: 1000  # ms
+
+# ============================================================================
+# Data & Storage
+# ============================================================================
+data:
+  # Market data
+  market_data:
+    sources:
+      - websocket
+      - rest_api
+    
+    # Historical data
+    history_lookback: 252  # days (1 year)
+    
+    # Real-time data
+    tick_buffer_size: 10000
+    
+    # OHLCV settings
+    timeframes:
+      - 1m
+      - 5m
+      - 15m
+      - 1h
+      - 4h
+      - 1d
+  
+  # Database
+  database:
+    type: sqlite  # sqlite, postgres, mysql
+    path: data/argus.db
+    
+    # Connection pool
+    pool_size: 5
+    max_overflow: 10
+    
+    # Backup
+    backup_enabled: true
+    backup_interval: 86400  # seconds (24 hours)
+    backup_retention: 7  # days
+
+# ============================================================================
+# API Settings
+# ============================================================================
+api:
+  # REST API
+  rest:
+    enabled: true
+    host: 0.0.0.0
+    port: 8080
+    
+    # Authentication
+    auth_type: api_key  # api_key, jwt, oauth2
+    api_key_header: X-API-Key
+    
+    # Rate limiting
+    rate_limit: 100  # requests per minute
+    
+    # CORS
+    cors_enabled: true
+    cors_origins:
+      - http://localhost:3000
+  
+  # WebSocket
+  websocket:
+    enabled: true
+    host: 0.0.0.0
+    port: 8081
+    
+    # Connection settings
+    ping_interval: 30
+    ping_timeout: 10
+
+# ============================================================================
+# Security
+# ============================================================================
+security:
+  # Encryption
+  encrypt_sensitive_data: true
+  encryption_key: ${ENCRYPTION_KEY}
+  
+  # API keys
+  api_key_rotation_interval: 2592000  # seconds (30 days)
+  
+  # IP whitelist
+  ip_whitelist_enabled: false
+  ip_whitelist: []
+  
+  # 2FA
+  two_factor_auth_enabled: false
+
+# ============================================================================
+# Development & Testing
+# ============================================================================
+development:
+  # Debug mode
+  debug: false
+  
+  # Hot reload
+  hot_reload: false
+  
+  # Profiling
+  enable_profiling: false
+  profile_output: logs/profile.stats
+  
+  # Testing
+  test_mode: false
+  mock_exchanges: true
+  
+  # Paper trading settings
+  paper:
+    initial_balance: 10000
+    realistic_slippage: true
+    realistic_latency: true
+    fill_probability: 0.95

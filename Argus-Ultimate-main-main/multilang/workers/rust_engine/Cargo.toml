@@ -1,0 +1,19 @@
+[package]
+name = "rust_engine"
+version = "0.2.0"
+edition = "2021"
+description = "ARGUS high-performance LOB hot-path engine — order book, alpha signals, correlation, VaR, Kelly, z-score"
+
+[[bin]]
+name = "rust_engine"
+path = "src/main.rs"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"

@@ -1,0 +1,119 @@
+{
+  "timestamp": "2026-04-12T12:26:40.693001+00:00",
+  "total_elapsed_s": 410.2,
+  "gpu": true,
+  "results": [
+    {
+      "name": "XGBoost Regime Classifier",
+      "status": "OK",
+      "path": "models/regime_xgb.pkl",
+      "metric": "samples",
+      "value": 84,
+      "elapsed": "2.6s"
+    },
+    {
+      "name": "Volatility Forecaster v2",
+      "status": "OK",
+      "path": "models/vol_forecaster_v2.pkl",
+      "metric": "observations",
+      "value": 10080,
+      "elapsed": "0.0s"
+    },
+    {
+      "name": "HMM Regime Detector",
+      "status": "OK",
+      "path": "models/hmm_regime.pkl",
+      "metric": "states",
+      "value": 4,
+      "elapsed": "0.0s"
+    },
+    {
+      "name": "Signal Stacker",
+      "status": "OK",
+      "path": "models/signal_stacker.pkl",
+      "metric": "signals",
+      "value": 5,
+      "elapsed": "0.0s"
+    },
+    {
+      "name": "Orderbook Predictor",
+      "status": "FAIL: cannot pickle '_thread.lock' object",
+      "path": "",
+      "metric": "",
+      "value": "",
+      "elapsed": "0.3s"
+    },
+    {
+      "name": "Feature Importance",
+      "status": "OK",
+      "path": "models/feature_importance.json",
+      "metric": "top_feature",
+      "value": "ret_1h",
+      "elapsed": "0.5s"
+    },
+    {
+      "name": "Transformer Price Predictor",
+      "status": "FAIL: Can't get local object '_build_transformer.<locals>._PriceTransformer'",
+      "path": "",
+      "metric": "",
+      "value": "",
+      "elapsed": "403.3s"
+    },
+    {
+      "name": "Regime Predictor",
+      "status": "FAIL: Can't get local object 'RegimePredictor.__init__.<locals>.<lambda>'",
+      "path": "",
+      "metric": "",
+      "value": "",
+      "elapsed": "0.0s"
+    },
+    {
+      "name": "Strategy Generator",
+      "status": "OK",
+      "path": "data/generated_strategies.json",
+      "metric": "promoted",
+      "value": 4,
+      "elapsed": "0.0s"
+    },
+    {
+      "name": "Kelly Position Sizer",
+      "status": "OK",
+      "path": "data/kelly_outcomes_trained.db",
+      "metric": "strategies",
+      "value": 4,
+      "elapsed": "0.1s"
+    },
+    {
+      "name": "Regime Forecaster",
+      "status": "OK",
+      "path": "data/regime_forecasts_trained.db",
+      "metric": "transitions",
+      "value": 200,
+      "elapsed": "1.7s"
+    },
+    {
+      "name": "Confidence Calibrator",
+      "status": "OK",
+      "path": "data/confidence_calibration_trained.db",
+      "metric": "models_calibrated",
+      "value": 4,
+      "elapsed": "1.5s"
+    },
+    {
+      "name": "Strategy Breeder",
+      "status": "OK",
+      "path": "data/strategy_breeding_trained.db",
+      "metric": "seed_strategies",
+      "value": 5,
+      "elapsed": "0.1s"
+    },
+    {
+      "name": "Cross-Session Memory",
+      "status": "OK",
+      "path": "data/cross_session_memory_trained.db",
+      "metric": "insights",
+      "value": 10,
+      "elapsed": "0.0s"
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "generated_at": "2026-03-06T16:37:25.512430+00:00",
+  "status": "PASS",
+  "bundle_path": "F:\\Argus-Ultimate-main\\deploy\\r720_bundle\\20260307_033725_r720-default",
+  "steps": [
+    {
+      "command": [
+        "C:\\Python314\\python.exe",
+        "main.py",
+        "validate",
+        "--config",
+        "F:\\Argus-Ultimate-main\\unified_config.yaml",
+        "--profile",
+        "prebuild"
+      ],
+      "returncode": 0,
+      "ok": true,
+      "stdout_tail": "2026-03-07 03:37:25,083 - ArgusUltimate - INFO - ARGUS RUN ID: 6dbc9bbb\n2026-03-07 03:37:25,083 - ArgusUltimate - INFO - Argus Ultimate Production System - Command: validate\n2026-03-07 03:37:25,084 - ArgusUltimate - INFO - Running strict configuration validation\n2026-03-07 03:37:25,146 - ArgusUltimate - INFO - Config valid: F:\\Argus-Ultimate-main\\unified_config.yaml + profile F:\\Argus-Ultimate-main\\config\\profiles\\prebuild.yaml\n2026-03-07 03:37:25,146 - ArgusUltimate - INFO - Validation passed",
+      "stderr_tail": "",
+      "step_id": "validate"
+    },
+    {
+      "command": [
+        "C:\\Python314\\python.exe",
+        "scripts/r720_prepare_bundle.py",
+        "--manifest",
+        "F:\\Argus-Ultimate-main\\docs\\hardware\\R720_PREBUILD_MANIFEST.yaml",
+        "--output-root",
+        "F:\\Argus-Ultimate-main\\deploy\\r720_bundle"
+      ],
+      "returncode": 0,
+      "ok": true,
+      "stdout_tail": "F:\\Argus-Ultimate-main\\deploy\\r720_bundle\\20260307_033725_r720-default",
+      "stderr_tail": "",
+      "step_id": "bundle_build",
+      "bundle_path": "F:\\Argus-Ultimate-main\\deploy\\r720_bundle\\20260307_033725_r720-default"
+    },
+    {
+      "command": [
+        "C:\\Python314\\python.exe",
+        "scripts/r720_bundle_check.py",
+        "--bundle",
+        "F:\\Argus-Ultimate-main\\deploy\\r720_bundle\\20260307_033725_r720-default",
+        "--output",
+        "F:\\Argus-Ultimate-main\\reports\\infra\\r720_bundle_check_latest.json"
+      ],
+      "returncode": 0,
+      "ok": true,
+      "stdout_tail": "PASS\nF:\\Argus-Ultimate-main\\reports\\infra\\r720_bundle_check_latest.json",
+      "stderr_tail": "",
+      "step_id": "bundle_check"
+    },
+    {
+      "command": [
+        "C:\\Python314\\python.exe",
+        "scripts/institutional_readiness_check.py",
+        "--config",
+        "F:\\Argus-Ultimate-main\\unified_config.yaml",
+        "--manifest",
+        "docs/institutional/evidence_manifest.json",
+        "--output",
+        "reports/institutional_readiness_latest.json",
+        "--allow-manual-unverified",
+        "--skip-pre-live",
+        "--profile",
+        "prebuild"
+      ],
+      "returncode": 0,
+      "ok": true,
+      "stdout_tail": "PASS [required_artifact] GOV-001: ok: docs/institutional/artifacts/governance/compliance_program.md\nPASS [required_artifact] RISK-001: ok: docs/institutional/artifacts/risk/limit_hierarchy.yaml\nPASS [required_artifact] OPS-001: ok: docs/institutional/artifacts/operations/incident_response_runbook.md\nPASS [required_artifact] SEC-001: ok: docs/institutional/artifacts/security/access_control_policy.md\nPASS [required_artifact] MODEL-001: ok: docs/institutional/artifacts/model/validation_policy.md\nPASS [report] REPORT-001: ok: reports/soak_gate_latest.json\nPASS [report] REPORT-002: ok: reports/walk_forward_latest.json\nPASS [manual_attestation] LEGAL-001: manual attestation check skipped: docs/institutional/artifacts/governance/legal_attestation.md\nPASS [manual_attestation] AUDIT-001: manual attestation check skipped: docs/institutional/artifacts/reports/monthly_controls_attestation.md\nReadiness: PASS (9/9)\nReport: F:\\Argus-Ultimate-main\\reports\\institutional_readiness_latest.json",
+      "stderr_tail": "",
+      "step_id": "institutional_readiness_soft"
+    }
+  ]
+}

@@ -1,0 +1,975 @@
+# =============================================================================
+# ARGUS R740 Infrastructure Stack
+# Dell PowerEdge R740 — 192GB DDR4 ECC RAM, 2x Xeon Gold 6248 (40c/80t)
+# Deploy: docker compose -f docker-compose.r740.yml up -d
+# =============================================================================
+#
+# HARDWARE STORAGE TOPOLOGY (as configured for this build):
+#   /        → BOSS card  (2x M.2 240GB RAID1)  — Ubuntu OS only
+#   /mnt/nvme → NVMe U.2  (2x 1.6TB RAID1)       — hot data (DB/Redis/Kafka)
+#   /mnt/sata → SATA bulk (RAID10 or JBOD)       — logs/backups/cold archive
+#
+# Service → storage tier mapping:
+#   TIER 1 (NVMe RAID1)         TIER 2 (SATA bulk)
+#   ─────────────────────       ─────────────────────
+#   timescaledb  (hypertables)  loki (log archive)
+#   redis        (state)        kafka logs (archived segments)
+#   kafka        (active segs)  prometheus (long-term TSDB)
+#   zookeeper    (coordination) minio (artifact bucket)
+#   pgbouncer    (sockets)      mlflow (backend store)
+#                               grafana dashboards
+#                               portainer / uptime-kuma / registry
+#
+# Services and RAM allocation:
+#   timescaledb    32 GB  — tick history, trades, audit trail, journal  [NVMe]
+#   redis          16 GB  — real-time state (regimes, positions, signals) [NVMe]
+#   kafka           8 GB  — event streaming (ticks, signals, orders, fills) [NVMe]
+#   zookeeper       2 GB  — kafka coordination                             [NVMe]
+#   prometheus      4 GB  — metrics scrape + storage (90d retention)       [SATA]
+#   grafana         2 GB  — dashboards (reads prometheus + timescaledb)    [SATA]
+#   loki            8 GB  — log aggregation                                [SATA]
+#   promtail        1 GB  — log shipper (reads ARGUS log files)
+#   caddy           1 GB  — reverse proxy + TLS for all UIs
+#   pgadmin         1 GB  — TimescaleDB web UI (optional, disable in prod)
+#   redis-insight   1 GB  — Redis web UI (optional, disable in prod)
+#   pgbouncer      512 MB — connection pooler for TimescaleDB              [NVMe]
+#   ollama         64 GB  — LLM inference (Llama 70B Q4)                   [NVMe]
+#   jupyter         4 GB  — analysis notebooks                             [SATA]
+#   minio           2 GB  — S3-compatible artifact storage                 [SATA]
+#   portainer       512 MB — Docker management UI                          [SATA]
+#   uptime-kuma     512 MB — uptime monitoring                             [SATA]
+#   cadvisor        512 MB — container metrics
+#   watchtower      256 MB — auto-update containers
+#   mlflow          2 GB  — ML experiment tracking                         [SATA]
+#   registry        512 MB — local Docker registry                         [SATA]
+#                  ------
+#   Total         ~152 GB → 40 GB headroom for OS + page cache
+#
+# Network: all services on argus-infra bridge. ARGUS workstation connects via
+#          25GbE using R740's IP, ports exposed on 0.0.0.0 for LAN access only.
+#          Set ARGUS_NVME_MOUNT (default /mnt/nvme) and ARGUS_SATA_MOUNT
+#          (default /mnt/sata) in .env to override paths.
+# =============================================================================
+
+version: "3.9"
+
+networks:
+  argus-infra:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
+# =============================================================================
+# VOLUMES — split across NVMe RAID1 (hot) and SATA bulk (warm/cold)
+# =============================================================================
+# Override the mount points by setting environment variables in .env:
+#   ARGUS_NVME_MOUNT=/mnt/nvme    (NVMe U.2 RAID1 — TimescaleDB, Redis, Kafka)
+#   ARGUS_SATA_MOUNT=/mnt/sata    (SATA bulk — logs, archives, artifacts)
+# =============================================================================
+volumes:
+  # ── TIER 1: NVMe RAID1 (hot data — 2x 1.6TB U.2 mirrored) ─────────────────
+  timescaledb_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${ARGUS_NVME_MOUNT:-/mnt/nvme}/argus/timescaledb
+  redis_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${ARGUS_NVME_MOUNT:-/mnt/nvme}/argus/redis
+  kafka_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${ARGUS_NVME_MOUNT:-/mnt/nvme}/argus/kafka
+  zookeeper_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${ARGUS_NVME_MOUNT:-/mnt/nvme}/argus/zookeeper
+  ollama_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${ARGUS_NVME_MOUNT:-/mnt/nvme}/argus/ollama
+
+  # ── TIER 2: SATA bulk (warm/cold — logs, archives, dashboards) ────────────
+  prometheus_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${ARGUS_SATA_MOUNT:-/mnt/sata}/argus/prometheus
+  grafana_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${ARGUS_SATA_MOUNT:-/mnt/sata}/argus/grafana
+  loki_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${ARGUS_SATA_MOUNT:-/mnt/sata}/argus/loki
+  minio_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${ARGUS_SATA_MOUNT:-/mnt/sata}/argus/minio
+  mlflow_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${ARGUS_SATA_MOUNT:-/mnt/sata}/argus/mlflow
+  jupyter_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${ARGUS_SATA_MOUNT:-/mnt/sata}/argus/jupyter
+  portainer_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${ARGUS_SATA_MOUNT:-/mnt/sata}/argus/portainer
+  uptime_kuma_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${ARGUS_SATA_MOUNT:-/mnt/sata}/argus/uptime-kuma
+  registry_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${ARGUS_SATA_MOUNT:-/mnt/sata}/argus/registry
+
+  # ── TIER 3: managed by Docker on BOSS (small config/cert storage) ─────────
+  caddy_data:
+    driver: local
+  caddy_config:
+    driver: local
+
+services:
+
+  # ===========================================================================
+  # TimescaleDB — primary time-series database
+  # Replaces all SQLite in: tick_capture, trade_ledger, audit_trail, trade_journal
+  # ===========================================================================
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: argus-timescaledb
+    restart: unless-stopped
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.10
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: argus
+      POSTGRES_USER: argus
+      POSTGRES_PASSWORD: ${TIMESCALEDB_PASSWORD:-argus_changeme}
+      # Performance tuning for 32GB allocation
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+      - ./infra/timescaledb_schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./infra/timescaledb_tuning.conf:/etc/postgresql/conf.d/argus.conf:ro
+    command: >
+      postgres
+        -c shared_buffers=8GB
+        -c effective_cache_size=24GB
+        -c maintenance_work_mem=2GB
+        -c checkpoint_completion_target=0.9
+        -c wal_buffers=64MB
+        -c default_statistics_target=100
+        -c random_page_cost=1.1
+        -c effective_io_concurrency=200
+        -c work_mem=52428kB
+        -c max_worker_processes=12
+        -c max_parallel_workers_per_gather=6
+        -c max_parallel_workers=12
+        -c max_parallel_maintenance_workers=4
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U argus -d argus"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 32G
+
+  # ===========================================================================
+  # Redis — real-time state store
+  # Replaces in-memory dicts in: regime_store, position_registry
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: argus-redis
+    restart: unless-stopped
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.11
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+        --maxmemory 16gb
+        --maxmemory-policy allkeys-lru
+        --save 900 1
+        --save 300 10
+        --save 60 10000
+        --appendonly yes
+        --appendfsync everysec
+        --requirepass ${REDIS_PASSWORD:-redis_changeme}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_changeme}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 16G
+
+  # ===========================================================================
+  # Zookeeper — Kafka coordination
+  # ===========================================================================
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: argus-zookeeper
+    restart: unless-stopped
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.12
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_HEAP_OPTS: "-Xmx2G -Xms2G"
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 | grep imok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
+  # ===========================================================================
+  # Kafka — event streaming
+  # Topics: argus.ticks, argus.signals, argus.orders, argus.fills, argus.risk
+  # ===========================================================================
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: argus-kafka
+    restart: unless-stopped
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.13
+    ports:
+      - "9092:9092"       # internal (docker)
+      - "9093:9093"       # external (workstation 25GbE)
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://${R740_IP:-192.168.1.100}:9093
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 168          # 7 days
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824      # 1 GB
+      KAFKA_LOG_RETENTION_BYTES: 107374182400  # 100 GB total
+      KAFKA_NUM_PARTITIONS: 4
+      KAFKA_HEAP_OPTS: "-Xmx8G -Xms4G"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+
+  # ===========================================================================
+  # Kafka topic initialisation (runs once, creates all ARGUS topics)
+  # ===========================================================================
+  kafka-init:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: argus-kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - argus-infra
+    entrypoint: ["/bin/bash", "-c"]
+    command: |
+      "
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic argus.ticks      --partitions 4 --replication-factor 1 --config retention.ms=86400000
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic argus.signals    --partitions 2 --replication-factor 1 --config retention.ms=86400000
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic argus.orders     --partitions 2 --replication-factor 1 --config retention.ms=604800000
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic argus.fills      --partitions 2 --replication-factor 1 --config retention.ms=604800000
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic argus.risk       --partitions 1 --replication-factor 1 --config retention.ms=604800000
+      kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic argus.audit      --partitions 1 --replication-factor 1 --config retention.ms=-1
+      echo 'Kafka topics created.'
+      "
+    restart: on-failure
+
+  # ===========================================================================
+  # Prometheus — metrics collection
+  # Scrapes: ARGUS health_server (:8765/metrics), TimescaleDB, Redis, Kafka
+  # ===========================================================================
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    container_name: argus-prometheus
+    restart: unless-stopped
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.14
+    ports:
+      - "9090:9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=90d"
+      - "--storage.tsdb.retention.size=50GB"
+      - "--web.enable-lifecycle"
+      - "--web.enable-admin-api"
+    volumes:
+      - prometheus_data:/prometheus
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./infra/prometheus/rules:/etc/prometheus/rules:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9090/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+
+  # ===========================================================================
+  # Grafana — dashboards
+  # Pre-provisioned: ARGUS performance dashboard, system metrics, P&L charts
+  # ===========================================================================
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: argus-grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+      - timescaledb
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.15
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: argus
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-grafana_changeme}
+      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-piechart-panel,grafana-worldmap-panel
+      GF_FEATURE_TOGGLES_ENABLE: "publicDashboards"
+      GF_UNIFIED_ALERTING_ENABLED: "true"
+      GF_SMTP_ENABLED: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana_dashboard.json:/var/lib/grafana/dashboards/argus_main.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
+  # ===========================================================================
+  # Loki — log aggregation (replaces scattered .log files)
+  # ===========================================================================
+  loki:
+    image: grafana/loki:2.9.8
+    container_name: argus-loki
+    restart: unless-stopped
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.16
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/loki.yml
+    volumes:
+      - loki_data:/loki
+      - ./infra/loki/loki.yml:/etc/loki/loki.yml:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3100/ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+
+  # ===========================================================================
+  # Promtail — ships ARGUS log files to Loki
+  # Reads: logs/*.log from the ARGUS workstation (via NFS or samba share)
+  # ===========================================================================
+  promtail:
+    image: grafana/promtail:2.9.8
+    container_name: argus-promtail
+    restart: unless-stopped
+    depends_on:
+      - loki
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.17
+    command: -config.file=/etc/promtail/promtail.yml
+    volumes:
+      - ./infra/promtail/promtail.yml:/etc/promtail/promtail.yml:ro
+      - /srv/argus/logs:/var/log/argus:ro    # mount workstation logs here
+      - /var/log:/var/log/host:ro
+    healthcheck:
+      test: ["CMD-SHELL", "promtail -check-syntax -config.file=/etc/promtail/promtail.yml || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  # ===========================================================================
+  # Caddy — reverse proxy with automatic TLS for LAN
+  # Access all services via: https://r740.local/{grafana,prometheus,pgadmin,...}
+  # ===========================================================================
+  caddy:
+    image: caddy:2.8-alpine
+    container_name: argus-caddy
+    restart: unless-stopped
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.18
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:80 || exit 0"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  # ===========================================================================
+  # pgAdmin — TimescaleDB web UI (development only, disable in production)
+  # ===========================================================================
+  pgadmin:
+    image: dpage/pgadmin4:8.6
+    container_name: argus-pgadmin
+    restart: unless-stopped
+    profiles: ["dev"]     # only starts with: docker compose --profile dev up
+    depends_on:
+      - timescaledb
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.19
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@argus.local
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-pgadmin_changeme}
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  # ===========================================================================
+  # RedisInsight — Redis web UI (development only)
+  # ===========================================================================
+  redis-insight:
+    image: redislabs/redisinsight:2.50
+    container_name: argus-redis-insight
+    restart: unless-stopped
+    profiles: ["dev"]
+    depends_on:
+      - redis
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.20
+    ports:
+      - "5540:5540"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  # ===========================================================================
+  # Postgres Exporter — exposes TimescaleDB metrics to Prometheus
+  # ===========================================================================
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: argus-postgres-exporter
+    restart: unless-stopped
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.21
+    environment:
+      DATA_SOURCE_NAME: "postgresql://argus:${TIMESCALEDB_PASSWORD:-argus_changeme}@timescaledb:5432/argus?sslmode=disable"
+    ports:
+      - "9187:9187"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9187/metrics > /dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # ===========================================================================
+  # Redis Exporter — exposes Redis metrics to Prometheus
+  # ===========================================================================
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.61.0
+    container_name: argus-redis-exporter
+    restart: unless-stopped
+    depends_on:
+      - redis
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.22
+    environment:
+      REDIS_ADDR: redis://redis:6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_changeme}
+    ports:
+      - "9121:9121"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9121/metrics > /dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  # ===========================================================================
+  # Node Exporter — R740 hardware metrics (CPU, RAM, disk, network)
+  # ===========================================================================
+  node-exporter:
+    image: prom/node-exporter:v1.8.0
+    container_name: argus-node-exporter
+    restart: unless-stopped
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.23
+    ports:
+      - "9100:9100"
+    command:
+      - "--path.rootfs=/host"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    volumes:
+      - /:/host:ro,rslave
+    pid: host
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9100/metrics > /dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # ===========================================================================
+  # AlertManager — alert routing and notification dispatch
+  # Routes Prometheus alerts to Discord, Slack, PagerDuty, and email
+  # ===========================================================================
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: argus-alertmanager
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.24
+    ports:
+      - "9093:9093"
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    volumes:
+      - ./infra/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    environment:
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
+      ARGUS_SLACK_WEBHOOK: ${ARGUS_SLACK_WEBHOOK:-}
+      ARGUS_PAGERDUTY_KEY: ${ARGUS_PAGERDUTY_KEY:-}
+      ARGUS_SMTP_HOST: ${ARGUS_SMTP_HOST:-localhost}
+      ARGUS_SMTP_PORT: ${ARGUS_SMTP_PORT:-587}
+      ARGUS_SMTP_FROM: ${ARGUS_SMTP_FROM:-argus@localhost}
+      ARGUS_SMTP_USER: ${ARGUS_SMTP_USER:-}
+      ARGUS_SMTP_PASS: ${ARGUS_SMTP_PASS:-}
+      ARGUS_SMTP_TO: ${ARGUS_SMTP_TO:-}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:9093/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # ===========================================================================
+  # PgBouncer — connection pooler for TimescaleDB
+  # ===========================================================================
+  pgbouncer:
+    image: edoburu/pgbouncer:1.22.0
+    container_name: argus-pgbouncer
+    restart: unless-stopped
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.25
+    ports:
+      - "6432:6432"
+    environment:
+      DATABASE_URL: "postgresql://argus:${TIMESCALEDB_PASSWORD:-argus_changeme}@timescaledb:5432/argus"
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: "200"
+      DEFAULT_POOL_SIZE: "25"
+      MIN_POOL_SIZE: "5"
+      RESERVE_POOL_SIZE: "5"
+      SERVER_RESET_QUERY: "DISCARD ALL"
+      AUTH_TYPE: scram-sha-256
+    volumes:
+      - ./infra/pgbouncer/pgbouncer.ini:/etc/pgbouncer/pgbouncer.ini:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 6432 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # ===========================================================================
+  # Ollama — local LLM inference server
+  # ===========================================================================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: argus-ollama
+    restart: unless-stopped
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.26
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      OLLAMA_HOST: "0.0.0.0"
+      OLLAMA_NUM_PARALLEL: "4"
+      OLLAMA_MAX_LOADED_MODELS: "2"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:11434/api/tags > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 64G
+
+  # ===========================================================================
+  # Jupyter — analysis notebook server
+  # ===========================================================================
+  jupyter:
+    image: jupyter/scipy-notebook:latest
+    container_name: argus-jupyter
+    restart: unless-stopped
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.27
+    ports:
+      - "8888:8888"
+    environment:
+      JUPYTER_ENABLE_LAB: "yes"
+      JUPYTER_TOKEN: "${JUPYTER_TOKEN:-argus_jupyter_changeme}"
+      NB_UID: 1000
+      NB_GID: 100
+    volumes:
+      - jupyter_data:/home/jovyan/work
+      - /srv/argus:/workspace:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8888/api/status > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+
+  # ===========================================================================
+  # MinIO — S3-compatible artifact storage
+  # ===========================================================================
+  minio:
+    image: minio/minio:latest
+    container_name: argus-minio
+    restart: unless-stopped
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.28
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: "${MINIO_ROOT_USER:-argus}"
+      MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD:-minio_changeme}"
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "mc ready local || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
+  # MinIO bucket initialization (creates argus-artifacts bucket)
+  minio-init:
+    image: minio/mc:latest
+    container_name: argus-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks:
+      - argus-infra
+    entrypoint: ["/bin/sh", "-c"]
+    command: |
+      "
+      mc alias set argus http://minio:9000 $${MINIO_ROOT_USER:-argus} $${MINIO_ROOT_PASSWORD:-minio_changeme}
+      mc mb --ignore-existing argus/argus-artifacts
+      mc mb --ignore-existing argus/mlflow-artifacts
+      echo 'MinIO buckets created.'
+      "
+    restart: on-failure
+
+  # ===========================================================================
+  # Portainer CE — Docker management UI
+  # ===========================================================================
+  portainer:
+    image: portainer/portainer-ce:2.20.3-alpine
+    container_name: argus-portainer
+    restart: unless-stopped
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.29
+    ports:
+      - "9443:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- --no-check-certificate https://localhost:9443/api/status > /dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # ===========================================================================
+  # Uptime Kuma — uptime monitoring
+  # ===========================================================================
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: argus-uptime-kuma
+    restart: unless-stopped
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.30
+    ports:
+      - "3001:3001"
+    volumes:
+      - uptime_kuma_data:/app/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:3001/api/entry || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # ===========================================================================
+  # cAdvisor — container resource monitoring
+  # ===========================================================================
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: argus-cadvisor
+    restart: unless-stopped
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.31
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # ===========================================================================
+  # Watchtower — auto-update containers every 6 hours
+  # ===========================================================================
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: argus-watchtower
+    restart: unless-stopped
+    networks:
+      - argus-infra
+    environment:
+      WATCHTOWER_POLL_INTERVAL: "21600"  # 6 hours in seconds
+      WATCHTOWER_CLEANUP: "true"
+      WATCHTOWER_INCLUDE_STOPPED: "false"
+      WATCHTOWER_LABEL_ENABLE: "false"
+      WATCHTOWER_NOTIFICATIONS: "shoutrrr"
+      WATCHTOWER_NOTIFICATION_URL: "${DISCORD_WEBHOOK_URL:-}"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /proc/1/status"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # ===========================================================================
+  # MLflow — ML experiment tracking server
+  # ===========================================================================
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.12.2
+    container_name: argus-mlflow
+    restart: unless-stopped
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.32
+    ports:
+      - "5000:5000"
+    environment:
+      MLFLOW_BACKEND_STORE_URI: "postgresql://argus:${TIMESCALEDB_PASSWORD:-argus_changeme}@timescaledb:5432/argus"
+      MLFLOW_DEFAULT_ARTIFACT_ROOT: "s3://mlflow-artifacts"
+      AWS_ACCESS_KEY_ID: "${MINIO_ROOT_USER:-argus}"
+      AWS_SECRET_ACCESS_KEY: "${MINIO_ROOT_PASSWORD:-minio_changeme}"
+      MLFLOW_S3_ENDPOINT_URL: "http://minio:9000"
+    command: >
+      mlflow server
+        --host 0.0.0.0
+        --port 5000
+        --backend-store-uri postgresql://argus:${TIMESCALEDB_PASSWORD:-argus_changeme}@timescaledb:5432/argus
+        --default-artifact-root s3://mlflow-artifacts
+        --serve-artifacts
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:5000/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
+  # ===========================================================================
+  # Local Docker Registry — private image storage
+  # ===========================================================================
+  registry:
+    image: registry:2
+    container_name: argus-registry
+    restart: unless-stopped
+    networks:
+      argus-infra:
+        ipv4_address: 172.20.0.33
+    ports:
+      - "5555:5000"
+    environment:
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
+    volumes:
+      - registry_data:/var/lib/registry
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:5000/v2/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M

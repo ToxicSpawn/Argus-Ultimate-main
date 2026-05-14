@@ -1,0 +1,3373 @@
+# MIGRATION NOTICE:
+# This file is now a legacy compatibility source.
+# Live-authoritative runtime configuration must come from:
+#   - config/constitution/*.yaml
+#   - config/runtime/*.yaml
+#   - config/exchange/*.yaml
+#   - config/strategy/*.yaml
+#
+# Do not add new live runtime policy here.
+
+# ARGUS ULTIMATE + KRAKEN DCA + PINNACLE AI - UNIFIED CONFIGURATION (ABSOLUTE PINNACLE)
+# Run profile: 2 switches (MLAG active-active), $1,000.00 AUD starting capital
+# Pinnacle = strategy_whitelist (positive-edge only) + edge-cost gate + disabled losers + regime filter
+# config_version: for future config migrations (increment when breaking schema changes)
+config_version: 1
+
+# Constitution config
+constitution:
+  profile: "paper"
+  version: "1.0.0"
+  description: "Paper trading configuration - Sydney, NSW Australia"
+
+# Timezone and location
+timezone: "Australia/Sydney"
+location:
+  city: "Sydney"
+  state: "NSW"
+  country: "AU"
+  timezone: "Australia/Sydney"
+
+# ============================================================================
+# RUN TEMPLATE - TARGET HARDWARE THE BOT RUNS ON (canonical spec)
+# ============================================================================
+# This is the hardware template the bot is configured for. All performance
+# targets, GPU/CPU/RAM settings, and network topology assume this stack.
+run_template:
+  # Host PC
+  cpu: "Intel Core Ultra 9 285K"           # Arrow Lake, 8P+16E cores
+  motherboard: "Gigabyte Z890 AORUS ELITE WIFI7"
+  ram: "G.Skill Trident Z5 RGB 64GB (2x32GB) PC5-51200 (6400MHz) DDR5"
+  gpu: "MSI GeForce RTX 5080 16G GAMING TRIO OC"
+  gpu_specs:
+    boost_mhz: 2700
+    memory: "16GB GDDR7 (30Gbps)"
+    bus: "256-bit, PCI-E 5.0 x16"
+    display: "3x DisplayPort 2.1b, 1x HDMI 2.1b"
+    features: ["DLSS 4", "Metal Backplate", "Tri FROZR 4 Thermal Design"]
+
+  # Network: 2 switches (MLAG active-active) + Solarflare XtremeScale 10GbE NIC
+  switches: 2
+  switch_topology: "mlag_active_active"   # 20Gbps aggregate, mission-critical redundancy
+  nic: "Solarflare XtremeScale SFN8522-PLUS Dual Port 10GbE PCI-E Server Adapter FH"  # dual port; network_10gbe uses Port1/Port2
+
+# ============================================================================
+# CAPITAL SETTINGS - START WITH $1K AUD (deploy more capital per trade as balance grows)
+# ============================================================================
+capital:
+  starting_capital_aud: 1000.0     # Start bot with 1,000 AUD (paper and live)
+  currency: "AUD"
+  min_position_size_aud: 15.0       # Minimum $15 to reduce fee drag on tiny trades
+  max_position_size_aud: 180.0      # Per-trade cap; binding limit is max_total_exposure_pct
+  max_position_pct: 0.35           # 35% max single position — room for conviction sizing
+  max_total_exposure_pct: 0.95     # 95% — near full deployment (validator caps at 1.0)
+
+  # Optional: max concurrent positions (capital optimizer uses this when set)
+  max_concurrent_positions: 5      # 5 concurrent — capture more opportunities across 48 pairs
+
+  # 10GbE Micro-Trading
+  enable_micro_positions: false
+  flash_position_max_aud: 0.0
+
+# ============================================================================
+# FX (AUD base capital ↔ USD quoted pairs)
+# ============================================================================
+fx:
+  # USD per 1 AUD. Used for sizing and accounting when trading USD-quoted pairs.
+  # In production you may want to replace this with a real-time FX feed.
+  aud_to_usd: 0.65
+
+# ============================================================================
+# RISK MANAGEMENT - MAX EARNINGS (improved: avoid shakeouts, let winners run)
+# ============================================================================
+risk:
+  max_daily_loss_pct: 0.25          # 25% max daily loss (paper trading)
+  max_drawdown_pct: 0.10            # 10% max drawdown — tighter protection
+  stop_loss_pct: 0.012             # 1.2% stop — tighter for better R:R
+  take_profit_pct: 0.035            # 3.5% take profit — R:R = 2.92:1 (need only 45% win rate)
+  max_consecutive_losses: 20        # 20 consecutive losses before tightening
+  max_error_rate: 0.25              # 25% error rate triggers shutdown (was 5% — too sensitive)
+
+  # 10GbE Speed Optimizations (DEPRECATED — not yet implemented in trading loop)
+  enable_latency_based_stops: false  # NOT IMPLEMENTED — placeholder for future latency-aware stops
+  position_scaling_speed: "fast"     # Faster position adjustments
+  enable_dynamic_sizing: false       # NOT IMPLEMENTED — placeholder for future latency-aware sizing
+
+  # Position sizing (replaces placeholders above — now ACTUALLY IMPLEMENTED)
+  position_sizing:
+    # Method: fixed | atr_based | kelly | risk_parity (falls back to fixed if unavailable)
+    method: "atr_based"
+
+    # ATR-based sizing: position = (risk_amount) / (atr_multiplier * atr)
+    # atr_multiplier acts as stop-loss buffer in ATR units
+    atr_multiplier: 2.0                    # 2x ATR stop distance (more stable than fixed %)
+    atr_period: 14                         # ATR lookback period (standard: 14)
+    atr_lookback_type: "ema"               # ema | sma — smoother signals use EMA
+    use_adaptive_atr: true                  # Scale ATR multiplier based on volatility regime
+    atr_vol_scale_floor: 1.5                # Min ATR mult in high vol (was 2.0)
+    atr_vol_scale_ceiling: 3.0              # Max ATR mult in low vol (was 3.0)
+
+    # Kelly Criterion sizing (when method=kelly)
+    kelly_fraction: 0.25                    # Fraction of full Kelly (half-Kelly = 0.5; 0.25 for crypto)
+    kelly_min_trades: 20                    # Min trades before computing Kelly (avoid early overfitting)
+    kelly_max_position_pct: 0.25           # Cap Kelly-derived position at 25% of capital
+    kelly_bootstrap_samples: 1000           # Bootstrap samples for Kelly confidence
+    kelly_confidence_level: 0.90            # Use lower-confidence Kelly if True
+    kelly_use_ema: true                     # Use EMA of win rate for more stable Kelly
+
+    # Volatility cone: scale positions based on current vol vs historical range
+    use_volatility_cone: true
+    vol_cone_window: 252                    # Annualized vol lookback (252 trading days)
+    vol_cone_high_pct: 0.90                 # Scale DOWN when vol > 90th percentile of history
+    vol_cone_low_pct: 0.10                   # Scale UP when vol < 10th percentile of history
+    vol_cone_high_scale: 0.5                 # Reduce size by 50% at high vol
+    vol_cone_low_scale: 1.5                 # Increase size by 50% at low vol
+    vol_cone_min_scale: 0.3                 # Never go below 30% of base size
+    vol_cone_max_scale: 2.0                 # Never exceed 200% of base size
+
+    # Correlation-aware sizing: reduce combined size when positions are correlated (e.g. BTC/ETH)
+    use_correlation_aware_sizing: true      # Correlation matrix fed from quant_fund each cycle; benefits multi-position risk
+    max_correlated_exposure: 0.6            # Scale down smaller weight when correlation > this (0.6 = 60%)
+
+  # Entry thresholds: multi-factor scoring with momentum, volume, regime confirmation
+  entry_thresholds:
+    # Multi-factor scoring: trade requires MIN_SCORE across all factors
+    min_entry_score: 0.60                   # Weighted score across factors must exceed this (0-1)
+    use_multi_factor_scoring: true
+
+    # Factor 1: Signal confidence (from strategy)
+    confidence_weight: 0.30
+    min_confidence: 0.25                    # Minimum confidence from signal source
+
+    # Factor 2: Trend/momentum confirmation
+    momentum_weight: 0.25
+    require_momentum_confirmation: true    # Price should be moving in signal direction
+    momentum_lookback_bars: 5               # Bars to check for momentum
+    momentum_min_strength_pct: 0.30         # Min momentum score (0.3 = 30% of bar direction)
+
+    # Factor 3: Volume confirmation
+    volume_weight: 0.20
+    require_volume_confirmation: true      # Volume should support the move
+    volume_lookback_bars: 5
+    volume_min_ratio: 1.2                   # Current vol / avg vol must exceed this
+
+    # Factor 4: Edge-cost gate
+    edge_weight: 0.25
+    edge_gate_min_edge_pct: 0.50            # Min edge after fees/slippage (paper)
+    edge_gate_live_edge_pct: 0.65           # Stricter in live
+
+    # Factor 5: Regime alignment
+    regime_weight: 0.15
+    require_regime_alignment: true          # Strategy must be favored in current regime
+    regime_confidence_min: 0.55            # Min regime detector confidence
+
+    # Factor 6: Time-of-day filter
+    time_weight: 0.10
+    skip_off_hours: true                    # Reduce exposure outside high-liquidity hours
+    off_hours_pct: 0.50                    # Scale positions to 50% during off-hours
+    off_hours_start_utc: 2                 # Start of off-hours (UTC)
+    off_hours_end_utc: 8                   # End of off-hours (UTC)
+
+    # Factor 7: Spread/slippage filter
+    spread_weight: 0.10
+    max_entry_spread_bps: 15.0              # Reject if bid-ask spread > 15 bps
+    max_entry_slippage_pct: 0.003          # Reject if expected slippage > 0.3%
+
+  # Risk limits: risk-of-ruin, drawdown scaling, streak escalation, PnL circuits
+  risk_limits:
+    # Drawdown-based position scaling (reduce size as drawdown increases)
+    use_drawdown_scaling: true
+    dd_scale_floor: 0.30                    # Never go below 30% of base position
+    dd_scale_ceiling: 0.10                  # Start reducing at 10% drawdown
+    dd_scale_curve: "linear"                # linear | exponential — how aggressively to scale
+
+    # Risk-of-ruin limits
+    risk_of_ruin_limit: 0.02               # Max 2% chance of losing 50% of capital
+    ruin_lookback_trades: 100               # Trades to use for ruin estimate
+    ruin_simulations: 10000                # Monte Carlo paths for ruin estimate
+
+    # Exposure caps (separate from position size)
+    max_daily_new_exposure_pct: 0.50       # Limit new risk added per day (50% of capital)
+    max_weekly_new_exposure_pct: 1.50     # Limit new risk per week (150% of capital)
+    exposure_cool_off_minutes: 30          # After hitting daily cap, wait before adding risk
+
+    # PnL-based circuit breakers (dynamic limits based on recent performance)
+    use_pnl_circuit_breakers: true
+    pnl_circuit_max_loss_pct: 0.20          # Stop adding risk if down 20% in period
+    pnl_circuit_profit_resume_pct: 0.05   # Resume after making back 5% from trough
+    pnl_circuit_period_bars: 100           # Period for PnL circuit (bars)
+
+    # Streak-based risk escalation
+    use_streak_escalation: true
+    streak_escalation_loss_threshold: 3    # Start escalating at 3 consecutive losses
+    streak_escalation_max_factor: 0.25    # Max reduction: never exceed 25% of base (more conservative)
+
+    # ============================================================================
+# ADAPTIVE CONFIG ENGINE - SELF-TUNING PARAMETERS
+# ============================================================================
+# Parameters self-adjust based on live feedback. Adaptation happens within
+# configured bounds so the system never goes off-rails.
+# ============================================================================
+adaptive_config:
+  enabled: true
+  modes: ["paper", "backtest", "live"]
+
+  # Adaptation speed: how fast parameters change (lower = smoother, higher = faster)
+  adaptation_rate: 0.05                  # 5% per update (slow, safe)
+  min_adaptation_interval_cycles: 10     # Min cycles between adaptations
+  max_adaptation_interval_cycles: 100    # Max cycles (prevents too-fast changes)
+
+  # What to adapt
+  adapt_entry_thresholds: true
+  adapt_position_sizing: true
+  adapt_risk_limits: true
+
+  # Adaptation strategy: exponential_moving_average | gradient_descent | bayesian
+  adaptation_strategy: "exponential_moving_average"
+
+  # Bounds checking: never adapt outside these limits
+  bounds:
+    min_entry_score: 0.40
+    max_entry_score: 0.85
+    min_confidence: 0.15
+    max_confidence: 0.75
+    min_position_fraction: 0.05
+    max_position_fraction: 0.40
+    min_atr_multiplier: 1.5
+    max_atr_multiplier: 4.0
+    min_drawdown_limit: 0.05
+    max_drawdown_limit: 0.20
+    min_stop_loss: 0.008
+    max_stop_loss: 0.025
+
+  # Feedback signals used for adaptation
+  feedback_signals:
+    use_sharne: true                     # Adapt based on Sharpe ratio trend
+    use_win_rate: true                   # Adapt based on win rate
+    use_expectancy: true                 # Adapt based on expectancy
+    use_drawdown: true                   # Adapt based on current drawdown
+    use_regime: true                     # Adapt faster in stable regimes
+    use_correlation: false               # Adapt based on position correlation
+
+  # Performance gating: only adapt when signal is strong enough
+  min_feedback_samples: 30               # Min trades before adapting a parameter
+  adaptation_threshold: 0.10             # Parameter must change outcome by 10% to trigger adaptation
+  confidence_threshold: 0.80             # Only adapt when 80%+ confident
+
+  # Adaptation history: remember successful adaptations for similar conditions
+  use_adaptation_memory: true
+  adaptation_memory_size: 100            # Remember last 100 successful adaptations
+  similarity_threshold: 0.70             # Apply remembered adaptation when conditions are 70%+ similar
+
+  # Learning rate decay: slow down adaptation as system matures
+  use_learning_rate_decay: true
+  initial_learning_rate: 0.10            # Start aggressive
+  final_learning_rate: 0.02              # End conservative
+  decay_period_trades: 500               # Decay over 500 trades
+
+  # Regime-aware adaptation: adapt faster in trending, slower in ranging
+  regime_adaptation_multipliers:
+    trending_up: 1.5                     # Adapt 50% faster in uptrend
+    trending_down: 1.2                   # Adapt 20% faster in downtrend
+    ranging: 0.5                         # Adapt 50% slower in range
+    high_volatility: 0.7                 # Adapt 30% slower in high vol
+
+  # Streak-aware: tighten parameters during losing streaks
+  streak_response:
+    enabled: true
+    loss_streak_threshold: 3             # Start responding at 3 losses
+    loss_streak_shrink_rate: 0.15         # Shrink positions by 15% per loss streak
+    win_streak_threshold: 5              # Start expanding at 5 wins
+    win_streak_growth_rate: 0.10          # Grow positions by 10% per win streak
+    max_streak_adjustment: 0.5           # Never adjust more than 50%
+
+  # Equity-sensitive: reduce risk as equity grows (protect profits)
+  equity_scaling:
+    enabled: true
+    scale_up_threshold: 1.20             # Start scaling up when equity > 120% of start
+    scale_up_factor: 1.10               # Scale positions by 1.1x at threshold
+    scale_down_threshold: 0.85            # Start scaling down when equity < 85% of start
+    scale_down_factor: 0.85              # Scale positions by 0.85x below threshold
+    max_scale_factor: 1.50               # Never scale above 1.5x
+    min_scale_factor: 0.50               # Never scale below 0.5x
+
+  # Volatility-aware: tighten in high vol, loosen in low vol
+  volatility_adaptation:
+    enabled: true
+    vol_lookback: 20                      # Recent volatility window
+    vol_high_threshold: 0.03             # 3% daily vol = high
+    vol_low_threshold: 0.01             # 1% daily vol = low
+    high_vol_shrink: 0.75                # Shrink positions 25% in high vol
+    low_vol_grow: 1.25                  # Grow positions 25% in low vol
+    use_volatility_cone: true            # Use cone vs history for scaling
+
+  # Drawdown recovery: gradually restore risk after drawdown
+  recovery_mode:
+    enabled: true
+    recovery_start_dd: 0.05              # Start recovery after 5% drawdown
+    recovery_end_dd: 0.02                # Full risk restored at 2% drawdown
+    recovery_rate: 0.10                  # Restore 10% of lost risk per winning trade
+    max_recovery_fraction: 0.50          # Never recover more than 50% of original risk
+
+  # Adaptation persistence: save learned parameters for next session
+  persist_adaptations: true
+  adaptation_db_path: "data/adaptations.db"
+  adaptation_backup_interval_cycles: 100  # Backup every 100 cycles
+
+  # Emergency override: lock parameters during extreme events
+  emergency_lock:
+    enabled: true
+    lock_on_max_drawdown: true           # Stop adapting when near max drawdown
+    lock_on_consecutive_losses: 5        # Stop adapting during losing streak
+    lock_on_high_vol: true              # Stop adapting during vol spike
+    lock_duration_cycles: 20            # Lock for 20 cycles after event
+  portfolio_var_limit_pct: 0.10            # block new risk when 95% VaR >= 10% of capital (minimum allowed by config validator)
+  portfolio_cvar_limit_pct: 0.08           # block new risk when CVaR (99%) >= 8% of capital
+  portfolio_var_confidence: 0.95
+  portfolio_var_lookback_trades: 50
+  cluster_drawdown_brake_pct: 0.0          # 0 disables; blocks new risk when cluster drawdown exceeds limit
+  target_cluster_cap_pct: 0.40             # cluster risk budget as fraction of equity
+  risk_cluster_map: {}                     # optional map, e.g. {"BTC/USD":"majors","SOL/USD":"alts"}
+  portfolio_vol_target_pct: 2.0            # realized vol target used for exposure scaling
+  portfolio_liquidity_spread_ref_bps: 20.0 # spread reference for liquidity scaling
+  portfolio_exposure_min_scale: 0.30       # floor scale so cap never collapses to zero
+
+  # Circuit breaker & auto-reduce (live + paper): trip on drawdown; reduce size after N losses
+  circuit_breaker_dd_pct: 8.0             # Trip circuit breaker when drawdown >= 8%
+  var_breach_pct: 5.0                      # VaR breach threshold (pct) for circuit breaker
+  var_breach_alert_enabled: true           # Emit rec_event(stage=var_breach_alert) when VaR breach
+  auto_reduce_after_n_losses: 3            # After N consecutive losses, reduce position size
+  auto_reduce_factor: 0.6                  # Size multiplier when auto-reduce active (0.6 = 60%)
+
+  # Emergency shutdown: extra conditions (doc §8: use all risk levers)
+  emergency_shutdown:
+    enabled: true
+    latency_spike_ms: 600000   # trip if cycle took > 600s (10 min — 48 pairs need time for OHLCV cache warmup)
+    flash_crash_pct: 15.0      # trip if any symbol moved > 15% in one cycle
+    network_fail: true         # trip when exchange unreachable (set by data layer)
+    arb_spread_bps: 500        # trip if spread > 500 bps (optional)
+
+# Runtime safety controls for soak stability.
+runtime_safety:
+  latency_grace_cycles: 2
+  live_safe_disable_pinnacle_ai_brain: false
+
+  # Canonical market-data polling controls.
+  market_data:
+    ohlcv_cache_seconds: 120
+    ohlcv_poll_interval_seconds: 60
+  ohlcv_retry_attempts: 2
+  # Historical OHLCV pre-loading for evolver/scanner
+  enable_historical_preload: true
+  historical_lookback_hours: 4380     # 6 months of hourly candles
+  historical_timeframe: "1h"
+  historical_cache_dir: "data/historical"
+
+# ============================================================================
+# EXCHANGE SETTINGS
+# ============================================================================
+exchanges:
+  primary: "binance"
+  secondary: "kraken"
+  use_ccxt: true              # Use CCXT for primary exchange (data/ccxt_data_provider); market data + execution via ccxt)
+  supported:
+    - "binance"
+    - "kraken"
+    - "mexc"
+  
+  kraken:
+    maker_fee: 0.0016                # 0.16%
+    taker_fee: 0.0026                # 0.26%
+    min_order_size: 0.0001
+  
+  coinbase_advanced:
+    # Coinbase Advanced Trade (conservative default tier assumption)
+    maker_fee: 0.006                 # 0.60%
+    taker_fee: 0.008                 # 0.80%
+    min_order_size: 1.0              # USD
+
+  mexc:
+    # MEXC - Lowest fees in the market (0% maker, 0.01% taker)
+    # No direct AUD deposit - transfer crypto from Kraken
+    maker_fee: 0.0                   # 0% maker fee!
+    taker_fee: 0.0001                # 0.01% taker fee
+    min_order_size: 5.0              # USD
+    api_key_env: "MEXC_API_KEY"
+    api_secret_env: "MEXC_API_SECRET"
+    base_url: "https://api.mexc.com"
+    websocket_url: "wss://wbs.mexc.com/ws"
+    notes: "Transfer BTC/ETH from Kraken to MEXC for zero-fee trading"
+
+# ============================================================================
+# TRADING PAIRS (full universe – scanner constantly picks the best to trade)
+# ============================================================================
+# Best symbols for live and paper: highest liquidity = tightest spreads, least slippage.
+# Used for both live trading and paper trading (single trading_pairs list).
+  best_symbols:
+    # Core high-conviction pairs
+    - "BTC/USD"
+    - "ETH/USD"
+    - "SOL/USD"
+    # Mid-cap with good volatility
+    - "XRP/USD"
+    - "DOGE/USD"
+    - "LINK/USD"
+    - "ARB/USD"
+    - "MATIC/USD"
+    # AUD pairs (home currency)
+    - "BTC/AUD"
+    - "ETH/AUD"
+
+# Live and paper trading both use this list (same universe).
+  trading_pairs:
+    # ── Core (high conviction, tight spreads) ──
+    - "BTC/USDT"
+    - "ETH/USDT"
+    # ── Mid-cap L1s (good volatility for small accounts) ──
+    - "SOL/USDT"
+    - "XRP/USDT"
+    - "DOGE/USDT"
+    - "ADA/USDT"
+
+# ============================================================================
+# COMMISSION & SLIPPAGE
+# ============================================================================
+execution:
+  slippage_pct: 0.0015               # Tighter slippage assumption (improved execution)
+  commission_reserve_pct: 0.05       # Reserve 5% for fees
+  signal_cooldown_bars: 4            # Min bars between trades (4 = balance quality vs frequency)
+
+# ============================================================================
+# EXECUTION ROUTING (SmartOrderRouter weights — tune venue scoring)
+# ============================================================================
+execution_routing:
+  enabled: true
+  weights:
+    liquidity: 0.40                    # Venue liquidity score weight
+    latency: 0.20                      # Lower latency = higher score
+    fees: 0.20                         # Lower fees = higher score
+    reliability: 0.20                  # Venue uptime / reliability weight
+  max_venues: 3                        # Max venues to split an order across
+
+# ============================================================================
+# CONTINUOUS BEST-TRADE SCANNER (peak mode: parallel, liquidity, diversity)
+# ============================================================================
+continuous_scan:
+  enabled: true
+  interval_seconds: 10.0       # Base rescan interval (5–60s)
+  top_n: 4                       # Concentrate on 4 best (doc §2: match allocator max_total_signals)
+  use_cached_best: true         # Main loop uses scanner's best list when fresh
+  max_age_seconds: 30.0         # Cache considered stale after this; fallback to AI brain
+  # Peak mode (scanner at its best)
+  parallel_sources: true       # Gather AI brain + strategy engine + HFT in parallel
+  use_liquidity_boost: true     # Boost score for tighter order book spread
+  liquidity_spread_pct_cap: 0.05  # Spreads tighter than this get max liquidity bonus
+  diversity_max_per_symbol: 2   # Max opportunities per symbol in top N (avoid all one pair)
+  diversity_max_per_strategy: 2 # Max per strategy (avoid all one strategy)
+  adaptive_interval_enabled: true  # Shorten interval when opportunities found, lengthen when empty
+  min_interval_seconds: 5.0     # Fastest rescan (peak responsiveness)
+  max_interval_seconds: 30.0    # Slowest when cache empty
+  max_symbols_per_scan: 25      # Pairs per scan (rotates through full list so all get scanned)
+  # Multi-timeframe: primary TF (e.g. 1h) for trend, entry TF (e.g. 15m) for entries; keep only when both agree (best way: fewer, better signals)
+  signal_multi_timeframe_enabled: false  # Disabled — adds latency, kills 20-30% of valid reversals at $1K scale
+  signal_primary_timeframe: "1h"
+  signal_entry_timeframe: "15m"
+  # External alpha: set to true and set URL when you have a signal API (best way #11)
+  external_alpha_enabled: false
+  external_alpha_url: ""
+  external_alpha_timeout_seconds: 5.0
+  # Strategy plugins: list of module paths providing get_strategies(config) -> {name: strategy}
+  strategy_plugin_modules: []
+  # Optional module: universe_builder – refresh trading_pairs by real volume (CCXT) every N cycles
+  dynamic_universe_enabled: false
+  dynamic_universe_interval_cycles: 100  # Refresh every 100 cycles (~17 min at 10s interval)
+  dynamic_universe_top_n: 15
+
+# ============================================================================
+# LIQUIDITY SCANNER (scan exchange for best liquidity, rank pairs)
+# ============================================================================
+  liquidity_scanner:
+    enabled: false
+    exchange_id: "kraken"
+    quote_currencies: ["USD"]
+    max_pairs: 5               # Return top 5 by liquidity score
+  min_volume_usd: 50000       # Skip pairs with <$50K daily volume
+  depth_levels: 10             # Order book depth levels to analyze
+  scan_interval_cycles: 50     # Re-scan every 50 cycles (~8 min at 10s interval)
+  batch_size: 5                # Fetch order books in batches of 5
+  batch_delay_s: 1.0           # Delay between batches (rate limiting)
+  cache_ttl_s: 60.0            # Cache results for 60s
+  auto_update_pairs: false      # Automatically update trading_pairs with top results
+  # Score weights (must sum to 1.0)
+  w_volume: 0.40               # 24h volume weight
+  w_spread: 0.30               # Bid-ask spread weight
+  w_depth: 0.20                # Order book depth weight
+  w_imbalance: 0.10            # Flow imbalance weight (balanced = better)
+
+# ============================================================================
+# EDGE-COST GATE (only trade when expected edge clearly exceeds costs)
+# Profitability: strict gate = fewer trades, higher expected edge per trade.
+# ============================================================================
+edge_cost_gate:
+  enabled: true
+  modes: ["paper", "backtest", "live"]   # live: gate applies in production (strict entry)
+  min_edge_pct: 0.50                # Relaxed from 0.85% — backtest showed signals are profitable at lower edge
+  buffer_mult: 1.5                  # Edge must exceed cost by 1.5x (was 2x; still filters negative-edge)
+  live_min_edge_pct: 0.65           # In live: require 0.65% min edge (was 1.0%)
+  live_buffer_mult: 1.8             # In live: edge must exceed cost by 1.8x (was 2.2x)
+  fee_mult: 2.0
+  slippage_mult: 2.0
+
+# ============================================================================
+# PORTFOLIO TARGET ENGINE (v1)
+# Signals -> targets -> execution deltas
+# ============================================================================
+portfolio_target_engine:
+  enabled: true
+  convergence_alpha: 1.0
+  rebalance_min_delta_pct: 0.02
+  score_confidence_weight: 1.0
+  score_net_edge_weight: 1.0
+  regime_boost_enabled: true
+
+# ============================================================================
+# LIQUIDITY-AWARE RISK ENGINE v1 (targets -> liquidity clamps -> risk gate)
+# ============================================================================
+liquidity_risk_engine:
+  enabled: true
+  depth_fraction_limit: 0.04
+  thin_spread_threshold_bps: 6
+  danger_spread_threshold_bps: 12
+  min_depth_threshold: 0.5
+  slippage_threshold_bps: 10
+  min_liquidity_score: 0.2
+  # When no L2 orderbook data (bid/ask/depth all zero) and spread is below
+  # thin threshold, assume normal liquidity instead of blocking trades.
+  # Essential for paper trading where L2 feeds may not be wired.
+  assume_normal_without_l2: true
+  score_weights:
+    depth: 1.0
+    spread: 1.0
+    fill_ratio: 0.75
+
+# ============================================================================
+# EXECUTION ALPHA ENGINE v2 (targets -> execution plans -> intents)
+# ============================================================================
+execution_alpha_engine:
+  enabled: true
+  maker_spread_threshold_bps: 2
+  min_fill_probability: 0.35
+  slice_threshold_pct: 0.03
+  maker_fallback_seconds: 8
+  telemetry_window: 200
+
+# ============================================================================
+# STRATEGY EVALUATION ENGINE v1 (evaluation only, no auto-promotion/disable)
+# ============================================================================
+strategy_evaluation_engine:
+  enabled: true
+  persist_interval_cycles: 10
+  min_trades_for_ranking: 5
+  use_regime_scoped_metrics: true
+  sharpe_like_min_trades: 5
+  max_metrics_history_points: 500
+  halt_on_error: false
+  db_path: "data/strategy_metrics.db"
+
+# ============================================================================
+# SELF-OPTIMIZING META ENGINE v1 (deterministic strategy weighting)
+# ============================================================================
+self_optimizing_meta_engine:
+  enabled: true
+  advisory_only: false
+  update_interval_cycles: 10
+  min_trades_for_reweighting: 5
+  meta_alpha: 0.2
+  max_weight_change_per_update: 0.10
+  min_weight_per_strategy: 0.05
+  max_weight_per_strategy: 0.45
+  baseline_weight_mode: "equal"
+  db_path: "data/meta_weights.db"
+  score_weights:
+    expectancy: 1.0
+    sharpe_like: 1.0
+    profit_factor: 0.75
+    drawdown_penalty: 1.0
+    fee_penalty: 0.5
+    slippage_penalty: 0.5
+  regime_multipliers:
+    trend:
+      momentum: 1.15
+      breakout: 1.10
+    range:
+      mean_reversion: 1.15
+
+# ============================================================================
+# CHAMPION / CHALLENGER PROMOTION ENGINE v1 (advisory-first, no auto-promotion)
+# ============================================================================
+champion_challenger:
+  enabled: true
+  advisory_only: true
+  min_trades_for_promotion: 10
+  max_drawdown_pct_for_promotion: 0.12
+  require_expectancy_improvement: true
+  require_profit_factor_improvement: false
+  require_sharpe_like_improvement: true
+  persist_interval_cycles: 10
+  db_path: "data/champion_challenger.db"
+  artifacts_dir: "deploy/promotions"
+  promotion_weights:
+    net_pnl: 1.0
+    expectancy: 1.0
+    profit_factor: 0.75
+    sharpe_like: 1.0
+    drawdown_penalty: 1.25
+    fee_penalty: 0.5
+
+# ============================================================================
+# MARKET MICROSTRUCTURE ENGINE v1
+# ============================================================================
+market_microstructure_engine:
+  enabled: true
+  rolling_window: 20
+  vacuum_spread_jump_bps: 4
+  vacuum_depth_drop_ratio: 0.5
+  high_adverse_selection_threshold: 0.7
+  use_in_execution_alpha: true
+  use_in_liquidity_risk: true
+
+# ============================================================================
+# RECON-REQUIRED RECOVERY ENGINE v1
+# ============================================================================
+recon_recovery_engine:
+  enabled: true
+  stale_threshold_seconds: 60
+  base_retry_delay_seconds: 5
+  max_retries: 5
+  halt_on_retry_exhausted: true
+
+# ============================================================================
+# SYSTEM HEALTH METRICS (runtime health snapshots)
+# ============================================================================
+system_health_metrics:
+  enabled: true
+  snapshot_interval_cycles: 10
+
+# ============================================================================
+# AI BRAIN SETTINGS (PINNACLE AI) - MAX EARNINGS AT $1K
+# ============================================================================
+ai_brain:
+  enabled: true
+  consciousness_enabled: true
+  swarm_intelligence_enabled: true
+  num_ai_agents: 80                 # Slightly more agents for better signal diversity
+  # Profitability: higher bar = only high-conviction trades (fewer but better)
+  min_signal_confidence: 0.10       # Lowered for more trades (was 0.35)
+  live_min_signal_confidence: 0.25  # Live stays conservative (was 0.55)
+  max_concurrent_signals: 8          # Up to 8 signals across all symbols
+  # Strategy engine RSI/BB thresholds (relaxed for paper learning)
+  se_buy_rsi: 50                     # Buy when RSI < 50 (was 42 - more signals)
+  se_sell_rsi: 50                    # Sell when RSI > 50 (was 58 - more signals)
+  se_buy_bb: 0.45                    # Buy when BB position < 0.45 (was 0.35)
+  se_sell_bb: 0.55                   # Sell when BB position > 0.55 (was 0.65)
+  # Drawdown-adaptive confidence (Phase 3): threshold auto-adjusts based on current drawdown
+  dd_adaptive_confidence_enabled: false
+  dd_adaptive_conf_floor: 0.30      # Threshold when drawdown = 0% (most aggressive)
+  dd_adaptive_conf_ceiling: 0.85    # Threshold when drawdown = max_drawdown_pct (most conservative)
+
+  # 10GbE Speed Enhancements
+  enable_arbitrage_boost: true       # Leverage speed for arbitrage detection
+  enable_flash_signals: true         # Microsecond opportunity detection
+  latency_optimization: true         # Optimize for <1μs network latency
+
+  agents:
+    market_analyst: true
+    risk_manager: true
+    execution_specialist: true
+    sentiment_analyst: true
+    arbitrage_detector: true
+    regime_detector: true
+    momentum_trader: true
+    mean_reversion_trader: true
+
+  consciousness:
+    market_sentiment_weight: 0.25
+    fear_greed_weight: 0.15
+    pattern_recognition_weight: 0.30
+    intuition_weight: 0.30
+
+  quantum_optimization:
+    enabled: true
+    method: "quantum_approximate"
+    risk_parity: true
+
+# ============================================================================
+# STRATEGY PACK (optional additional strategies)
+# ============================================================================
+# PINNACLE: positive-edge only. Scanner + main loop enforce whitelist when non-empty.
+strategies:
+  enabled:
+    - "hunter"
+    - "shadow"
+    - "momentum"
+    - "mean_reversion"
+    - "trend_following"
+    - "quantum_momentum_elite"
+    - "quantum_mean_reversion_elite"
+    - "quantum_trend_following_elite"
+  max_extra_signals: 2
+  # Only these strategies may emit signals
+  strategy_whitelist: ["mean_reversion", "momentum", "funding_rate_harvester", "regime_aligned", "macd_trend"]
+  use_regime_lstm_boost: true        # When true, scale signal confidence by ml.regime_boost (Priority 2 recommended)
+  use_volatility_regime_scale: true  # Scale down confidence in high vol (doc §6: regime/vol-aware)
+  volatility_regime_high_threshold: 0.02
+  use_funding_rate_filter: true      # Skip long when funding rate >= threshold (doc §6: avoid expensive longs)
+  # funding_rates_url: ""            # Optional: HTTP URL for funding rates JSON; else CCXT
+  funding_rate_skip_long_threshold: 0.0001  # 0.01% = skip long when rate >= this
+  # Regime-based filter: momentum in trending, mean-reversion in ranging
+  regime_filter_enabled: true
+  regime_filter_trend_strategies: ["momentum"]
+  regime_filter_mr_strategies: ["mean_reversion"]
+  # funding_rate_harvester runs in ALL regimes (delta-neutral, regime-independent)
+
+# ============================================================================
+# STRATEGY LIBRARY (restored algorithmic/advanced/quantum_custom strategies)
+# ============================================================================
+strategy_library:
+  # Strategy library (tier + algorithmic) runs as optional 4th signal source in the scanner when enabled.
+  enabled: true
+  modes: ["paper", "backtest", "live"]
+
+  # Exactly which additional strategies are allowed to contribute signals.
+  # (They are merged into the same optional strategy-pack signal path.)
+  enabled_strategies:
+    # Algorithmic
+    - "momentum"
+    - "mean_reversion"
+    - "trend_following"
+    - "pairs_trading"
+    - "market_making"
+    - "arbitrage"
+    - "candlestick_patterns"
+    - "high_freq_grid"
+
+    # Trinity Enhanced
+    - "farmer_enhanced"
+    - "hunter_enhanced"
+    - "shadow_enhanced"
+
+    # Advanced
+    - "regime_switching"
+    - "stat_arb"
+    - "factor_investing"
+    - "cross_exchange_arb"
+    - "advanced_pairs_arbitrage"
+    - "advanced_market_making_inventory"
+
+    # DeFi
+    - "flash_loan_arb"
+    - "liquidity_mining"
+    - "mev_extraction"
+    - "yield_farming"
+    - "yield_optimizer"
+
+    # Derivatives
+    - "futures_basis"
+    - "options_trading"
+
+    # HFT
+    - "latency_arbitrage"
+    - "triangular_arb"
+    - "market_making_2"
+
+    # Legendary
+    - "ai_legendary"
+    - "hybrid_legendary"
+    - "quantum_legendary"
+    - "self_evolving_legendary"
+
+    # ML
+    - "advanced_ml"
+    - "adaboost_model"
+    - "autoencoder_model"
+    - "transformer_brain"
+
+    # Solana
+    - "solana_sniper"
+    - "solana_mev"
+    - "solana_dex"
+    - "solana_copy_trading"
+
+    # Transcendent
+    - "absolute_transcendence"
+    - "void_breaker"
+
+    # Tier ensembles (dependency-light)
+    - "absolute_tier"
+    - "akashic_tier"
+    - "apeiron_tier"
+    - "chronos_tier"
+    - "omega_tier"
+    - "paradox_tier"
+    - "singularity_tier"
+    - "source_tier"
+    - "thanatos_tier"
+    - "void_tier"
+
+    # Quantum custom (quantum-inspired wrappers)
+    - "quantum_momentum_elite"
+    - "quantum_mean_reversion_elite"
+    - "quantum_trend_following_elite"
+    - "quantum_breakout_elite"
+    - "quantum_portfolio_rotation_elite"
+    - "quantum_arbitrage_elite"
+    - "quantum_router_simple"
+    - "advanced_multi_asset_quantum"
+
+    # Exhaustive Additional Strategies
+    - "aggressive_opportunity_trader"
+    - "entropy_strategy"
+    - "god_engine_multi"
+    - "jit_liquidity"
+    - "lead_lag_shadow"
+    - "market_making_avellaneda"
+    - "noosphere_strategy"
+    - "opportunity_hunter"
+    - "oracle_strategy"
+    - "reaper_strategy"
+    - "ultimate_comprehensive"
+
+# ============================================================================
+# STRATEGY ROUTER — Central dispatcher for all wired strategies
+# ============================================================================
+# Controls which strategies feed signals into the trading loop via StrategyRouter.
+# Strategies with enabled: false are instantiated but produce no signals.
+# Disabled-by-default entries need external feeds (perps, Deribit, multi-exchange).
+strategy_router:
+  enabled: true
+  timeout_per_strategy_s: 5.0
+  strategies:
+    # ── Core 3: regime-switched strategies with documented edge ──
+    mean_reversion:          {enabled: true}    # RANGING regime: Bollinger Band reversion on BTC/ETH
+    momentum:                {enabled: true}    # TRENDING regime: MACD + RSI trend following
+    funding_rate_harvester:  {enabled: true}    # ALL regimes: delta-neutral funding capture (needs Bybit perps)
+
+    # ── Confirmation filters (not signal sources, just modifiers) ──
+    macro_event_filter:      {enabled: true}    # Block trades near FOMC/CPI events
+    mtf_confluence:          {enabled: true}    # Multi-timeframe confirmation
+
+    # ── Disabled: need more capital, exchanges, or infrastructure ──
+    peak_alpha:              {enabled: true}    # ensemble alpha signal
+    breakout:                {enabled: true}    # core crypto strategy — #1 in trending markets
+    scalping:                {enabled: true}    # viable at 5ms via London VPS
+    session_effect_strat:    {enabled: true}    # 6mo history from historical loader
+    stat_arb_cointegration:  {enabled: true}    # BTC/ETH cointegration with 5yr history
+    cross_exchange_arb:      {enabled: true}    # Kraken+Coinbase from London VPS (both <10ms)
+    liquidation_cascade:     {enabled: true}    # snipe liquidation dips at 5ms
+    futures_basis_arb:       {enabled: false}   # needs Bybit perps
+    delta_neutral_perp_arb:  {enabled: false}   # needs Bybit perps
+    volatility_arb:          {enabled: false}   # needs Deribit IV data
+    market_maker:            {enabled: false}   # needs deeper liquidity + capital
+    deribit_options:         {enabled: false}   # needs Deribit credentials
+
+# ============================================================================
+# QUANTUM FEATURES (optional, safe by default)
+# ============================================================================
+quantum_features:
+  # IMPORTANT: enabled only in these modes by default (never live)
+  enabled: true
+  # 10/10 transparency: when true, logs/docs state clearly that quantum is simulated (no hardware) unless real backend connected
+  quantum_simulated_disclosure: true   # "Quantum-inspired / simulated; not real quantum hardware unless configured"
+  modes: ["paper", "backtest"]
+
+  quantum_consciousness:
+    enabled: true
+
+# ============================================================================
+# QUANTUM SIMULATOR (in-repo, dependency-light)
+# ============================================================================
+# These settings configure the in-repo simulator used by `quantum/production_quantum_simulator.py`.
+# They are applied as env vars by `core/config_manager.load_unified_trading_config()`.
+quantum_simulator:
+  # When true, unified system may call production_quantum_simulator for portfolio optimization/weights when available
+  use_production: true   # Phase C1: enable real QAOA-driven portfolio circuit
+  # auto | state_vector | mps | approx
+  backend: "auto"
+
+  # Used when backend=mps (larger => more accurate, slower). 16-64 are typical.
+  mps_bond_dim: 32
+
+  # Optional realism knobs (keep 0 for deterministic/noiseless defaults).
+  # Independent measurement bit-flip probability per qubit.
+  readout_flip_p: 0.0
+
+  # Effective depolarizing strengths (fast approximation; higher => noisier).
+  depol_1q: 0.0
+  depol_2q: 0.0
+
+  # Optional zero-noise extrapolation scales (ZNE-lite). Example: [1, 2, 3]
+  zne_scales: []
+
+# ============================================================================
+# OPTIONAL MODULES (all enabled below; see docs/WHAT_ELSE_CAN_BE_DONE.md)
+# ============================================================================
+# - Pinnacle AI brain: ai_brain.enabled (fallback to strategy-engine-only if load fails)
+# - Quant fund / multi-factor risk: quant_fund_upgrades.enabled + risk_engine.enabled
+# - Quantum Monte Carlo risk: quantum_bot.use_quantum_monte_carlo_risk
+# - HFT engine: hft.enabled
+# - Advanced HFT infrastructure: hft.use_advanced_hft_infrastructure
+# - Universe builder (real volume): continuous_scan.dynamic_universe_enabled + interval
+quant_fund_upgrades:
+  enabled: true
+  modes: ["paper", "backtest", "live"]   # Multi-factor risk engine in all modes
+  risk_engine:
+    enabled: true
+
+# ============================================================================
+# TRANSCENDENT FEATURES - 10GbE ULTRA-LOW LATENCY ENHANCED
+# ============================================================================
+transcendent:
+  enabled: true
+  quantum_simulation: true
+  neuromorphic_computing: true
+  advanced_ai_ml: true
+  genetic_algorithms: true
+  multi_agent_swarm: true
+  blockchain_analytics: true
+  high_performance_computing: true
+
+  # 10GbE Performance Targets
+  response_time_target_ms: 25         # From 50ms → 25ms (10GbE enabled)
+  throughput_target_signals: 2500     # Increased throughput
+  network_latency_target_us: 1        # <1μs network latency target
+  gpu_acceleration: true
+  distributed_processing: true
+
+  # RUN TEMPLATE HARDWARE (see run_template at top of config)
+  hardware_acceleration:
+    enabled: true
+    # CPU: Intel Core Ultra 9 285K (Arrow Lake)
+    cpu_architecture: "arrow_lake"
+    cpu_model: "Intel Core Ultra 9 285K"
+    cpu_cores: 24                     # 8P + 16E
+    npu_enabled: true                 # Intel NPU utilization
+    # Motherboard
+    motherboard: "Gigabyte Z890 AORUS ELITE WIFI7"
+    # GPU: MSI GeForce RTX 5080 16G GAMING TRIO OC (Boost 2700MHz, DLSS 4, Tri FROZR 4)
+    gpu_model: "rtx_5080"
+    gpu_vendor_model: "MSI GeForce RTX 5080 16G GAMING TRIO OC"
+    gpu_memory_gb: 16
+    gpu_memory_type: "gddr7"
+    gpu_boost_mhz: 2700
+    cuda_cores_sim: 10000             # Massive parallel throughput
+    tensor_cores_enabled: true        # DLSS 4 / AI acceleration
+    # RAM: G.Skill Trident Z5 RGB 64GB DDR5-6400
+    ram_speed_mhz: 6400
+    ram_size_gb: 64
+    ram_model: "G.Skill Trident Z5 RGB 64GB (2x32GB) PC5-51200 (6400MHz) DDR5"
+
+  # 10GbE Growth Optimization
+  enable_growth_optimization: true
+  enable_enhanced_multipliers: true
+  enable_trading_frequency_optimization: true
+  enable_advanced_position_sizing: true
+  enable_strategy_synergy: true
+  enable_cost_optimization: true
+  enable_compounding_optimization: true
+  enable_market_adaptation: true
+  enable_10gbe_arbitrage: true        # New: Cross-exchange arbitrage
+  enable_latency_arbitrage: true      # New: Speed-based arbitrage
+  enable_flash_trading: true          # New: Microsecond opportunities
+
+# ============================================================================
+# ARGUS ULTIMATE STRATEGIES - 10GbE ENHANCED
+# ============================================================================
+argus_strategies:
+  quantum_emotion_arbitrage: true
+  fractal_volatility_harvest: true
+  adaptive_regime_scalping: true
+  multi_asset_sentiment_sync: true
+
+  # 10GbE Speed Strategies
+  cross_exchange_arbitrage: true      # New: Leverage speed between exchanges
+  latency_arbitrage: true            # New: Exploit <1μs latency advantage
+  flash_arbitrage: true              # New: Microsecond price discrepancies
+  micro_scalping: true               # New: 10-60 second trades
+  network_optimized_scalping: true   # Enhanced scalping with 10GbE
+
+# ============================================================================
+# EXECUTION ENGINE (KRAKEN DCA) - USE EVERYTHING
+# ============================================================================
+execution_engine:
+  enabled: true
+  order_type: "market"                # market, limit, twap, vwap
+  retry_attempts: 3
+  retry_delay_seconds: 5
+  max_slippage_pct: 0.005            # 0.5% max slippage (strict; use 0.01 for paper)
+  order_fill_timeout_seconds: 30     # Wait up to 30s for fill, then cancel (0 = disabled)
+  max_spread_bps: 50                 # Skip order when (ask-bid)/mid > 50 bps (reject bad spreads; 0 = disabled)
+  use_is_gate: true                  # Reject when strategy/symbol avg implementation shortfall (bps) > max_avg_is_bps (use all doc levers)
+  max_avg_is_bps: 25                 # Gate threshold in bps (reject if avg IS cost > 25 bps)
+
+  # Use all institutional features
+  vwap_large_order_threshold_aud: 80.0   # Use VWAP/TWAP slicing for orders >= $80 AUD
+  use_twap_for_large_orders: true        # TWAP for large orders (doc §5: slice over time to reduce impact)
+  portfolio_weight_method: "hrp"         # hrp | bl | mpt – scale quantity by HRP/BL/MPT weights
+  multi_venue_enabled: true              # Split large orders across primary + secondary when notional >= threshold
+  multi_venue_min_notional_aud: 200.0    # Multi-venue when order >= $200 AUD
+  twap_min_notional_usd:  250.0          # Use TWAP for orders >= this USD value
+  twap_duration_minutes:  5.0            # TWAP execution window in minutes
+  use_venue_routing_by_spread: true      # When true, weight venues by inverse spread (tighter spread gets more size)
+  # DCA levels: split each order into N entries (doc §5: improve average entry)
+  dca_levels_pct: [0.33, 0.33, 0.34]
+  # Institutional order types (placeholders; enable when exchange/venue supports)
+  iceberg_enabled: true
+  iceberg_visible_pct: 0.10            # fraction of total order shown on book
+  iceberg_min_visible_qty: 0.001       # minimum visible quantity per slice
+  iceberg_randomize_visible: true      # +/-20% randomness to avoid detection
+  iceberg_max_duration: 300            # max seconds before timeout
+  dark_pool_enabled: false
+
+  # Correlation-aware sizing: reduce combined size when positions are correlated (e.g. BTC/ETH)
+  use_correlation_aware_sizing: true      # Correlation matrix fed from quant_fund each cycle; benefits multi-position risk
+  max_correlated_exposure: 0.6            # Scale down smaller weight when correlation > this (0.6 = 60%)
+  # correlation_matrix: optional – use "SYM_A|SYM_B" as key, value = correlation -0.99..0.99 (feed from monitoring)
+  # Example (uncomment and fill from your data):
+  # correlation_matrix:
+  #   "BTC/USD|ETH/USD": 0.85
+  #   "BTC/USD|SOL/USD": 0.72
+
+  # Fail-closed runtime (halts new intents when exchange/data/clock state is stale/ambiguous).
+  fail_closed_runtime_enabled: true
+  fail_closed_runtime_enforce_paper: false
+  fail_closed_max_exchange_heartbeat_age_seconds: 30.0
+  fail_closed_max_market_data_age_seconds: 30.0
+  fail_closed_max_ticker_age_seconds: 30.0
+  fail_closed_max_clock_skew_seconds: 5.0
+  fail_closed_require_clock_sync: false
+
+  # PR-15 execution quality feedback loop (safe by default, no permission broadening)
+  execution_quality_feedback_enabled: true
+  execution_quality_lookback: 50
+  execution_quality_min_samples: 5
+  execution_quality_target_slippage_bps: 12.0
+  execution_quality_adverse_rate_threshold: 0.55
+  execution_quality_disable_maker_adverse_rate: 0.80
+  execution_quality_timeout_adjust_down_pct: 0.25
+  execution_quality_timeout_adjust_up_pct: 0.10
+  execution_quality_min_timeout_scale: 0.25
+  execution_quality_max_timeout_scale: 1.50
+  execution_quality_max_slice_multiplier: 4
+
+  trade_ledger:
+    enabled: true
+    db_path: "data/unified_trades.db"   # Ω also stores decision_snapshots + order_intents
+    retention_days: 365
+
+# ============================================================================
+# DATA – TICK STORE + DATA LAKE (USE EVERYTHING)
+# ============================================================================
+data:
+  persist_tick_store: true     # Write ticker/order book to tick store in live/paper
+  use_lake_read: true          # Paper loop: try loading OHLCV from data lake first
+  persist_to_lake: true        # Paper loop: write OHLCV to data lake after fetch
+  persist_to_tick_store: true  # Paper loop: emit synthetic ticks to tick store
+  lake_path: "data/lake"
+
+# ============================================================================
+# MULTI-LANGUAGE SERVICE MESH (23 languages)
+# ============================================================================
+multi_language:
+  enabled: true
+  # Apply median of 23 language cycle boosts to signal confidence before execution (recommended)
+  use_cycle_aggregate_boost: true
+  # Use latency/confidence-weighted mean for cycle boost (faster and more confident = higher weight)
+  use_weighted_mean_boost: false
+  # Run risk check across all 23 languages; skip execution if any language fails (Priority 2)
+  use_risk_all: false
+  # Use correctness-language median for cycle boost (Haskell, F#, Scala, etc. – stricter)
+  use_conservative_cycle_boost: false
+  # Optional: POST /warm to each HTTP endpoint at startup (set true when using remote services)
+  warm_on_start: false
+  # Skip execution if any correctness language fails risk (Priority: correctness languages as gate)
+  use_conservative_risk: true
+  # Optional: run regime_estimate (all 23) and use in cycle/sizing
+  use_regime_estimate: true
+  # Optional: run slippage_estimate before execution and cap/reject if too high
+  use_slippage_estimate: true
+  # Optional: run drawdown_check (all 23) and skip execution if failed
+  use_drawdown_check: true
+  # Optional: cap position size by 23-language size_pct_conservative
+  use_position_sizing_gate: true
+  # Optional: drop signals that 23-language signal_filter majority reject
+  use_signal_filter_gate: true
+  # Optional: run slippage_estimate before execution; skip if median slippage (bps) > max_slippage_bps
+  max_slippage_bps: 100.0
+  # Thompson-sampled ensemble signal scoring (dynamic language weights based on realized accuracy)
+  use_ensemble_signal: true
+  # Formal risk gate: Haskell/F# correctness languages have veto power (kelly bounds, drawdown cascade, invariants)
+  use_formal_risk_gate: true
+  # Microstructure analysis via Rust: VPIN, toxicity, spoofing detection — penalize toxic order books
+  use_microstructure_gate: true
+  # Toxicity threshold: penalize confidence when toxicity > this value (0-1)
+  microstructure_toxicity_threshold: 0.7
+  # Per-task timeouts (seconds) – Priority 3: all task types (orchestrator uses these)
+  task_timeouts:
+    order_book_processing: 0.5
+    risk_calculation: 0.5
+    volatility_estimate: 2.0
+    signal_score: 1.0
+    regime_estimate: 2.0
+    slippage_estimate: 1.0
+    position_sizing: 0.5
+    drawdown_check: 0.5
+    cycle_plan: 3.0
+    correlation_estimate: 2.0
+    liquidity_score: 1.0
+    market_impact: 1.0
+    signal_filter: 0.5
+    confidence_calibration: 2.0
+    heartbeat: 0.3
+  # Each service must expose:
+  # - GET  /health
+  # - POST /execute  (see multilang/protocol.py)
+  endpoints:
+    rust: "http://argus-rust:8011"
+    cpp: "http://argus-cpp:8012"
+    cuda: "http://argus-cuda:8013"
+    go: "http://argus-go:8014"
+    java: "http://argus-java:8015"
+    scala: "http://argus-scala:8016"
+    kotlin: "http://argus-kotlin:8017"
+    swift: "http://argus-swift:8018"
+    csharp: "http://argus-csharp:8019"
+    fsharp: "http://argus-fsharp:8020"
+    javascript: "http://argus-javascript:8021"
+    typescript: "http://argus-typescript:8022"
+    elixir: "http://argus-elixir:8023"
+    erlang: "http://argus-erlang:8024"
+    clojure: "http://argus-clojure:8025"
+    haskell: "http://argus-haskell:8026"
+    ruby: "http://argus-ruby:8027"
+    r: "http://argus-r:8028"
+    julia: "http://argus-julia:8029"
+    matlab: "http://argus-octave:8030"
+    crystal: "http://argus-crystal:8031"
+    webassembly: "http://argus-wasm:8032"
+    mojo: "http://argus-mojo:8033"
+
+# ============================================================================
+# MONITORING (GRAFANA/PROMETHEUS)
+# ============================================================================
+monitoring:
+  prometheus:
+    enabled: true
+    port: 9090
+    scrape_interval: 15
+  
+  grafana:
+    enabled: true
+    port: 3000
+    username: "admin"
+    password: ${GRAFANA_PASSWORD:-admin}
+  
+  alerts:
+    enabled: true
+    telegram:
+      enabled: true                   # Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in .env for live
+      bot_token: ${TELEGRAM_BOT_TOKEN:-}
+      chat_id: ${TELEGRAM_CHAT_ID:-}
+    
+    email:
+      enabled: false
+      smtp_server: "smtp.gmail.com"
+      smtp_port: 587
+      from_email: ${EMAIL_FROM:-}
+      to_email: ${EMAIL_TO:-}
+    
+    triggers:
+      - type: "drawdown"
+        threshold: 0.12                # Alert at 12% drawdown (match risk.max_drawdown_pct)
+      - type: "daily_loss"
+        threshold: 0.10                # Alert at 10% daily loss (match risk.max_daily_loss_pct)
+      - type: "consecutive_losses"
+        threshold: 2                   # Match risk.max_consecutive_losses
+      - type: "error_rate"
+        threshold: 0.05                # Match risk.max_error_rate
+      - type: "circuit_breaker"
+        threshold: 1                   # Alert when circuit breaker trips
+
+# ============================================================================
+# PAPER TRADING - IMPROVED (aligned with live + disabled losers + circuit breaker)
+# ============================================================================
+  paper_trading:
+  peak_mode: true
+  # When true: paper uses same config as live (no overrides), same disabled strategies, and simulated slippage on fills
+  simulate_live: true
+  # Start fresh without restoring positions/equity from previous sessions
+  restore_state: false
+  # --- Risk (aligned with improved risk:) ---
+  max_daily_loss_pct: 0.35          # Allow 35% daily loss for testing
+  max_drawdown_pct: 0.35            # Allow 35% drawdown for testing (was 12%)
+  stop_loss_pct: 0.015
+  take_profit_pct: 0.06             # 6% TP – R:R 4:1 (profitability)
+  max_consecutive_losses: 20
+  # --- Execution ---
+  slippage_pct: 0.0015
+  signal_cooldown_bars: 4
+  # --- Edge-cost gate (profitability: strict entry; aligned with main edge_cost_gate) ---
+  edge_cost_gate_min_edge_pct: 0.50
+  edge_cost_gate_buffer_mult: 1.5
+  # --- AI brain ---
+  min_signal_confidence: 0.25       # Lowered to allow more signals during testing
+  max_concurrent_signals: 5
+  # --- Strategies ---
+  strategies_use_all: false
+  strategy_library_use_all: false
+  strategies_max_extra_signals: 2
+  # --- Capital ---
+  min_position_size_aud: 15.0
+  # --- Paper-only: disable strategies with negative PnL in paper results ---
+  paper_trading_quality_threshold: 0.45   # Allow HFT and good strategies (0.82 was filtering all)
+  paper_trading_disabled_strategies: ["farmer", "high_freq_grid", "apeiron_tier", "ultimate", "hft_obi_pressure"]   # HFT disabled in paper (was losing; re-enable when PnL positive)
+  paper_trading_high_vol_size_mult: 0.8   # Slightly reduce size in high_vol regime (tighter risk)
+  # --- Smart exit management (trailing stop + partial close + time exit) ---
+  trailing_stop_enabled: true          # Enable trailing stop
+  trailing_stop_activation_pct: 0.015  # Activate trailing stop at 1.5% profit
+  trailing_stop_distance_pct: 0.01     # Trail by 1% from high-water mark
+  partial_close_enabled: true          # Enable partial position close
+  partial_close_at_pct: 0.015         # Close 50% at 1.5% profit (lock in gains)
+  partial_tp_at_pct: 0.015            # Alias for partial_close_at_pct
+  partial_tp_close_pct: 0.5           # Close 50% at partial level
+  time_exit_cycles: 20                 # Close stale positions after 20 cycles
+  # --- Circuit breaker & auto-reduce (reinforced risk) ---
+  circuit_breaker_dd_pct: 8.0
+  var_breach_pct: 5.0
+  auto_reduce_after_n_losses: 3
+  auto_reduce_factor: 0.6
+  # --- Scanner / adaptive ---
+  continuous_scan_enabled: true
+  continuous_scan_use_cached_best: true
+  adaptive_universe_enabled: true
+  adaptive_universe_top_n: 10
+  evaluation_fast_mode: false
+
+# ============================================================================
+# RUNTIME MODE SAFETY INTERLOCK
+# ============================================================================
+# LIVE BOT CHECKLIST (before setting mode: "live"):
+# 1. Credentials: set KRAKEN_API_KEY, KRAKEN_SECRET (and COINBASE if using secondary) in env
+# 2. Alerts: enable monitoring.alerts.telegram or email for drawdown/daily loss
+# 3. Optional: use_volatility_adjusted_limits + realized_vol_pct from monitoring for live
+# 4. Optional: use_correlation_aware_sizing + correlation_matrix for multi-position risk
+# 5. Strategies: live_disabled_strategies below filters same losers as paper (recommended)
+runtime:
+  mode: "paper"   # set to "live" only when credentials + checklist above are done
+  # 10/10 safety: require paper evidence before allowing live (pre_live_check enforces)
+  live_require_paper_edge: true      # 10/10: require min_trades and min_win_rate from paper before allowing live
+  live_min_trades_paper: 20          # min closed trades in paper_results or allocator
+  live_min_win_rate_pct: 45.0       # min win rate % (e.g. 45)
+  soak_gate:
+    enabled: true
+    report_path: "reports/soak_gate_latest.json"
+    max_age_hours: 24.0
+    min_paper_window_hours: 6.0
+    min_decision_count: 500
+    min_trade_count: 20
+    max_error_rate: 0.03
+    max_timeout_rate: 0.03
+    max_reconciliation_halts: 0
+    max_duplicate_intents: 0
+    max_drawdown_pct: 0.10
+    max_cycle_latency_p90_ms: 60000.0
+  # Institutional level: when true, enforce limit hierarchy + pre-trade compliance + audit on every order (see docs/INSTITUTIONAL_LEVEL_ROADMAP.md)
+  institutional_mode: true
+  # Strategies to disable in live (same losers as paper_trading_disabled_strategies; applied when mode is live)
+  live_disabled_strategies:
+    - "farmer"
+    - "high_freq_grid"
+    - "hft_obi_pressure"
+    - "apeiron_tier"
+    - "ultimate"
+
+# ============================================================================
+# RECONCILIATION OWNERSHIP (DRIFT CONTROL + OPERATOR ACK)
+# ============================================================================
+reconciliation:
+  interval_cycles: 1                # Live checks every cycle by default
+  live_every_cycle: true
+  paper_enabled: false              # Keep paper default lightweight unless explicitly enabled
+  small_drift_pct: 0.02             # Auto-correct threshold
+  halt_drift_pct: 0.10              # Halt + freeze threshold
+  require_operator_ack: true        # Unfreeze requires operator acknowledgment
+  freeze_file: "data/reconciliation_freeze.json"
+
+# ============================================================================
+# BACKTEST (realistic slippage, latency simulation, OOS, live-trading realism)
+# ============================================================================
+backtest:
+  slippage_bps: 8.0        # Per-venue slippage in backtests (more realistic drag; paper loop uses this)
+  latency_ms: 0.0          # Simulated delay between signal and fill (ms); paper loop can defer fill 1 bar if > 0
+  oos_train_ratio: 0.8     # Fraction of data for train; rest is out-of-sample (paper loop reports OOS metrics)
+  rate_limit_reject_pct: 0.0  # Simulate exchange rate limit: randomly reject this % of signals (e.g. 2.0 = 2%)
+  fill_probability: 0.98      # 2% of fills rejected for realism (doc §9: tune so live matches)
+  # --- Live-trading realism (paper simulates actual trading for accurate results) ---
+  spread_bps: 5.0          # Bid-ask spread in bps (buy at ask, sell at bid)
+  max_slippage_pct: 0.005  # Reject trade if total implied slippage (spread + slippage + impact) exceeds this (0.5%)
+  market_impact_bps_per_10k_usd: 0.5   # Extra slippage per 10k USD notional (size-based)
+  fee_maker_ratio: 0.2     # Blended fee: 20% maker / 80% taker (0 = all taker)
+  # rate_limit_reject_pct: see above (single setting for backtest)
+  partial_fill_threshold_aud: 0.0   # Above this notional (AUD), apply partial-fill drag (0 = off)
+  partial_fill_drag_pct: 0.001     # Extra drag when order exceeds partial_fill_threshold (e.g. 0.1%)
+  # --- Commission modeling ---
+  commission_rate: 0.0026           # Kraken taker fee 0.26% per side (applied to every backtest fill)
+  # --- Trailing stop & exit management (Phase 2) ---
+  trailing_stop_enabled: true       # Enable trailing stop in backtest (track peak, exit on 4% drop)
+  trailing_stop_pct: 0.04          # 4% trailing stop from peak (wider for crypto volatility)
+  stop_loss_enabled: false          # Static stop-loss disabled (too tight for crypto 15m candles)
+
+# ============================================================================
+# EVOLUTION - Bot evolves strategies constantly to suit the market
+# ============================================================================
+# Three mechanisms (all on when enabled):
+# 1. GA evolution: run genetic algorithm on a schedule; fitness = paper-loop return/Sharpe
+#    on recent data; best params auto-applied so strategies adapt to current market.
+# 2. Strategy allocator: tracks PnL per strategy; favors better-performing strategies
+#    (contextual bandits by regime/sentiment). Modes: paper, backtest, live.
+# 3. StrategyEngine tuner: per-symbol, per-regime (range/trend/high_vol) learning from
+#    closed trades; adjusts mean_reversion vs trend weights to suit the market.
+evolution:
+  run_with_market: true               # evolution runs continuously with the market
+  load_evolved: true                  # load data/evolved_params.json at startup (advance bot)
+  params_path: "data/evolved_params.json"
+  continuous_enabled: true
+  interval_hours: 24.0                # fallback: run GA every N hours (when realtime_interval_minutes = 0)
+  fitness_days: 7                     # backtest window for fitness (recent market)
+  generations: 5
+  population_size: 12
+  auto_apply: true                   # apply new best params after each run – strategies evolve to suit market
+  # Real-time: run with the market (short interval + recent/live data)
+  realtime_interval_minutes: 30.0
+  realtime_fitness_days: 1.0
+  use_live_feed: true
+  realtime_generations: 5            # Stronger evolution (improved)
+  realtime_population_size: 10       # Slightly larger pop for better search
+  min_bars_for_live_feed: 20
+  trigger_on_trade: true
+  after_n_trades: 3                  # Evolve more often (every 3 closed trades)
+  # Safety and scheduling
+  dry_run: false                     # true: run GA, log best params, do not persist or apply
+  debounce_minutes: 15.0             # min minutes between evolution runs (avoid thrashing)
+  allow_apply_live: true             # evolved params applied in live mode (protected by min_trades + debounce)
+  # Fitness and GA tuning (profitability: require enough trades to judge edge)
+  min_trades: 3                      # min closed trades for valid fitness (avoids rewarding 1-trade flukes)
+  ga:
+    mutation_prob: 0.2
+    mutation_sigma: 0.15
+    crossover_prob: 0.7
+  early_stop_generations: 0          # 0 = off; stop after N gens with < threshold improvement
+  early_stop_threshold: 0.001
+  fitness_cache_size: 0              # LRU cache for fitness (0 = off)
+  parallel_fitness_workers: 0        # 0 = sequential
+  walk_forward_train_ratio: null     # e.g. 0.7 for train/test split (null = off)
+  # Profitability: evolution optimizes for risk-adjusted return and penalizes losses
+  negative_return_penalty_weight: 0.3   # Penalize param sets with negative return (favors profitable params)
+  use_composite_fitness: true             # Sharpe + Sortino + Calmar - drawdown - neg return
+  backup_before_apply: true
+  version_history_size: 5            # keep last N versions for scripts/rollback_evolved_params.py (0 = off)
+  # Phase 2: multi-timeframe, overfit/volatility/Calmar, strategy subset, allocator decay
+  multi_timeframes: null              # e.g. ["1h", "15m"] for combined fitness across TFs
+  multi_timeframe_weights: null      # optional weights (same length as multi_timeframes)
+  overfit_penalty_weight: 0.0        # penalize train >> test in walk-forward
+  volatility_penalty_weight: 0.05     # Slight penalty for very volatile equity curves
+  composite_calmar_weight: 0.2        # Calmar (return/max_dd) in composite – favors profitable, stable params
+  strategy_whitelist_override: null   # restrict evolution backtest to these strategies only
+  allocator_decay_after_apply: 0.5    # Halve allocator stats after evolution apply (doc §7: bandit doesn't over-exploit old behavior)
+  use_evolution_strategy_reward: true   # Record PnL per strategy/symbol for ml.evolution_strategy_reward (param jitter)
+
+# Strategy allocator: favors strategies that perform better (evolves which strategies get more weight).
+strategy_allocator:
+  enabled: true
+  modes: ["paper", "backtest", "live"]
+  timeframe: "1m"                    # Timeframe for allocator buckets (optional; empty = any)
+  persist_path: "data/strategy_allocator_stats.json"
+  min_trades_before_bias: 3           # Bias toward winners sooner
+  exploration_c: 0.75                 # Profitability: favor proven winners (lower = less exploration)
+  ema_alpha: 0.25                    # Faster adaptation to PnL
+  max_total_signals: 4               # Concentrate on fewer, better signals
+  max_per_strategy: 2
+
+# ============================================================================
+# LEVEL 10 SELF-EVOLVING SYSTEM
+# ============================================================================
+# Advanced self-evolution beyond basic GA:
+# - Genetic algorithm with genome encoding (Strategy DNA)
+# - Meta-learning (learns how to learn faster)
+# - Autonomous research (generates and tests hypotheses)
+# - Self-improving code (writes and improves strategy code)
+# - Strategy memory (remembers what worked in similar conditions)
+#
+# Enable when you want strategies that evolve, learn, and improve themselves.
+level10:
+  enabled: false                     # Master switch (default off - enable to activate)
+  population_size: 50                # Evolution population size
+  evolution_interval: 3600           # Evolve every N seconds (3600 = 1 hour)
+  complexity: 0.5                    # Strategy complexity (0.0 = simple, 1.0 = complex)
+  auto_improve: true                 # Auto-improve best strategies
+  research_enabled: true             # Enable hypothesis research
+  # Advanced settings
+  mutation_rate: 0.1                 # Gene mutation rate
+  crossover_rate: 0.7                # Crossover probability
+  elitism_count: 5                   # Keep top N strategies unchanged
+  tournament_size: 3                 # Tournament selection size
+
+# ============================================================================
+# HFT (peak: main loop OB -> HFT engine -> signals; scanner scan_for_opportunities)
+# ============================================================================
+hft:
+  enabled: true
+  max_hft_signals_per_cycle: 2       # Cap HFT signals per cycle (avoid flooding pipeline)
+  min_imbalance_ratio: 2.5           # OBI: require 2.5x more liquidity on one side
+  min_spread_bps: 2.0                # Minimum spread (bps) to trade
+  arb_min_profit_bps: 30             # Cross-exchange arb: min profit after fees (bps); 0 = use fee-based default
+  tick_window: 50                    # Ticks for momentum (when fetch_recent_trades available)
+  disabled_in_regimes: []            # e.g. ["high_vol"] to disable HFT when regime is high_vol
+  use_advanced_hft_infrastructure: true   # Optional module: advanced HFT event loop, push OB/trades, drain signal_ring
+
+# ============================================================================
+# QUANTUM BOT (start_quantum_bot.py) - PEAK MODE
+# ============================================================================
+# Quantum bot runs with paper_trading_peak_mode and institutional_mode forced on.
+# Brain: Pinnacle + quantum walk + peak confidence floor and regime-aware boost.
+quantum_bot:
+  peak: true                           # Peak mode: confidence floor, regime-aware boost, cap signals
+  use_quantum_walk: true               # Quantum walk lite (or full when deps available) for signal confidence
+  use_quantum_monte_carlo_risk: true  # After portfolio update: VaR/CVaR via quantum Monte Carlo; optional circuit breaker
+  use_quantum_var_circuit_breaker: false  # When true, trip circuit breaker if drawdown > CVaR_95 (use with care)
+  use_full_quantum_walk: false         # When true and Qiskit/PennyLane available, use QuantumWalkSimulator
+  use_hybrid_switcher: false           # When true, use hybrid quantum-classical switcher for signal/risk
+  use_cloud_quantum: false             # When true and QUANTUM_API_KEY set, use cloud quantum for risk/sizing
+  use_quantum_annealing_selection: true   # Phase C5: annealer-driven strategy selection mask
+  use_multi_timeframe_walk: true       # Run quantum walk on 1h and 1m returns; combine visitation
+  use_multi_timeframe_confirmation: false  # Require 15m+1h alignment before accepting signals
+  volatility_adjusted_limits: false    # Scale max position/daily loss by realized vol (set true when vol feed available)
+  correlation_aware_sizing: false      # Use correlation-aware weights in execution (set true when correlation_matrix set)
+  use_quantum_var_position_cap: true  # Phase C3: hard CVaR-derived position cap
+  use_quantum_portfolio_weights: true # Phase C4: real QAOA-driven allocation weights
+  use_quantum_arb_search: true        # Phase C7: Grover-driven arbitrage search
+  max_tail_loss_fraction: 0.05        # Max fraction of capital that may be lost in the CVaR-99 tail
+  quantum_simulator_use_production: true  # Activate quantum/production_quantum_simulator (Phase C1 QAOA v2)
+  quantum_walk_steps: 15
+  quantum_walk_damping: 0.15
+  quantum_walk_correlation_threshold: 0.2
+  quantum_walk_boost_cap: 0.12
+  quantum_circuit_breaker_cooldown_seconds: 0   # No retrip for N seconds after trip (0 = disabled)
+  quantum_circuit_breaker_threshold_multiplier: 1.0  # Trip when drawdown > this * |CVaR_95|
+
+# ============================================================================
+# EMERGENCY SHUTDOWN - 10GbE ENHANCED
+# ============================================================================
+emergency_shutdown:
+  enabled: true
+  auto_shutdown: true
+  conditions:
+    - max_drawdown_exceeded
+    - daily_loss_limit_exceeded
+    - consecutive_losses_exceeded
+    - error_rate_exceeded
+    - system_health_critical
+
+    # 10GbE Speed-Based Triggers
+    - latency_spike_detected         # Network latency > 10μs
+    - execution_delay_exceeded       # Orders taking > 100ms
+    - flash_crash_detected           # Extreme volatility events
+    - network_failure_detected       # 10GbE connectivity issues
+    - arbitrage_execution_failed     # Failed high-speed arbitrage
+
+# ============================================================================
+# 10GbE NETWORK OPTIMIZATION
+# ============================================================================
+network_10gbe:
+  enabled: true
+  # Run template: Solarflare XtremeScale SFN8522-PLUS Dual Port 10GbE PCI-E Server Adapter FH
+  solarflare_adapter: "SFN8522-PLUS"
+  primary_interface: "Solarflare_Port1"
+  backup_interface: "Solarflare_Port2"
+  driver_mode: "onload"               # Activate OpenOnload
+  onload_profile: "latency"           # Optimize for lowest latency
+  target_latency_us: 1                # <1μs target
+  max_jitter_us: 1                   # <1μs jitter tolerance
+  enable_kernel_bypass: true
+  enable_hardware_timestamping: true  # PTP Hardware Timestamping
+  rx_ring_size: 4096
+  tx_ring_size: 4096
+  
+  # Hardware-Specific Optimizations for SFN8522-PLUS
+  sfn8522_optimizations:
+    pio_mode: true                    # Programmed I/O
+    ctpio_mode: true                  # Cut-Through PIO
+    rx_coalescing: false              # Disable coalescing for min latency
+    busy_poll_us: 100000              # Busy poll duration
+
+  # Arbitrage Configuration
+  arbitrage:
+    min_profit_threshold_pct: 0.05    # 0.05% minimum spread
+    max_execution_time_ms: 50         # <50ms execution target
+    enable_flash_arbitrage: true      # Microsecond opportunities
+    cross_exchange_enabled: true      # Multi-exchange arbitrage
+
+  # Enterprise Switching Infrastructure - RUN TEMPLATE: 2 switches (see run_template)
+  switch_infrastructure:
+    enabled: true
+    switch_count: 2                     # Run template: 2 switches (MLAG active-active)
+    primary_model: "X460-G2-48P-10GE4"
+    secondary_model: "X460-G2-48P-10GE4"
+    topology: "mlag_active_active"      # Multi-Chassis Link Aggregation, 20Gbps
+    redundancy_level: "mission_critical" # 99.999% Uptime
+    vlans_enabled: true               # Isolate trading traffic
+    qos_enabled: true                 # Prioritize trading packets (802.1p/DSCP)
+    jumbo_frames: true                # MTU 9000 end-to-end
+    cut_through_switching: true       # Ultra-low latency switching mode
+    port_channel_bonding: true        # LACP 20Gbps Aggregate Bandwidth
+
+  # Trading Frequency (10GbE Optimized)
+  trading_frequency:
+    min_trade_interval_ms: 100        # Minimum 100ms between trades
+    max_trades_per_hour: 25           # Conservative limit
+    enable_micro_trading: true        # Sub-$10 positions
+
+# ============================================================================
+# LOGGING
+# ============================================================================
+logging:
+  level: "INFO"
+  file: "logs/unified_system.log"
+  max_file_size_mb: 100
+  backup_count: 5
+
+# ============================================================================
+# PERFORMANCE TARGETS - 10GbE ENHANCED
+# ============================================================================
+targets:
+  win_rate: 0.65                     # 65% target win rate (10GbE improved)
+  sharpe_ratio: 2.0                  # Target Sharpe ratio (higher with speed)
+  max_drawdown: 0.15                  # Max 15% drawdown
+  monthly_return: 0.12                # 12% monthly return target (conservative)
+
+  # 10GbE Performance Targets
+  network_latency_us: 1               # <1μs network latency
+  execution_time_ms: 25               # <25ms order execution
+  arbitrage_win_rate: 0.75            # 75% for arbitrage trades
+  micro_trade_profit_target_pct: 0.03 # 0.03% target per micro-trade
+
+# ============================================================================
+# PERP EXCHANGE CONNECTORS (AU-Compatible: Bybit + OKX)
+# NOTE: Binance API is NOT available to Australian residents.
+# ============================================================================
+perp_exchanges:
+  bybit:
+    enabled: false                    # Set true + add API keys to activate
+    api_key: ""                       # Or set BYBIT_API_KEY env var
+    api_secret: ""                    # Or set BYBIT_API_SECRET env var
+    testnet: false
+  okx:
+    enabled: false                    # Set true + add API keys to activate
+    api_key: ""                       # Or set OKX_API_KEY env var
+    api_secret: ""                    # Or set OKX_API_SECRET env var
+    passphrase: ""                    # Or set OKX_PASSPHRASE env var
+    testnet: false
+
+# ============================================================================
+# FUNDING RATE HARVESTING
+# ============================================================================
+funding_rate_harvester:
+  enabled: true                       # Bybit connector active — delta-neutral harvest
+  open_threshold: 0.0005             # Open harvest at 0.05%/8h (≈54% APR)
+  close_threshold: 0.0001            # Close when rate drops to 0.01%/8h
+  stop_threshold: -0.0003            # Stop loss if rate goes negative
+  max_concurrent_harvests: 3         # Max simultaneous symbol harvests
+  preferred_venues:
+    - bybit
+    - okx
+  harvest_symbols:
+    - "BTC/USD"
+    - "ETH/USD"
+    - "SOL/USD"
+
+# ============================================================================
+# ALTERNATIVE DATA SIGNALS
+# ============================================================================
+alternative_data:
+  # On-chain metrics (Glassnode)
+  onchain:
+    enabled: false                    # Set true + API key to activate
+    provider: "glassnode"
+    api_key: ""                       # Or set GLASSNODE_API_KEY env var
+    flow_threshold_btc: 1000.0        # Significant flow threshold
+    mvrv_overbought: 2.0
+    mvrv_oversold: 1.0
+    cache_ttl_seconds: 3600
+
+  # Options market signals (Deribit)
+  options:
+    enabled: true                     # Public API — no key required
+    provider: "deribit"
+    currency: "BTC"
+    expiry_days_max: 30
+    pcr_bearish_threshold: 1.3
+    pcr_bullish_threshold: 0.6
+    iv_skew_bearish: 5.0
+    iv_skew_bullish: -3.0
+    cache_ttl_seconds: 900
+
+  # Macro regime overlay (yfinance)
+  macro:
+    enabled: true                     # Free data — no key required
+    lookback_days: 20
+    dxy_correlation_threshold: 0.5
+    cache_ttl_hours: 4
+
+# ============================================================================
+# ML MODELS
+# ============================================================================
+ml_models:
+  temporal_fusion_transformer:
+    enabled: true
+    model_path: ""                    # Path to .pt TorchScript or .json numpy weights
+    seq_len: 48                       # 48 bars of context
+    hidden_size: 64
+    n_heads: 4
+    online_learning_lr: 0.005         # Learning rate for live updates
+    save_path: "data/tft_weights.json"
+
+# ============================================================================
+# ADVANCED RISK
+# ============================================================================
+advanced_risk:
+  # Half-Kelly position sizing with uncertainty
+  kelly:
+    enabled: true
+    kelly_fraction: 0.5               # 0.5 = half-Kelly (conservative)
+    n_bootstrap: 2000
+    confidence_level: 0.90
+    min_trades_for_kelly: 10
+    max_position_fraction: 0.25       # Hard cap: never risk >25% on one trade
+    # FIX 3: Bootstrap values used when < 20 real trades (gives Kelly a starting point)
+    kelly_bootstrap_win_rate: 0.55    # Conservative 55% win rate assumption
+    kelly_bootstrap_avg_win: 0.02     # 2% average win
+    kelly_bootstrap_avg_loss: 0.015   # 1.5% average loss
+
+  # Correlation breakdown detection
+  correlation_monitor:
+    enabled: true
+    lookback_bars: 20
+    alert_threshold: 0.80             # Halve positions above this avg correlation
+    crisis_threshold: 0.92            # Near-full risk-off above this
+
+  # Alpha decay tracking
+  alpha_decay:
+    enabled: true
+    horizons_seconds: [300, 900, 1800, 3600, 14400]
+    update_execution_window: true     # Auto-adjust TWAP window based on decay
+
+# ============================================================================
+# MARKET MAKING (Avellaneda-Stoikov)
+# ============================================================================
+market_making:
+  enabled: false                      # Requires WebSocket order placement
+  symbols:
+    - "SOL/USD"
+    - "LINK/USD"
+  gamma: 0.1                          # Risk aversion (higher = tighter inventory mgmt)
+  k: 1.5                              # Order book depth parameter
+  session_seconds: 3600               # 1-hour virtual sessions
+  max_inventory_units: 5.0
+  min_spread_bps: 8.0
+
+# ============================================================================
+# STAT ARB (Cointegration-Based Pairs Trading)
+# ============================================================================
+stat_arb_cointegration:
+  enabled: true
+  pairs:
+    - ["BTC/USD", "ETH/USD"]
+    - ["ETH/USD", "SOL/USD"]
+    - ["BTC/USD", "LTC/USD"]
+  z_entry: 2.0                        # Enter when |z-score| > this
+  z_exit: 0.5                         # Exit when |z-score| < this
+  z_stop: 4.0                         # Stop loss when spread diverges further
+  price_history_len: 200              # Bars needed for cointegration test
+
+# ============================================================================
+# STORAGE BACKEND
+# ============================================================================
+storage:
+  backend: "sqlite"                   # "sqlite" or "timescaledb"
+  sqlite_path: "data/ticks.db"
+  timescaledb_url: ""                 # Or set TIMESCALE_DATABASE_URL env var
+  table_prefix: "argus"
+
+# ============================================================================
+# WEBSOCKET ORDER PLACEMENT
+# ============================================================================
+websocket_orders:
+  enabled: false                      # Enable WS order placement (lower latency)
+  exchange: "kraken"
+  timeout_seconds: 5.0
+  fallback_to_rest: true              # Always fall back to REST on WS timeout
+
+# ============================================================================
+# MARKET IMPACT MODEL (Almgren-Chriss square-root impact)
+# ============================================================================
+market_impact:
+  enabled: true
+  eta: 0.08                           # Permanent impact coefficient (Kraken default)
+  gamma: 0.314                        # Temporary impact coefficient
+  spread_bps: 4.0                     # Half-spread estimate (Kraken BTC/USD)
+  adv_usd: 50000000                   # Default 24h ADV for BTC/USD
+  sigma_daily: 0.03                   # Default daily volatility (3%)
+  max_acceptable_impact_bps: 30.0     # Gate: skip order if estimated cost > 30bps
+
+# ============================================================================
+# ALGORITHMIC ORDER EXECUTION (TWAP / VWAP / Adaptive)
+# ============================================================================
+algo_execution:
+  enabled: true
+  immediate_threshold_usd: 150.0      # Below this: skip algo, go market
+  default_type: "adaptive"            # immediate | twap | vwap | adaptive
+  default_duration_seconds: 300.0     # 5-minute default execution window
+  default_num_slices: 5               # Split into 5 child orders by default
+  max_slice_usd: 200.0                # Cap each slice
+  urgency: 0.5                        # 0=patient, 1=aggressive
+
+# ============================================================================
+# WALK-FORWARD BACKTESTER
+# ============================================================================
+backtesting:
+  enabled: true
+  train_months: 6                     # In-sample window length
+  oos_months: 2                       # Out-of-sample window length
+  step_months: 1                      # Walk-forward step size
+  position_size_pct: 0.10             # 10% of capital per trade
+  stop_loss_pct: 0.02                 # 2% stop-loss
+  take_profit_pct: 0.04               # 4% take-profit (2:1 RR)
+  use_impact_model: true              # Apply Almgren-Chriss slippage
+  data_source: "kraken"               # Exchange for historical OHLCV
+
+# ============================================================================
+# LIVE TRADING GATE (paper → live graduation criteria)
+# ============================================================================
+live_gate:
+  min_sharpe: 1.5                     # Minimum 30-day paper Sharpe
+  max_drawdown_pct: 0.08              # Maximum 8% drawdown in paper window
+  min_win_rate: 0.45                  # Minimum 45% win rate
+  min_trades: 50                      # Minimum 50 closed trades
+  lookback_days: 30                   # Rolling window for metrics
+  min_capital_aud: 500.0              # Minimum account capital
+  require_zero_critical_errors: true  # No CRITICAL log errors in last 24h
+
+# ============================================================================
+# POSITION REGISTRY (cross-strategy exposure tracking)
+# ============================================================================
+position_registry:
+  enabled: true
+  max_exposure_per_symbol_usd: 500.0  # Max gross USD per symbol across all strategies
+  max_total_exposure_usd: 800.0       # Max total gross USD across everything
+  max_positions_per_strategy: 3       # Max open positions per strategy
+  max_total_positions: 10             # Max total open positions
+  db_path: "data/position_registry.db"
+  persist: true                       # Survive restarts
+
+# ============================================================================
+# MULTI-TIMEFRAME CONFLUENCE FILTER
+# ============================================================================
+mtf_confluence:
+  enabled: true
+  timeframes: ["15m", "1h", "4h"]    # Timeframes to check agreement across
+  min_agreeing_tfs: 2                 # At least 2 must agree
+  min_confluence_score: 0.60          # Weighted agreement threshold
+  fast_ema: 9
+  slow_ema: 21
+  trend_ema: 50
+  require_higher_tf_agreement: true   # 4h must not explicitly oppose
+
+# ============================================================================
+# PORTFOLIO OPTIMIZER (Black-Litterman)
+# ============================================================================
+portfolio_optimizer:
+  enabled: true
+  tau: 0.025                          # Uncertainty in prior
+  risk_aversion: 2.5                  # Lambda for mean-variance
+  min_weight: 0.05                    # Minimum strategy allocation
+  max_weight: 0.50                    # Maximum strategy allocation
+  prior_mode: "equal"                 # equal | sharpe
+  rebalance_threshold: 0.05           # Rebalance only if weights shift >5%
+  min_history: 20                     # Minimum observations before using BL
+
+# ============================================================================
+# ROLLING PERFORMANCE FEEDER (Sharpe → meta engine wiring)
+# ============================================================================
+rolling_performance_feeder:
+  enabled: true
+  update_interval_seconds: 3600       # Recompute every hour
+  rolling_days: 30                    # 30-day rolling window
+  min_trades_per_strategy: 5          # Skip strategies with < 5 trades
+  dry_run: false                      # Set true to compute but not apply weights
+
+# ============================================================================
+# HOT RELOAD (config without restart)
+# ============================================================================
+hot_reload:
+  enabled: true
+  poll_interval_seconds: 30           # Check config mtime every 30 seconds
+  install_sighup_handler: true        # SIGHUP triggers immediate reload (Unix)
+
+# ============================================================================
+# TELEGRAM ALERTS
+# ============================================================================
+telegram:
+  enabled: false                      # Enable when TELEGRAM_BOT_TOKEN is set
+  # token: set via TELEGRAM_BOT_TOKEN env var
+  # chat_id: set via TELEGRAM_CHAT_ID env var
+  alert_on_trade: true
+  alert_on_risk: true
+  alert_on_funding: true
+  daily_summary_hour: 0               # Hour (AEST) to send daily summary
+
+# ============================================================================
+# NEWS SENTIMENT SIGNAL (CryptoPanic)
+# ============================================================================
+news_sentiment:
+  enabled: true                       # CryptoPanic free API — 5-min cache
+  # api_token: set via CRYPTOPANIC_API_TOKEN env var (optional — public posts free)
+  signal_threshold: 0.3               # Score to trigger signal
+  shock_threshold: 0.8                # Single-headline shock level
+  cache_ttl_seconds: 300              # 5-minute cache
+  symbols: ["BTC/USD", "ETH/USD", "SOL/USD"]
+
+# ============================================================================
+# UNISWAP V3 LP YIELD TRACKING
+# ============================================================================
+defi_lp:
+  enabled: false                      # Enable when UNISWAP_WALLET is set
+  # wallet_address: set via UNISWAP_WALLET env var
+  cache_ttl_seconds: 300
+  min_apr_to_hold: 2.0                # EXIT signal if APR < 2%
+  oor_fraction_to_rebalance: 0.5      # REBALANCE if >50% positions out of range
+
+# ============================================================================
+# TFT TRAINING PIPELINE
+# ============================================================================
+tft_training:
+  enabled: false                      # Set true to auto-train on startup
+  symbols: ["BTC/USD", "ETH/USD"]
+  timeframe: "1h"
+  train_months: 18
+  oos_months: 3
+  epochs: 30
+  weights_dir: "ml/weights"
+  retrain_interval_days: 7            # Weekly retraining schedule
+
+# ============================================================
+# Batch 3 — New component configuration sections
+# ============================================================
+
+fill_tracker:
+  enabled: true
+  db_path: "data/fills.db"
+  daily_limit_bps: 20.0              # max daily slippage budget in bps
+  daily_limit_usd: 50.0              # max daily slippage budget in USD
+
+maker_enforcement:
+  enabled: true
+  fallback_to_taker: true
+  urgency_threshold: 0.70            # bypass maker if urgency > this
+  max_retries: 3
+
+intraday_var:
+  enabled: true
+  capital_usd: 1000.0
+  var_limit_pct: 0.02                # 2% of capital
+  ewma_lambda: 0.94
+  confidence_95: 1.645
+  confidence_99: 2.326
+
+stress_tester:
+  enabled: true
+  capital_usd: 1000.0
+  stop_loss_pct: 0.15
+
+counterparty_monitor:
+  enabled: true
+  exchanges: ["kraken", "bybit", "okx", "coinbase"]
+  max_exposure_per_exchange_pct: 0.50
+
+funding_cost_limiter:
+  enabled: true
+  max_annual_cost_pct: 0.50
+  max_8h_rate_pct: 0.075
+  alert_threshold_pct: 0.30
+
+tail_hedge:
+  enabled: true
+  capital_usd: 1000.0
+  hedge_budget_pct: 0.02             # 2% of capital for hedges
+  min_urgency: 0.50
+
+liquidation_cascade:
+  enabled: true
+  oi_drop_threshold: 0.05
+  funding_threshold: -0.01
+  min_confidence: 0.60
+  lookback_hours: 4
+
+macro_event_calendar:
+  enabled: true
+  halt_window_minutes: 30
+  reduce_window_minutes: 120
+  reduce_factor: 0.30
+
+cross_exchange_arb:
+  enabled: true
+  fee_bps_per_side: 4.0
+  min_net_spread_bps: 5.0
+  max_position_usd: 500.0
+
+futures_basis_arb:
+  enabled: true
+  min_annual_basis_pct: 5.0
+  max_position_usd: 300.0
+  fee_bps: 6.0
+
+deribit_options:
+  enabled: true
+  symbol: "BTC"
+  cache_ttl: 300                     # 5 minutes
+
+hmm_regime:
+  enabled: true
+  n_states: 4
+  n_iter: 100
+  min_history: 60
+
+signal_stacker:
+  enabled: true
+  method: "adaptive"                 # static | adaptive | kelly
+  lookback: 50
+
+llm_signal:
+  enabled: true                      # RTX 5080 + Ollama running locally
+  provider: "ollama"
+  model: "llama3.1:8b-instruct-q4_K_M"    # 8B: fast, 4.9GB. Upgrade to 70B later
+  base_url: "http://localhost:11434"
+  timeout: 10.0
+  inference_timeout: 10              # seconds; hard deadline per LLM inference call
+
+hyperopt:
+  enabled: false                     # run manually; not during live trading
+  n_trials: 100                      # RTX 5080: more trials affordable
+  objective: "sharpe"
+  gpu_acceleration: true             # XGBoost + optuna use CUDA
+
+feature_importance:
+  enabled: true
+  n_permutations: 5
+
+health_server:
+  enabled: true
+  host: "0.0.0.0"
+  port: 8080
+
+process_lock:
+  enabled: true
+  name: "argus"
+
+latency_tracker:
+  enabled: true
+  max_history: 1000
+  thresholds:
+    signal_to_order: 500.0
+    order_to_fill: 5000.0
+    api_round_trip: 200.0
+    strategy_cycle: 1000.0
+
+exchange_monitor:
+  enabled: true
+  stale_orderbook_seconds: 30.0
+  check_interval: 30.0
+
+performance_attribution:
+  enabled: true
+  lookback_days: 30
+
+drawdown_autopsy:
+  enabled: true
+  drawdown_alert_pct: 0.05
+
+trade_journal:
+  enabled: true
+  db_path: "data/trade_journal.db"
+
+discord_webhook:
+  enabled: false                     # set DISCORD_WEBHOOK_URL env var to enable
+  username: "ARGUS Bot"
+
+pdf_reporter:
+  enabled: true
+  output_dir: "reports/"
+  period: "weekly"
+
+compliance:
+  ato_cgt:
+    enabled: true
+    financial_year_start_month: 7
+  austrac:
+    enabled: true
+    ttr_threshold_aud: 10000         # AUD threshold for Threshold Transaction Report
+    entity_name: "ARGUS Trading"
+  wash_sale:
+    enabled: true
+    lookback_days: 30                # ATO "bed and breakfast" detection window
+    block_trades: false              # false = warn only; true = hard block wash sale buys
+    # Australian law doesn't prohibit wash sales, but they may be flagged by ATO
+  tax_lot_optimizer:
+    strategy: "MIN_TAX"              # HIFO | LOFO | MIN_TAX | DISCOUNT_FIRST
+    tax_rate: 0.325
+    cgt_discount: 0.50
+
+fear_greed:
+  enabled: true
+  cache_ttl: 3600
+
+funding_predictor:
+  enabled: true
+  smoothing_alpha: 0.30
+
+tick_capture:
+  enabled: false                     # high storage; enable for microstructure research
+  db_path: "data/ticks.db"
+  batch_size: 100
+  flush_interval: 5.0
+
+tick_store:
+  enabled: true                      # Date-partitioned Parquet tick storage + replay
+  base_dir: "data/ticks"
+  flush_count: 1000                  # Flush buffer after N ticks
+  flush_interval_s: 60.0             # Flush buffer after N seconds
+  cleanup_max_days: 90               # Auto-delete tick files older than N days
+
+
+# ============================================================================
+# INFRASTRUCTURE — R740 server backends
+# All settings here are inactive by default (backend: local).
+# Activate by running with --profile r740 or ARGUS_CONFIG_PROFILE=r740.
+# ============================================================================
+infrastructure:
+  backend: local                   # local (SQLite + in-memory) | r740 (TimescaleDB + Redis + Kafka)
+
+  timescaledb:
+    enabled: false                 # set true in r740 profile
+    url_env_var: ARGUS_DATABASE_URL
+    pool_min: 2
+    pool_max: 20
+    connect_timeout: 10
+    command_timeout: 30
+
+  redis:
+    enabled: false                 # set true in r740 profile
+    url_env_var: ARGUS_REDIS_URL
+    pool_size: 10
+    socket_timeout: 5
+    retry_on_timeout: true
+    health_check_interval: 30
+    # Key prefixes (all ARGUS keys namespaced to avoid collision)
+    key_prefix: "argus:"
+    regime_ttl: 3600               # seconds before stale regime is evicted
+    position_ttl: 86400            # 24h — position state TTL
+
+  kafka:
+    enabled: false                 # set true in r740 profile
+    brokers_env_var: ARGUS_KAFKA_BROKERS
+    topics:
+      ticks:   "argus.ticks"
+      signals: "argus.signals"
+      orders:  "argus.orders"
+      fills:   "argus.fills"
+      risk:    "argus.risk"
+      audit:   "argus.audit"
+    producer:
+      acks: 1
+      retries: 3
+      batch_size: 16384
+      linger_ms: 5
+      compression_type: lz4
+    consumer:
+      group_id: argus-main
+      auto_offset_reset: earliest
+      enable_auto_commit: true
+
+  loki:
+    enabled: false                 # set true in r740 profile
+    url_env_var: ARGUS_LOKI_URL
+    labels:
+      application: argus
+
+# ============================================================================
+# BATCH 4 — EXECUTION ENHANCEMENTS
+# ============================================================================
+adaptive_slippage:
+  enabled: true
+  db_path: "data/fills.db"
+  min_samples: 50
+  retrain_interval: 3600
+
+rate_limiter:
+  enabled: true
+  # limits defined in execution/rate_limit_manager.py DEFAULT_LIMITS
+
+position_netter:
+  enabled: true
+
+order_flow_toxicity:
+  enabled: true
+  window: 50
+  bucket_size: 100
+
+conditional_orders:
+  enabled: true
+  # connector: null = simulation mode
+
+# ============================================================================
+# BATCH 4 — ML ENHANCEMENTS
+# ============================================================================
+meta_labeling:
+  enabled: true
+  threshold: 0.55
+  min_samples: 100
+  model_type: auto               # auto | logistic | gbm
+
+online_learner:
+  enabled: true
+  learning_rate: 0.01
+  drift_threshold: 50.0
+
+microstructure_ml:
+  enabled: false                 # enable when tick data available
+  horizon_seconds: 30
+  min_samples: 200
+  n_levels: 5
+
+orderbook_predictor:
+  enabled: false                 # enable when L2 feed connected
+  horizon_seconds: 30
+
+tft_data_pipeline:
+  enabled: true
+  lookback_days: 730
+  val_pct: 0.10
+  test_pct: 0.10
+
+# ============================================================================
+# BATCH 4 — STRATEGY ENHANCEMENTS
+# ============================================================================
+delta_neutral_perp_arb:
+  enabled: true                  # Bybit + OKX perp connectors active
+  spot_exchange: kraken
+  perp_exchange: bybit
+  capital_per_trade_usd: 500.0
+  min_funding_rate_bps: 3.0
+  min_annual_pct: 15.0
+
+volatility_arb:
+  enabled: false                 # enable when Deribit options data streaming
+  min_premium_pct: 15.0
+  capital_per_trade: 300.0
+
+kalman_pairs:
+  enabled: true
+  pairs:
+    - [BTC/AUD, ETH/AUD]
+  delta: 0.00001
+  ve: 0.001
+
+onchain_signals:
+  enabled: false                 # enable when GLASSNODE_API_KEY set
+  api_key_env: GLASSNODE_API_KEY
+
+social_sentiment:
+  enabled: false                 # enable when LUNARCRUSH_API_KEY set
+  api_key_env: LUNARCRUSH_API_KEY
+
+# ============================================================================
+# BATCH 4 — RISK ENHANCEMENTS
+# ============================================================================
+black_litterman:
+  enabled: true
+  risk_aversion: 2.5
+  tau: 0.05
+
+greeks_calculator:
+  enabled: true
+  risk_free_rate: 0.05
+
+liquidation_monitor:
+  enabled: true
+  warn_pct: 20.0
+  danger_pct: 10.0
+  critical_pct: 5.0
+
+cvar_optimizer:
+  enabled: true
+
+correlation_regime:
+  enabled: true
+  window: 24
+  crisis_threshold: 0.75
+  elevated_threshold: 0.55
+  crisis_periods: 3
+
+# ============================================================================
+# BATCH 4 — DATA & BACKTESTING
+# ============================================================================
+fred_macro:
+  enabled: true
+  api_key_env: FRED_API_KEY      # optional — falls back to hardcoded calendar
+  cache_ttl: 86400
+
+l2_normaliser:
+  enabled: true
+
+tick_backtester:
+  enabled: true
+  db_path: "data/ticks.db"
+  maker_fee_bps: 0.0
+  taker_fee_bps: 6.0
+  slippage_model: linear
+
+ab_framework:
+  enabled: true
+  min_samples: 100
+  significance: 0.05
+
+# ============================================================================
+# BATCH 4 — MONITORING & COMPLIANCE
+# ============================================================================
+twilio_alerts:
+  enabled: false                 # enable when TWILIO_* env vars set
+  # TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER, TWILIO_TO_NUMBER
+
+tax_harvester:
+  enabled: true
+  tax_rate: 0.325
+  min_harvest_aud: 50.0
+  min_days_held: 30
+  financial_year_start_month: 7
+
+cgt_reporter:
+  enabled: true
+  output_dir: "reports/cgt/"
+  # accountant_email: read from ACCOUNTANT_EMAIL env var
+
+# ============================================================================
+# BATCH 4 — OPS
+# ============================================================================
+capital_scaling:
+  enabled: true
+  state_path: "data/scaling_state.json"
+  current_stage: PAPER           # PAPER | STAGE_1..5
+
+# ============================================================================
+# BATCH 4 COMPLETE — ML, Strategy, Data, Backtesting, Compliance, Ops
+# ============================================================================
+
+volatility_forecaster:
+  enabled: true
+  lambda_ewma: 0.94
+  min_bars_ewma: 30
+  min_bars_garch: 250
+  use_garch: true              # Requires: pip install arch
+
+alpha_model:
+  enabled: true
+  min_bars: 288                # 24h of 5-minute bars
+  weights:
+    momentum_1d: 0.25
+    momentum_7d: 0.20
+    reversal_1h: 0.15
+    vol_adjusted_momentum: 0.25
+    carry: 0.15
+
+regime_classifier:
+  enabled: true
+  n_estimators: 200
+  max_depth: 4
+  # Requires: pip install xgboost (falls back to rule-based)
+
+whale_tracker:
+  enabled: true
+  whale_btc_threshold: 100.0   # BTC above this = whale tx
+  whale_eth_threshold: 1000.0  # ETH above this = whale tx
+  cache_ttl_seconds: 300
+  # cryptoquant_api_key: read from CRYPTOQUANT_API_KEY env var
+
+reinforcement_agent:
+  enabled: false               # Enable when model is trained
+  model_path: "models/rl_agent.zip"
+  max_position_usd: 1000.0
+  slippage_budget_bps: 20.0
+  # Requires: pip install stable-baselines3 gymnasium
+
+monte_carlo:
+  enabled: true
+  n_paths: 1000
+  n_steps: 252
+  random_seed: 42
+  confidence_levels: [0.05, 0.25, 0.50, 0.75, 0.95]
+
+regime_backtest:
+  enabled: true
+  min_trades_for_regime: 5     # Minimum trades to report regime stats
+
+austrac:
+  enabled: true
+  reporting_entity_name: "ARGUS Trading"
+  reporting_entity_id: "UNREG-001"  # Replace with your AUSTRAC RE ID
+  output_dir: "compliance/reports"
+  ttr_threshold_aud: 10000.0
+  # NOTE: actual submission via AUSTRAC Online portal — not automated
+
+deployment_checklist:
+  enabled: true
+  paper_pnl_min_usd: -50.0    # Paper P&L must be above this to go live
+  paper_days_required: 3
+  max_drawdown_pct: 15.0
+
+capital_migration:
+  enabled: true
+  # Stages: paper → micro (AUD 100) → seed (AUD 500) → live (AUD 1000)
+  # Advancement requires: days, Sharpe, drawdown, circuit break checks
+
+ollama:
+  enabled: true                # RTX 5080 workstation running
+  base_url: "http://localhost:11434"
+  model: "llama3.3:70b-instruct-q4_K_M"   # 70B fits in 16GB GDDR7 @ Q4_K_M
+  fallback_model: "llama3.1:8b-instruct-q4_K_M"  # fast fallback if 70B times out
+
+r740_backends:
+  enabled: false               # Enable when R740 server is provisioned
+  # Set via environment variables (see scripts/r740_activate.py):
+  # ARGUS_DATABASE_URL=postgresql://argus:argus@r740-ip:5432/argus
+  # ARGUS_REDIS_URL=redis://r740-ip:6379/0
+  # ARGUS_KAFKA_BROKERS=r740-ip:9092
+  # ARGUS_CONFIG_PROFILE=r740
+
+# ── Ensemble Signal Hub ─────────────────────────────────────────────
+ensemble_signal_hub:
+  enabled: true
+  cache_ttl_seconds: 60
+  weights:
+    fear_greed: 0.15
+    llm: 0.20
+    whale: 0.15
+    news: 0.10
+    alpha: 0.30
+    funding: 0.00
+  size_multiplier_range: [0.5, 1.5]
+
+# ── Model Manager ────────────────────────────────────────────────────
+model_manager:
+  enabled: true
+  models_dir: "models/"
+  staleness_threshold_hours: 168
+  auto_retrain_on_degradation: true
+  degradation_threshold: 0.55
+
+# ── API Dashboard ────────────────────────────────────────────────────
+api_dashboard:
+  enabled: true
+  port: 8081   # 8080 = HealthServer; 8081 = full dashboard
+  host: "0.0.0.0"
+
+# ── Signal Subscription Service (monetisation) ──────────────────────
+signal_service:
+  enabled: false          # set true + ARGUS_SIGNAL_ADMIN_KEY env var to activate
+  port: 8082
+  db_path: "data/signal_service.db"
+
+# ── Capital Migration Monitor ────────────────────────────────────────
+capital_migration_monitor:
+  enabled: true
+  check_interval_hours: 4
+
+# ── Weekly Retrain ───────────────────────────────────────────────────
+weekly_retrain:
+  enabled: true
+  day_of_week: "sunday"
+  hour: 2
+  models: ["regime", "rl_agent"]
+
+# ── GNN Asset Flow ──────────────────────────────────────────────────
+gnn_asset_flow:
+  enabled: true
+  assets: ["BTC/USD", "ETH/USD", "SOL/USD", "BNB/USD", "XRP/USD", "ADA/USD"]
+  lookback: 50
+
+# ── Autoencoder Regime ──────────────────────────────────────────────
+autoencoder_regime:
+  enabled: true
+  input_dim: 10
+  latent_dim: 3
+  hidden_dim: 16
+  n_clusters: 4
+
+# ── RL Portfolio Manager ────────────────────────────────────────────
+rl_portfolio:
+  enabled: true
+  n_strategies: 15
+  state_dim: 20
+  max_weight: 0.40
+  lr: 0.001
+
+# ── Attention Order Flow Predictor ──────────────────────────────────
+attention_orderflow:
+  enabled: true
+  seq_len: 50
+  feature_dim: 8
+  n_heads: 4
+
+# ── Latency Optimization ──────────────────────────────────────────
+# Minimises tick-to-trade latency across the entire pipeline.
+latency:
+  fast_mode: false                 # Skip non-essential per-cycle ops (GC, observability snapshots)
+  ws_order_preference: true        # Prefer WebSocket over REST for order placement
+  tick_to_trade_threshold_ms: 500  # Warn if total tick-to-trade exceeds this
+  ping_interval_s: 30              # Exchange ping interval for latency routing
+  connection_pool_enabled: true    # Pre-warm HTTPS keep-alive connections on startup
+  fire_and_forget_enabled: false   # Enable fire-and-forget order submission (for arb)
+
+connection_pool:
+  enabled: true
+  limit_per_host: 10
+  keepalive_timeout: 30
+  total_limit: 50
+
+order_templates:
+  enabled: true                    # Pre-compute order JSON at startup
+
+async_order_submitter:
+  enabled: false
+  dedup_window_ms: 100
+  max_pending: 100
+
+latency_router:
+  enabled: true
+  ping_interval_s: 30
+  degradation_threshold: 2.0
+
+tick_to_trade:
+  enabled: true
+  threshold_ms: 500
+  window_size: 500
+
+# ============================================================================
+# DEX HFT — Decentralised Exchange High-Frequency Trading
+# ============================================================================
+# Block times (not network latency) are the bottleneck — viable from anywhere.
+# All DEX features are disabled by default and opt-in.
+dex:
+  enabled: false                      # Enable DEX trading (requires RPC URL and private key)
+  rpc_url_env: "UNISWAP_RPC_URL"     # Env var name for RPC endpoint
+  private_key_env: "DEX_PRIVATE_KEY"  # Env var name (NEVER store key in config)
+  chain: "arbitrum"                   # ethereum, arbitrum, base, polygon, optimism
+  max_gas_cost_usd: 5.0              # Skip arb if gas exceeds this
+  min_arb_profit_bps: 10             # Minimum profit in basis points after all costs
+  max_position_usd: 500              # Maximum position size per arb trade
+  cex_fee_bps: 4.0                   # Assumed CEX taker fee per side
+  dex_fee_bps: 30                    # Default DEX pool fee (bps)
+  slippage_buffer_bps: 5.0           # Extra slippage allowance
+  flash_loan_enabled: false           # Enable flash loan arbitrage
+  flash_loan_provider: "aave"         # aave (0.09% fee) or dydx (0% fee) or balancer (0%)
+  max_flash_loan_usd: 100000         # Maximum flash loan amount
+  mempool_monitoring: false           # Enable mempool monitoring (requires WSS RPC)
+  watched_pools: []                   # Pool addresses to monitor (e.g. WETH/USDC on Arbitrum)
+
+# ============================================================================
+# PAPER TRADING OVERRIDES — disable noisy/blocking features for initial testing
+# ============================================================================
+self_improvement:
+  enabled: true                       # Enabled — evolver handles adaptation via strategy_evolver v4
+
+# NOTE: Override sections below take precedence over earlier definitions
+# (YAML last-occurrence-wins rule). Keep these as the active paper/prod settings.
+
+edge_cost_gate:
+  enabled: false                      # Disable edge-cost gate so signals flow through
+
+cycle_seconds: 10                     # 10s cycles for responsiveness
+
+multi_language:
+  enabled: true
+  use_native_workers: false           # native workers crash on Windows
+  use_cycle_aggregate_boost: false
+  use_risk_all: false
+  use_regime_estimate: false
+  use_slippage_estimate: false
+  use_drawdown_check: false
+  use_position_sizing_gate: false
+  use_signal_filter_gate: false
+  use_formal_risk_gate: false
+  use_microstructure_gate: false
+
+strategy_evaluation_engine:
+  enabled: true                       # Re-enabled — evaluates strategy fitness each cycle
+
+execution_engine:
+  dca_levels_pct: null
+  vwap_large_order_threshold_aud: 999999.0
+# PORTFOLIO REBALANCER — drift-based, cost-aware rebalancing
+# ============================================================================
+portfolio_rebalancer:
+  enabled: true
+  drift_threshold_pct: 5.0
+  min_rebalance_interval_hours: 4
+  cost_aware_skip: true
+
+# ============================================================================
+# TRANSACTION COST MODEL — spread, commission, impact, slippage estimation
+# ============================================================================
+transaction_cost_model:
+  default_spread_bps: 5.0
+  commission_bps: 26.0
+  slippage_pct: 0.001
+  market_impact_coefficient: 0.1
+
+# ============================================================================
+# CHAOS ENGINEERING — controlled fault injection for resilience testing
+# ============================================================================
+# WARNING: Only enable in paper-trading or staging environments!
+chaos:
+  enabled: false
+  latency_probability: 0.05
+  latency_min_ms: 50
+  latency_max_ms: 500
+  connection_drop_probability: 0.01
+  connection_drop_duration_s: 5
+  stale_data_probability: 0.02
+  stale_data_duration_s: 30
+  order_rejection_probability: 0.03
+
+# ============================================================================
+# SHADOW EXECUTION — hypothetical trade recording & divergence analysis
+# ============================================================================
+shadow_execution:
+  enabled: false
+  db_path: "data/shadow_trades.db"
+  divergence_alert_threshold_pct: 10.0
+
+# ============================================================================
+# TRANSFORMER PRICE PREDICTOR — deep-learning next-bar prediction
+# ============================================================================
+transformer_predictor:
+  enabled: true
+  fallback_lookback: 20            # bars for momentum fallback when PyTorch unavailable
+  seq_len: 60                      # Transformer input sequence length
+  epochs: 10                       # training epochs per fit() call
+  max_history: 2000                # rolling prediction records for calibration
+
+# ============================================================================
+# MULTI-HORIZON SIGNAL FUSION — attention-weighted timeframe aggregation
+# ============================================================================
+multi_horizon_fusion:
+  enabled: true
+  signal_ttl_s: 300.0              # stale signal expiry (seconds)
+  max_accuracy_records: 1000       # rolling window for per-timeframe accuracy
+  default_regime: "normal"
+
+# ============================================================================
+# CAUSAL DISCOVERY ENGINE — Granger causality between time series
+# ============================================================================
+causal_discovery:
+  enabled: true
+  max_lag: 5                       # max lag order for Granger tests
+  significance: 0.05               # p-value threshold for significance
+
+# ============================================================================
+# DYNAMIC DRAWDOWN CONTROLLER — convex position sizing reduction
+# ============================================================================
+dynamic_drawdown:
+  enabled: true
+  db_path: "data/drawdown_controller.db"
+  # Curve control points: [drawdown_pct, multiplier]
+  # At 5% DD → 0.8x, 10% → 0.5x, 15% → 0.2x, 20% → halt (0.0x)
+  curve:
+    - [0.0, 1.0]
+    - [5.0, 0.8]
+    - [10.0, 0.5]
+    - [15.0, 0.2]
+    - [20.0, 0.0]
+
+# ============================================================================
+# REGIME-CONDITIONAL VAR — VaR method selection by market regime
+# ============================================================================
+regime_conditional_var:
+  enabled: true
+  mc_simulations: 1000             # Monte Carlo sims for volatile regime
+  default_confidence: 0.99
+  regime_methods:
+    normal: "parametric"
+    crisis: "historical"
+    volatile: "monte_carlo"
+    trending: "parametric"
+
+# ============================================================================
+# OPPORTUNITY COST TRACKER — quantifies missed P&L from skipped signals
+# ============================================================================
+opportunity_cost:
+  enabled: true
+  db_path: "data/opportunity_cost.db"
+  position_size_usd: 100.0         # notional for P&L conversion
+  lookback_days: 7                 # default analysis window
+
+# ============================================================================
+# BATCH 11 — ARCHITECTURE, RESEARCH & REVENUE
+# ============================================================================
+
+# ── Event Sourcing Store ──────────────────────────────────────────────
+event_store:
+  enabled: true
+  db_path: "data/event_store.db"
+
+# ── Service Circuit Breaker ───────────────────────────────────────────
+service_circuit_breaker:
+  enabled: true
+  failure_threshold: 5
+  recovery_timeout_s: 60
+  success_threshold: 3
+
+# ── Canary Deployer ──────────────────────────────────────────────────
+canary_deployer:
+  enabled: true
+  db_path: "data/canary_deployments.db"
+  default_traffic_pct: 5.0
+
+# ── Bayesian Online Changepoint Detection ─────────────────────────────
+regime_changepoint:
+  enabled: true
+  hazard_lambda: 200
+  threshold: 0.5
+  max_run_length: 500
+
+# ── Fractal / Hurst Exponent Analyzer ─────────────────────────────────
+fractal_analyzer:
+  enabled: true
+  max_lag: 100
+  persistent_threshold: 0.55
+  anti_persistent_threshold: 0.45
+
+# ── Entropy-Based Signal Quality ──────────────────────────────────────
+entropy_signal_quality:
+  enabled: true
+  n_bins: 20
+
+# ── Tax-Loss Harvester ────────────────────────────────────────────────
+tax_loss_harvester:
+  enabled: true
+  db_path: "data/tax_harvest.db"
+  tax_rate: 0.325
+  wash_sale_lookback_days: 30
+  min_loss_aud: 50.0
+  financial_year_start_month: 7
+
+# ============================================================================
+# ANALYTICS & EVOLUTION — P&L attribution, strategy similarity, drawdown DNA,
+#   streak analysis, neuroevolution, strategy breeding, self-debugging
+# ============================================================================
+
+# P&L Attribution Engine — decomposes realised P&L into alpha/beta/timing/costs
+attribution_engine:
+  enabled: true
+  db_path: "data/attribution.db"
+  default_lookback_days: 30
+
+# Strategy Similarity Detector — Jaccard similarity of signal streams
+strategy_similarity:
+  enabled: true
+  db_path: "data/strategy_similarity.db"
+  redundancy_threshold: 0.8        # pairs above this flagged as redundant
+  default_lookback_days: 7
+
+# Drawdown DNA — classify drawdowns by root cause
+drawdown_dna:
+  enabled: true
+  db_path: "data/drawdown_dna.db"
+  black_swan_depth_pct: 10.0       # depth threshold for black-swan classification
+  black_swan_max_hours: 4.0        # max duration for black-swan
+  decay_min_hours: 168.0           # min hours to flag strategy decay (7 days)
+
+# Win/Loss Streak Analyzer — consecutive outcome tracking + runs test
+streak_analyzer:
+  enabled: true
+  db_path: "data/streaks.db"
+  tilt_threshold: 5                # consecutive losses to flag "on tilt"
+  runs_test_lookback: 100          # outcomes for Wald-Wolfowitz test
+
+# Neuroevolution — genetic algorithm for MLP architecture search
+neuroevolution:
+  enabled: false                   # enable for experimental architecture search
+  pop_size: 20
+  input_dim: 10
+  output_dim: 1
+  min_layers: 1
+  max_layers: 6
+  min_neurons: 8
+  max_neurons: 256
+  mutation_rate: 0.3
+  top_k: 5                        # elites per generation
+
+# Strategy Breeder — genetic crossover of strategy parameter sets
+strategy_breeder:
+  enabled: true
+  db_path: "data/strategy_breeding.db"
+  top_k: 5                        # parents selected per generation
+  offspring: 10                    # children per generation
+  mutation_rate: 0.1
+
+# Self-Debugger — anomaly detection on component outputs
+self_debugger:
+  enabled: true
+  window_size: 200                 # rolling output history per component
+  sigma_threshold: 3.0             # standard deviations for outlier detection
+  stuck_threshold: 20              # identical outputs to flag "stuck"
+  auto_disable_threshold: 5        # consecutive anomalies before auto-disable
+
+# ============================================================================
+# PEAK INTELLIGENCE — autonomous cognitive layer
+# ============================================================================
+
+# Cognitive Engine — 5-stage autonomous thinking loop (perceive/analyze/plan/decide/learn)
+cognitive_engine:
+  enabled: true
+  db_path: "data/cognitive_engine.db"
+  max_plans: 5                       # candidate plans per cycle
+  belief_prior: 0.5                  # default prior for new beliefs
+  belief_likelihood: 0.7             # default evidence strength
+  learning_rate: 0.1
+  pattern_lookback: 50
+  min_confidence_to_trade: 0.35
+  anomaly_z_threshold: 2.5          # z-score for anomaly detection
+  opportunity_min_score: 0.3        # minimum signal score to consider
+  threat_max_drawdown_pct: 5.0      # drawdown threshold for threat detection
+  risk_adjusted_return_weight: 0.50 # MCDA weight for risk-adjusted return
+  confidence_weight: 0.35           # MCDA weight for confidence
+  diversification_weight: 0.15      # MCDA weight for diversification benefit
+
+# Goal Manager — explicit goal pursuit (return, drawdown, Sharpe, win rate)
+goal_manager:
+  enabled: true
+  db_path: "data/goals.db"
+  max_active_goals: 10
+  risk_bump_pct: 10.0               # position size increase when behind on return
+  risk_cut_pct: 15.0                # position size decrease when ahead
+  exposure_cut_pct: 25.0            # exposure reduction on drawdown warning
+
+# Market Hypothesis Engine — generate/test/track market hypotheses
+market_hypothesis:
+  enabled: true
+  db_path: "data/hypotheses.db"
+  max_active: 20
+  default_expiry_hours: 24
+  min_probability: 0.3
+  confirmation_threshold: 0.7
+  rejection_threshold: 0.3
+
+# Attention System — dynamic focus allocation across symbols/strategies/risks
+attention_system:
+  enabled: true
+  high_vol_weight: 0.25
+  open_position_weight: 0.30
+  stop_proximity_weight: 0.20
+  signal_strength_weight: 0.15
+  volume_anomaly_weight: 0.10
+  ignore_threshold: 0.10            # symbols below this score are ignored
+  max_focus_symbols: 10
+  max_focus_strategies: 5
+
+# Counterfactual Analyzer — "what if" analysis for trades and skipped signals
+counterfactual:
+  enabled: true
+  db_path: "data/counterfactuals.db"
+  size_multiplier_large: 1.5
+  size_multiplier_small: 0.5
+  venue_fee_diff_bps: 5.0
+  limit_order_improvement_bps: 3.0
+  horizons: ["1h", "4h", "24h"]
+  lookback_days: 30
+
+# Predictive Planner — forward-looking trade plan generation and monitoring
+predictive_planner:
+  enabled: true
+  db_path: "data/trade_plans.db"
+  max_active_plans: 20
+  min_risk_reward: 1.5
+  default_horizon_hours: 24
+  min_confidence: 0.4
+
+# System Consciousness — self-awareness, capability matrix, trade/no-trade decisions
+system_consciousness:
+  enabled: true
+  confidence_decay_rate: 0.01
+  confidence_boost_rate: 0.02
+  stressed_drawdown_pct: 5.0
+  confident_win_streak: 5
+  cautious_loss_streak: 3
+  min_trades_for_assessment: 10
+  capability_smoothing: 0.3
+
+# =============================================================================
+# AUTONOMOUS MODE — full self-adapting operation
+# =============================================================================
+# When enabled, ARGUS:
+#   - Auto-promotes config tiers based on portfolio value
+#   - Auto-promotes strategies through CANDIDATE → PAPER → LIVE pipeline
+#   - Auto-retires underperforming strategies
+#   - Auto-scales background research based on system load
+#   - Learns from failures and applies lessons globally
+#   - Adapts to regime changes pre-emptively
+#   - Pauses itself if health degrades
+autonomous_mode:
+  enabled: true
+
+  # Capital tier auto-management
+  capital_tier_auto: true
+  capital_tier_starting: micro    # micro, small, medium, large, fund
+  capital_tier_ramp_cycles: 360   # smooth transition over 1 hour at 10s/cycle
+
+  # Strategy lifecycle automation
+  strategy_lifecycle_auto: true
+  discovery_cycles: 1             # GP evolves every cycle
+  validation_cycles: 50           # walk-forward every 50 cycles
+  paper_promotion_cycles: 100     # check paper candidates every 100
+  hostile_test_cycles: 200        # hostile tests every 200 cycles
+  live_promotion_cycles: 500      # live activation every 500 cycles
+  performance_eval_cycles: 1000   # evaluate live strategies every 1000
+
+  min_walk_forward_sharpe: 0.5
+  min_paper_trades_for_promotion: 30
+  retire_sharpe_threshold: -0.2
+  boost_sharpe_threshold: 0.8
+  max_live_strategies: 30
+
+  # Antifragile failure response
+  antifragile_enabled: true
+  failure_escalation_threshold: 3       # disable pattern after 3 occurrences
+  failure_escalation_window_hours: 24
+
+  # Resource autoscaling
+  resource_autoscale: true
+  autoscale_cycles: 10                  # check load every 10 cycles
+  autoscale_hysteresis_cycles: 5        # require 5 cycles before applying
+
+  # Self-diagnosis auto-action
+  health_check_cycles: 50
+  auto_pause_threshold: 30              # halt if health < 30
+  reduce_size_threshold: 50             # 50% size if health 30-50
+  warn_threshold: 70                    # warn if health 50-70
+
+  # Discord alerts for autonomous events
+  discord_alerts: true
+  alert_on_promotion: true
+  alert_on_retirement: true
+  alert_on_pattern_disable: true
+  alert_on_tier_change: true
+  alert_on_health_change: true
+
+# =============================================================================
+# MARKET MAKER — structural income strategy
+# =============================================================================
+market_maker:
+  enabled: false                  # enable when at SMALL tier or above
+  symbols:
+    - BTC/USD
+    - ETH/USD
+  base_spread_bps: 8.0
+  min_spread_bps: 4.0
+  max_spread_bps: 50.0
+  quote_size_pct: 0.02            # 2% of capital per quote
+  max_inventory_pct: 0.10         # 10% of capital max inventory
+  inventory_skew_strength: 1.5
+  requote_threshold_bps: 2.0
+  vol_adjustment_factor: 10.0
+  emergency_hedge_pct: 0.85
+  total_capital_pct: 0.40         # 40% of capital allocated to MM
+
+# =============================================================================
+# CONTINUOUS ADAPTATION — ARGUS code constantly adapts to market data
+# =============================================================================
+# Every cycle, ARGUS learns from observations and slowly drifts parameters,
+# gate thresholds, and strategy weights toward what works in the current
+# market regime. The health monitor reverts changes that hurt performance.
+continuous_adaptation:
+  enabled: true
+
+  # Master mode (aggressive / normal / conservative / paused)
+  mode: normal
+
+  # Cadences (cycles between adaptation runs)
+  parameter_drift_cycles: 50      # drift parameters every 50 cycles
+  gate_adapt_cycles: 100          # adapt gates every 100 cycles
+  health_check_cycles: 50         # check adaptation health every 50 cycles
+  full_sweep_cycles: 1000         # full optimization sweep every 1000
+
+  # Health monitoring
+  measurement_window_cycles: 100  # measure adaptation effect over 100 cycles
+
+  # Safety bounds
+  max_simultaneous_adaptations: 10  # max parameters changed per cycle
+  max_drift_per_cycle_pct: 0.02   # max 2% parameter change per cycle
+
+  # Auto-protections
+  auto_throttle: true             # slow down if adaptations hurt
+  auto_revert: true               # revert if 5 consecutive bad cycles
+  hurt_streak_throttle: 3         # throttle after 3 bad cycles
+  hurt_streak_revert: 5           # revert after 5 bad cycles
+
+  # Observation buffer
+  observation_buffer_size: 100000 # max observations to keep
+  persist_observations: false     # write to disk (slower but durable)
+
+  # Default parameters to adapt
+  adapt_parameters:
+    - max_position_pct
+    - confidence_threshold
+    - stop_loss_pct
+    - take_profit_pct
+    - trailing_stop_pct
+    - vol_adjustment_factor
+    - kelly_fraction
+
+  # Default gates to adapt
+  adapt_gates:
+    - confidence_gate
+    - regime_confidence_gate
+    - edge_score_gate
+    - drawdown_gate
+
+# =============================================================================
+# CODE EVOLUTION — ARGUS writes new Python strategy code at runtime
+# =============================================================================
+# This is the most aggressive form of self-modification: ARGUS generates new
+# .py files in generated_strategies/, validates them statically, runs them in
+# a sandbox, commits them to git, promotes them to active, and hot-reloads
+# them into the running process.
+#
+# SAFETY: All generated code is constrained to:
+#   - generated_strategies/ subdirectory only (never modifies core ARGUS files)
+#   - Whitelisted imports only (no os, subprocess, network, eval/exec)
+#   - AST-validated before any execution
+#   - Sandbox-tested against synthetic market states first
+#   - Git-committed for rollback capability
+#   - Subject to the same hostile scenario testing as hand-written strategies
+code_evolution:
+  enabled: true
+
+  # Generation cadence
+  generation_cycles: 500           # generate every 500 cycles
+  max_generations_per_cycle: 3     # max strategies generated per cycle
+  max_active_strategies: 50        # cap on concurrent generated strategies
+
+  # Pattern detection thresholds
+  pattern_min_observations: 50     # min observations for pattern to be promoted
+  pattern_min_win_rate: 0.55       # min historical win rate
+  pattern_min_sharpe: 0.5          # min historical Sharpe ratio
+
+  # Pipeline stages
+  auto_promote_to_active: true     # move passing strategies to active/
+  auto_commit_to_git: true         # version control every generation
+  auto_reload_after_commit: true   # hot-reload into running process
+
+  # Sandbox limits
+  max_eval_time_ms: 100            # per-call evaluation timeout
+  sandbox_test_samples: 50         # number of test states to run
+  max_sandbox_time_s: 5            # total sandbox time limit
+
+  # Code review constraints
+  max_file_size_bytes: 10240       # 10KB max per generated file
+  max_ast_nodes: 500               # AST complexity limit
+
+  # Directories
+  candidates_dir: generated_strategies/candidates
+  active_dir: generated_strategies/active
+  graveyard_dir: generated_strategies/graveyard
+
+# =============================================================================
+# UNIVERSAL ADAPTATION — every parameter in ARGUS adapts to market data
+# =============================================================================
+# This is the highest-level adaptation system. It auto-discovers all numerical
+# parameters from this YAML config (~700 of them), groups them into ~10
+# clusters, and adapts the cluster multipliers based on observed P&L.
+#
+# Parameters are NOT adapted individually (not enough samples for 700 params).
+# Instead, parameters with correlated outcomes are grouped into clusters that
+# adapt together. This reduces the effective tunable surface from 700 → 10
+# while still affecting all 700 parameters via cluster multipliers.
+#
+# Safety:
+#   - Bounds enforcement (every param has min/max)
+#   - Dependency constraints (e.g. TP > SL, CVaR > VaR)
+#   - Per-cluster health monitoring
+#   - Auto-revert on consecutive bad cycles
+#   - Auto-throttle if too many reverts
+universal_adaptation:
+  enabled: true
+
+  # Mode: aggressive / normal / conservative / paused
+  mode: normal
+
+  # Cadences
+  cluster_adapt_cycles: 100        # adapt clusters every 100 cycles
+  health_check_cycles: 50          # check health every 50 cycles
+
+  # Per-cycle limits
+  max_clusters_per_cycle: 5        # max clusters drifted per cycle
+
+  # Auto-protections
+  auto_revert: true                # revert clusters that hurt for 5 cycles
+  auto_throttle: true              # slow adaptation if reverts spike
+
+  # YAML auto-discovery
+  yaml_path: unified_config.yaml
+  auto_discover_yaml: true
+
+# =============================================================================
+# ADVANCED TIER — 15 research-grade modules
+# =============================================================================
+# These are the most sophisticated components in ARGUS. They cover the full
+# range from Bayesian optimization to quantum annealing to federated learning.
+# Each is opt-in and can be enabled/disabled individually.
+advanced_tier:
+  enabled: true
+
+  # Bayesian Gaussian Process parameter optimization
+  bayesian_optimizer:
+    enabled: true
+    exploration_weight: 0.1
+    min_observations: 5
+
+  # Multi-armed bandit for strategy selection (Thompson Sampling)
+  thompson_bandit_router:
+    enabled: true
+    exploration_rate: 0.15
+    decay_factor: 0.99
+
+  # Reinforcement learning execution agent (PPO-style)
+  rl_execution_agent:
+    enabled: true
+    learning_rate: 0.001
+    state_dim: 5
+
+  # Genetic programming for cluster discovery
+  gp_cluster_discovery:
+    enabled: true
+    population_size: 30
+    generations_per_run: 15
+
+  # Mixture of experts strategy routing
+  moe_strategy_router:
+    enabled: true
+    gating_learning_rate: 0.01
+
+  # Transformer-inspired world model for lookahead planning
+  world_model:
+    enabled: true
+    rollout_horizon: 5
+    ensemble_size: 3
+
+  # MAML meta-learning across markets
+  meta_learner_maml:
+    enabled: true
+    inner_lr: 0.01
+    meta_lr: 0.001
+    n_shots: 10
+
+  # Elastic Weight Consolidation for continual learning
+  ewc_continual_learner:
+    enabled: true
+    ewc_lambda: 1000.0
+    max_grad_norm: 1.0
+
+  # Hierarchical reinforcement learning (multi-timescale)
+  hierarchical_rl:
+    enabled: true
+    timescales_seconds: [0.1, 5.0, 60.0]
+
+  # Adversarial robustness training
+  adversarial_trainer:
+    enabled: true
+    epsilon: 0.2
+    n_adversaries_per_real: 5
+
+  # Probabilistic programming (Bayesian market models)
+  probabilistic_programming:
+    enabled: true
+    n_mcmc_samples: 1000
+
+  # Causal GNN for cross-asset relationships
+  causal_gnn:
+    enabled: true
+    n_gnn_layers: 2
+    granger_lag: 5
+
+  # Simulated quantum annealing for portfolio optimization
+  quantum_annealer:
+    enabled: true
+    n_iterations: 1000
+    initial_temperature: 10.0
+    cooling_rate: 0.99
+
+  # Federated learning across instances
+  federated_learner:
+    enabled: true
+    aggregation_method: fedavg
+    dp_noise_scale: 0.1
+
+  # Deep causal inference with do-calculus
+  deep_causal_engine:
+    enabled: true
+    max_dag_size: 50
+
+# ============================================================================
+# ADVANCED FEATURES - NEW MODULES (v8.2.0)
+# ============================================================================
+# Configuration for newly implemented advanced features
+
+advanced_features:
+  # Master switch for all advanced features
+  enabled: true
+  fallback_on_error: true
+  
+  # TCA (Transaction Cost Analysis) Engine
+  tca_engine:
+    enabled: true
+    cost_model: "advanced"  # basic | advanced
+    track_slippage: true
+    track_market_impact: true
+    report_frequency: "daily"
+  
+  # POV (Percentage of Volume) Execution
+  pov_executor:
+    enabled: true
+    target_participation: 0.10  # 10% of volume
+    max_participation: 0.20     # 20% max
+    urgency: 0.5                # 0-1 scale
+    min_order_size_usd: 10.0
+  
+  # Concept Drift Detection
+  drift_detection:
+    enabled: true
+    window_size: 1000
+    alert_threshold: 0.05
+    retrain_trigger: true
+    monitored_features: ["returns", "volatility", "volume", "spread"]
+  
+  # LLM Sentiment Integration
+  llm_sentiment:
+    enabled: false  # Requires API keys
+    provider: "openai"  # openai | anthropic | local
+    model: "gpt-4"
+    cache_ttl_seconds: 300
+    min_confidence: 0.7
+  
+  # Uncertainty Quantification
+  uncertainty_quantification:
+    enabled: true
+    method: "ensemble"  # ensemble | bayesian | dropout
+    n_ensemble_models: 5
+    confidence_level: 0.95
+    use_for_position_sizing: true
+  
+  # Tail Risk Hedging
+  tail_risk_hedging:
+    enabled: true
+    var_confidence: 0.99
+    cvar_window: 252
+    hedge_trigger_threshold: 0.02
+    max_hedge_ratio: 0.5
+  
+  # Stress Testing Framework
+  stress_testing:
+    enabled: true
+    scenarios:
+      - name: "2008_financial_crisis"
+        shocks: {"SPX": -0.40, "VIX": 2.0}
+      - name: "2020_covid_crash"
+        shocks: {"SPX": -0.34, "BTC": -0.50}
+      - name: "crypto_winter"
+        shocks: {"BTC": -0.75, "ETH": -0.80}
+    run_frequency: "weekly"
+  
+  # A/B Testing Framework
+  ab_testing:
+    enabled: true
+    min_sample_size: 100
+    significance_level: 0.05
+    auto_stop: true
+    max_duration_days: 30
+  
+  # Delta Hedging Module
+  delta_hedging:
+    enabled: true
+    rebalance_threshold: 0.1
+    max_gamma_exposure: 100.0
+    hedge_frequency: "hourly"
+  
+  # Black-Litterman Optimization
+  black_litterman:
+    enabled: true
+    risk_aversion: 1.0
+    tau: 0.05
+    use_market_caps: true
+    view_confidence: 0.8
+  
+  # Event Sourcing Audit Trail
+  event_sourcing:
+    enabled: true
+    db_path: "data/events.db"
+    retention_days: 365
+    snapshot_frequency: 1000
+    enable_snapshots: true
+  
+  # Real-time Feature Store
+  realtime_feature_store:
+    enabled: true
+    update_frequency_ms: 100
+    ttl_seconds: 300
+    max_features: 1000
+    persistence: true
+  
+  # CQRS Pattern
+  cqrs:
+    enabled: true
+    read_model_cache_size: 10000
+    command_validation: true
+    audit_logging: true
+  
+  # MiFID II Compliance
+  mifid2_compliance:
+    enabled: false  # Enable for EU regulatory compliance
+    reporting_frequency: "daily"
+    best_execution_tracking: true
+    venue_analysis: true
+  
+  # GNN (Graph Neural Network) Training
+  gnn_training:
+    enabled: true
+    hidden_dim: 64
+    num_layers: 3
+    learning_rate: 0.001
+    batch_size: 32
+    epochs: 100
+  
+  # Multi-task Learning
+  multi_task_learning:
+    enabled: true
+    tasks:
+      - name: "price_prediction"
+        type: "regression"
+        weight: 1.0
+      - name: "volatility_prediction"
+        type: "regression"
+        weight: 0.8
+      - name: "direction_prediction"
+        type: "classification"
+        weight: 1.2
+    use_uncertainty_weighting: true
+    use_gradient_surgery: true
+  
+  # Causal Inference
+  causal_inference:
+    enabled: true
+    methods: ["backdoor", "iv", "did"]
+    dag_auto_discovery: true
+    min_effect_size: 0.1
+  
+  # Quantum Portfolio Optimization
+  quantum_optimization:
+    enabled: false  # Requires quantum libraries
+    backend: "simulator"  # simulator | qiskit | real
+    n_qubits: 10
+    n_iterations: 1000
+  
+  # Diffusion Models (Synthetic Data)
+  diffusion_models:
+    enabled: true
+    num_timesteps: 1000
+    schedule: "cosine"
+    generation_batch_size: 100
+    use_for_augmentation: true
+  
+  # Advanced Features Orchestrator
+  orchestrator:
+    enabled: true
+    max_concurrent_features: 10
+    feature_timeout_seconds: 30
+    enable_monitoring: true
+    health_check_interval: 60
+  
+  # Distributed Tracing
+  distributed_tracing:
+    enabled: true
+    service_name: "argus"
+    sample_rate: 0.1
+    export_to: "stdout"  # stdout | jaeger | otlp
+
+# ============================================================================
+# ADAPTIVE SYSTEM - REAL-TIME MARKET ADAPTATION (v8.3.0)
+# ============================================================================
+# Configuration for the adaptive orchestrator that provides real-time
+# market adaptation including regime detection, strategy rotation,
+# self-healing models, and dynamic position sizing.
+
+adaptive:
+  # Master switch for adaptive system
+  enabled: true
+  
+  # Regime Detection
+  regime_check_interval_seconds: 10
+  min_regime_confidence: 0.7
+  regime_history_window: 1000
+  
+  # Strategy Rotation
+  strategy_rotation_interval_minutes: 60
+  enable_auto_rotation: true
+  min_rotation_confidence: 0.75
+  rotation_cooldown_minutes: 30
+  
+  # Self-Healing Models
+  model_health_check_interval_minutes: 30
+  enable_auto_retrain: true
+  performance_degradation_threshold: 0.15
+  min_retrain_samples: 100
+  model_rollback_enabled: true
+  
+  # Dynamic Position Sizing
+  position_sizing_update_seconds: 5
+  enable_dynamic_sizing: true
+  volatility_target: 0.15  # 15% annualized volatility target
+  min_position_multiplier: 0.25
+  max_position_multiplier: 2.0
+  
+  # Correlation Regime Detection
+  correlation_update_interval_minutes: 5
+  correlation_window_days: 30
+  correlation_regime_threshold: 0.3
+  
+  # Liquidity Adaptation
+  liquidity_update_interval_seconds: 30
+  min_liquidity_score: 0.5
+  liquidity_impact_threshold: 0.01  # 1% price impact threshold
+  
+  # Event Reactor
+  event_check_interval_seconds: 60
+  news_sentiment_threshold: 0.7
+  event_impact_threshold: 0.02
+  event_cooldown_minutes: 15

@@ -1,0 +1,43 @@
+# ConfigMap holding non-secret runtime config
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "argus.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "argus.labels" . | nindent 4 }}
+data:
+  # Placeholder — mount actual unified_config.yaml here or override at deploy time
+  argus.env: |
+    ARGUS_ENV=production
+    ARGUS_VERSION={{ .Chart.AppVersion }}
+---
+# Prometheus alert + recording rules ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argus-prometheus-rules
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "argus.labels" . | nindent 4 }}
+data:
+  argus_alerts.yml: |
+    # Loaded from monitoring/alerts/argus_alerts.yml (Push 84)
+    # Mount full file via CI or kustomize overlay
+    groups: []
+  recording_rules.yml: |
+    # Loaded from monitoring/alerts/recording_rules.yml (Push 84)
+    groups: []
+---
+# Grafana dashboard ConfigMap (sidecar auto-discovery)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argus-grafana-strategy-dashboard
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "argus.labels" . | nindent 4 }}
+    grafana_dashboard: "1"
+data:
+  strategy_performance.json: |
+    {"title": "Argus \u2014 Strategy Performance", "uid": "argus-strategy-perf-83", "panels": [], "schemaVersion": 38}

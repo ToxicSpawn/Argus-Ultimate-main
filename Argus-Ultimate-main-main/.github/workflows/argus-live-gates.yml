@@ -1,0 +1,47 @@
+name: Argus Live Gates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  live-gates:
+    name: Live Core Gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pyyaml
+
+      - name: Run live-core tests
+        run: |
+          pytest \
+            tests_unified/test_live_import_wall.py \
+            tests_unified/test_runtime_manifest.py \
+            tests_unified/test_live_guard.py \
+            tests_unified/test_state_machine.py \
+            tests_unified/test_constitution_gate.py \
+            tests_unified/test_liquidity_gate.py \
+            tests_unified/test_phase_d_execution_flow.py \
+            tests_unified/test_phase_d_constitution_reject.py \
+            tests_unified/test_replay_engine.py \
+            tests_unified/test_target_to_execution_flow.py \
+            tests_unified/test_batch2_wrappers.py \
+            tests_unified/test_batch3_planning_modules.py \
+            tests_unified/test_batch4_strategy_and_adapters.py \
+            --tb=short -q

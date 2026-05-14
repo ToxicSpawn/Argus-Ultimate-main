@@ -1,0 +1,139 @@
+# =============================================================================
+# Argus v6.2.0 Exchange Configuration
+# =============================================================================
+# Fill in your API keys before running Argus.
+# NEVER commit this file with real keys — add it to .gitignore.
+#
+# All exchanges are optional.  Argus will use whichever are configured and
+# enabled=true.  Recommended minimum for $1k AUD:
+#   - btcmarkets (AUD on-ramp, -0.05% rebate, AUSTRAC registered)
+#   - mexc       (0% maker fee, widest pair selection)
+#   - bybit      (fallback, funding arb)
+#
+# Venue priority (best to worst for market-making):
+#   btcmarkets → mexc → bybit → kraken → coinbase
+# =============================================================================
+
+exchanges:
+
+  # ---------------------------------------------------------------------------
+  # Bybit — Primary funding-arb venue + zero-fee spot (select pairs)
+  # ---------------------------------------------------------------------------
+  bybit:
+    api_key: "YOUR_BYBIT_API_KEY"
+    api_secret: "YOUR_BYBIT_API_SECRET"
+    testnet: false
+    enabled: true
+    role:
+      - mm             # market making on zero-fee spot pairs
+      - funding_arb    # delta-neutral carry trade on perpetuals
+    notes: >
+      Zero maker fee on select spot pairs.
+      Near-zero futures maker fee (0.01%).
+      Primary funding arb venue — largest perp OI.
+      Supports order amendment (efficient cancel-replace).
+
+  # ---------------------------------------------------------------------------
+  # MEXC — Best micro-capital MM venue (0% spot and futures maker fee)
+  # ---------------------------------------------------------------------------
+  mexc:
+    api_key: "YOUR_MEXC_API_KEY"
+    api_secret: "YOUR_MEXC_API_SECRET"
+    testnet: false
+    enabled: true
+    role:
+      - mm             # market making (zero fee → every spread tick is profit)
+      - funding_arb    # 0% futures maker is industry-leading
+    notes: >
+      ZERO maker fee on spot AND futures — unique in the industry.
+      1000+ USDT-quoted pairs including many mid-cap alts with wide spreads.
+      Lower competition than Bybit on individual pairs.
+      Argus uses MEXC_SPOT_MAKER_FEE=0.0, MEXC_FUTURES_MAKER_FEE=0.0.
+      MEXC is the primary choice for new pair discovery at $1k scale.
+
+  # ---------------------------------------------------------------------------
+  # BTC Markets — AUSTRAC registered, -0.05% maker REBATE
+  # ---------------------------------------------------------------------------
+  btcmarkets:
+    api_key: "YOUR_BTCM_API_KEY"
+    api_secret: "YOUR_BTCM_API_SECRET"
+    enabled: true
+    role:
+      - mm             # maker rebate makes this venue always profitable
+    notes: >
+      AUSTRAC-registered Australian exchange — ideal for AU-resident operators.
+      -0.05% maker REBATE: the exchange pays you per fill (BTCM_MAKER_FEE=-0.0005).
+      AUD-quoted pairs: BTC-AUD, ETH-AUD, SOL-AUD, XRP-AUD, DOGE-AUD, etc.
+      Less automated competition than USDT venues → wider spreads common.
+      Argus always prefers BTC Markets when a pair is available (prefer_rebate_venues=true).
+
+  # ---------------------------------------------------------------------------
+  # Kraken — Reputable but expensive at $1k scale (disabled by default)
+  # ---------------------------------------------------------------------------
+  kraken:
+    api_key: "YOUR_KRAKEN_API_KEY"
+    api_secret: "YOUR_KRAKEN_API_SECRET"
+    enabled: false    # disabled by default — 0.16% maker is too expensive at $1k
+    role:
+      - secondary     # fallback only; do not use as primary MM venue
+    notes: >
+      0.16% maker fee → needs ≥32 bps spread just to break even.
+      NOT recommended at $1k scale; every fill costs money.
+      Only enable if targeting very wide-spread pairs (>50 bps).
+      Fees drop with higher volume tiers, but that requires far more capital.
+
+  # ---------------------------------------------------------------------------
+  # Coinbase — Most expensive venue (disabled by default)
+  # ---------------------------------------------------------------------------
+  coinbase:
+    api_key: "YOUR_COINBASE_API_KEY"
+    api_secret: "YOUR_COINBASE_API_SECRET"
+    enabled: false    # disabled by default — 0.40% maker is prohibitive at $1k
+    role:
+      - secondary     # absolute last resort
+    notes: >
+      0.40% maker fee → needs ≥80 bps spread just to break even.
+      Virtually never viable at $1k for MM.
+      Regulatory-compliant (US-listed public company) if compliance matters.
+      Only enable for extremely wide-spread, illiquid pairs — and even then,
+      prefer MEXC or BTC Markets first.
+
+# =============================================================================
+# Capital allocation (AUD)
+# =============================================================================
+# Total $1,000 AUD ≈ $620 USD at 0.62 rate.
+# Allocation:  55% MM ($550 AUD / $341 USD)
+#              40% funding arb ($400 AUD / $248 USD)
+#               5% reserve (buffer for fees, slippage, rebalancing)
+
+capital:
+  total_aud: 1000.0
+  mm_pct: 0.55          # market making  → ~$550 AUD
+  funding_arb_pct: 0.40 # funding arb    → ~$400 AUD
+  reserve_pct: 0.05     # liquidity buffer → ~$50 AUD
+  aud_usd_rate: 0.62    # used for USD normalisation; update live before trading
+
+# =============================================================================
+# Risk settings
+# =============================================================================
+
+risk:
+  max_drawdown_pct: 15.0       # kill switch at 15% portfolio drawdown
+  max_daily_loss_aud: 16.0     # hard stop after ~$10 USD daily loss
+  max_position_per_pair_pct: 20.0  # never more than 20% in one pair
+  max_open_pairs: 5            # MM active on at most 5 pairs simultaneously
+  paper_trading: true          # SET TO FALSE WHEN READY FOR LIVE TRADING
+  # WARNING: paper_trading=false will place real orders and risk real money.
+  # Verify your API keys, fee settings, and risk limits before going live.
+
+# =============================================================================
+# Scanner settings
+# =============================================================================
+
+scanner:
+  min_spread_bps: 20           # minimum spread to consider a pair
+  mexc_min_volume_usd: 20000   # $20k min 24h volume on MEXC pairs
+  mexc_max_volume_usd: 2000000 # $2M max 24h volume (beyond this spreads compress)
+  bybit_min_volume_usd: 50000  # $50k min 24h volume on Bybit pairs
+  rescan_interval_seconds: 60  # how often to re-rank pairs
+  top_pairs_to_trade: 3        # number of pairs to actively quote at once

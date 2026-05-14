@@ -1,0 +1,99 @@
+{
+  "generated_at_utc": "2026-03-07T18:35:43.320303+00:00",
+  "overall_status": "PASS",
+  "checks": [
+    {
+      "name": "decision_snapshot_growth",
+      "status": "PASS",
+      "details": {
+        "count": 547
+      }
+    },
+    {
+      "name": "intent_state_distribution",
+      "status": "PASS",
+      "details": {
+        "states": {
+          "FAILED": 1,
+          "SENT": 25
+        }
+      }
+    },
+    {
+      "name": "recon_required_growth",
+      "status": "PASS",
+      "details": {
+        "recon_required_count": 0,
+        "max_allowed": 3
+      }
+    },
+    {
+      "name": "emergency_stop_frequency",
+      "status": "PASS",
+      "details": {
+        "count": 0,
+        "max_allowed": 0
+      }
+    },
+    {
+      "name": "meta_weight_stability",
+      "status": "PASS",
+      "details": {
+        "total_abs_weight_change": 0.0,
+        "max_allowed": 0.75
+      }
+    },
+    {
+      "name": "liquidity_clamp_frequency",
+      "status": "PASS",
+      "details": {
+        "clamp_count_last_500_decisions": 91
+      }
+    },
+    {
+      "name": "microstructure_field_presence",
+      "status": "PASS",
+      "details": {
+        "presence_ratio": 0.298,
+        "min_required": 0.2
+      }
+    },
+    {
+      "name": "execution_plan_field_presence",
+      "status": "PASS",
+      "details": {
+        "presence_ratio": 0.118,
+        "min_required": 0.2,
+        "recent_presence_ratio": 1.0,
+        "recent_min_required": 0.8,
+        "recent_window": 50
+      }
+    },
+    {
+      "name": "memory_growth",
+      "status": "PASS",
+      "details": {
+        "db": "data\\unified_trades.db",
+        "metric": "memory_rss_mb",
+        "sample_count": 2,
+        "oldest_mb": 0.0,
+        "newest_mb": 0.0,
+        "growth_mb": 0.0,
+        "max_allowed_growth_mb": 512.0
+      }
+    },
+    {
+      "name": "db_growth",
+      "status": "PASS",
+      "details": {
+        "total_db_size_mb": 3.703125,
+        "max_allowed_mb": 1024.0,
+        "trades_db_bytes": 3682304,
+        "state_db_bytes": 143360,
+        "meta_db_bytes": 57344,
+        "omega_db_bytes": 0
+      }
+    }
+  ],
+  "failed_checks": []
+}

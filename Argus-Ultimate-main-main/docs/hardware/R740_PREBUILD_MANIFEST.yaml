@@ -1,0 +1,41 @@
+host:
+  hostname: argus-r740
+  argus_user: argus
+  repo_dir: /opt/argus/repo
+  log_dir: /opt/argus/logs
+  chassis_model: PowerEdge R740
+
+network:
+  iface_primary: ens1f0
+  iface_secondary: ens1f1
+  ip_primary_cidr: 192.168.10.100/24
+  ip_secondary_cidr: 192.168.10.101/24
+  gateway4: 192.168.10.1
+  dns_servers:
+    - 1.1.1.1
+    - 8.8.8.8
+  mtu: 9000
+  ptp_iface: ens1f0
+  nic_family: intel_x710_xxv710
+
+cpu:
+  family: xeon_scalable
+  os_cpus: 0-7
+  exec_cpus: 8-31
+  cpu_isolation: 8-31
+
+memory:
+  type: ddr4_2933_rdimm_ecc
+  min_total_gib: 128
+
+storage:
+  nvme_primary: /dev/nvme0n1
+  nvme_secondary: /dev/nvme1n1
+  scheduler: none
+
+timing:
+  ntp_server_1: time.cloudflare.com
+  ntp_server_2: time.google.com
+
+build:
+  profile_name: r740-default

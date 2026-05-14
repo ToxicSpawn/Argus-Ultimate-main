@@ -1,0 +1,175 @@
+{
+  "timestamp": "2026-04-23T02:20:47.387189",
+  "evolution_results": {
+    "best_params": {
+      "max_position_pct": 0.326255922825852,
+      "kelly_fraction": 0.48529111612515463,
+      "risk_per_trade": 0.0669077912530266,
+      "rsi_period": 6.350523456975916,
+      "rsi_oversold": 34.03317050912628,
+      "rsi_overbought": 73.24225831659014,
+      "ema_fast": 9.628668181741329,
+      "ema_slow": 26.626332770621666,
+      "bb_period": 23.86845376271515,
+      "bb_std": 1.7146486022326313,
+      "atr_period": 12.974896353475618,
+      "atr_multiplier": 2.693779935982904,
+      "take_profit_pct": 0.11117062414933941,
+      "stop_loss_pct": 0.006884720294356498,
+      "trailing_stop_pct": 0.03,
+      "breakeven_trigger": 0.013676735960576277,
+      "tf_1m_weight": 0.04008034497361701,
+      "tf_5m_weight": 0.4354582290112739,
+      "tf_15m_weight": 0.112747133821058,
+      "tf_1h_weight": 0.20307641006019492,
+      "bull_multiplier": 1.6534231751357256,
+      "bear_multiplier": 0.7099834904948801,
+      "sideways_multiplier": 0.4574703615896709,
+      "high_vol_multiplier": 0.6591911790954614,
+      "min_confidence": 0.8450285358628178,
+      "min_signal_strength": 0.48246223594702486,
+      "volume_threshold": 2.4134838178194546,
+      "zscore_entry": 3.356317353572596,
+      "zscore_exit": 0.417649654214492,
+      "lookback_period": 41.66628621380611,
+      "momentum_period": 17.954170810338297,
+      "momentum_threshold": 0.031197117099753924,
+      "ml_confidence_threshold": 0.5369597019140828,
+      "ml_ensemble_weight": 0.28002672217401403,
+      "ml_retrain_frequency": 10.996807815110905
+    },
+    "best_fitness": 12.56646292200198,
+    "best_metrics": {
+      "returns": 4.407709970282283,
+      "sharpe": 42.6717981774954,
+      "drawdown": 0.030428413439612913,
+      "win_rate": 0.6190057071725636,
+      "profit_factor": 9.680252861890144
+    },
+    "generations": 35,
+    "total_evaluations": 5400,
+    "elapsed_seconds": 0.201194,
+    "hall_of_fame": [
+      {
+        "fitness": 9.57179837579019,
+        "returns": 4.079629685744168,
+        "sharpe": 31.171922632708906
+      },
+      {
+        "fitness": 9.493352252337596,
+        "returns": 3.2834640469699976,
+        "sharpe": 31.966428453165623
+      },
+      {
+        "fitness": 8.592538884376294,
+        "returns": 4.742848334438262,
+        "sharpe": 26.301289475357898
+      },
+      {
+        "fitness": 8.116055116857511,
+        "returns": 3.275536415417188,
+        "sharpe": 26.467002994388928
+      },
+      {
+        "fitness": 8.015587895399804,
+        "returns": 3.8044282166006327,
+        "sharpe": 25.302542671738703
+      },
+      {
+        "fitness": 7.939175055738675,
+        "returns": 3.2939341602048877,
+        "sharpe": 25.72506270799552
+      },
+      {
+        "fitness": 7.685814914560124,
+        "returns": 4.052416910443684,
+        "sharpe": 23.64079144922528
+      },
+      {
+        "fitness": 6.444504678949952,
+        "returns": 3.7064435959319395,
+        "sharpe": 19.174891318533703
+      },
+      {
+        "fitness": 6.15260169560475,
+        "returns": 3.2748549997889915,
+        "sharpe": 18.62855925376373
+      },
+      {
+        "fitness": 6.037236714568414,
+        "returns": 3.757569201637887,
+        "sharpe": 17.47487176033366
+      }
+    ]
+  },
+  "optimized_config": {
+    "position_sizing": {
+      "max_position_pct": 0.326255922825852,
+      "kelly_fraction": 0.48529111612515463,
+      "risk_per_trade": 0.0669077912530266
+    },
+    "entry_rules": {
+      "rsi_period": 6,
+      "rsi_oversold": 34.03317050912628,
+      "rsi_overbought": 73.24225831659014,
+      "ema_fast": 9,
+      "ema_slow": 26,
+      "min_confidence": 0.8450285358628178
+    },
+    "exit_rules": {
+      "take_profit_pct": 0.11117062414933941,
+      "stop_loss_pct": 0.006884720294356498,
+      "trailing_stop_pct": 0.03,
+      "breakeven_trigger": 0.013676735960576277
+    },
+    "regime_weights": {
+      "bull": 1.6534231751357256,
+      "bear": 0.7099834904948801,
+      "sideways": 0.4574703615896709,
+      "high_vol": 0.6591911790954614
+    },
+    "timeframe_weights": {
+      "1m": 0.04008034497361701,
+      "5m": 0.4354582290112739,
+      "15m": 0.112747133821058,
+      "1h": 0.20307641006019492
+    }
+  },
+  "best_params": {
+    "max_position_pct": 0.326255922825852,
+    "kelly_fraction": 0.48529111612515463,
+    "risk_per_trade": 0.0669077912530266,
+    "rsi_period": 6.350523456975916,
+    "rsi_oversold": 34.03317050912628,
+    "rsi_overbought": 73.24225831659014,
+    "ema_fast": 9.628668181741329,
+    "ema_slow": 26.626332770621666,
+    "bb_period": 23.86845376271515,
+    "bb_std": 1.7146486022326313,
+    "atr_period": 12.974896353475618,
+    "atr_multiplier": 2.693779935982904,
+    "take_profit_pct": 0.11117062414933941,
+    "stop_loss_pct": 0.006884720294356498,
+    "trailing_stop_pct": 0.03,
+    "breakeven_trigger": 0.013676735960576277,
+    "tf_1m_weight": 0.04008034497361701,
+    "tf_5m_weight": 0.4354582290112739,
+    "tf_15m_weight": 0.112747133821058,
+    "tf_1h_weight": 0.20307641006019492,
+    "bull_multiplier": 1.6534231751357256,
+    "bear_multiplier": 0.7099834904948801,
+    "sideways_multiplier": 0.4574703615896709,
+    "high_vol_multiplier": 0.6591911790954614,
+    "min_confidence": 0.8450285358628178,
+    "min_signal_strength": 0.48246223594702486,
+    "volume_threshold": 2.4134838178194546,
+    "zscore_entry": 3.356317353572596,
+    "zscore_exit": 0.417649654214492,
+    "lookback_period": 41.66628621380611,
+    "momentum_period": 17.954170810338297,
+    "momentum_threshold": 0.031197117099753924,
+    "ml_confidence_threshold": 0.5369597019140828,
+    "ml_ensemble_weight": 0.28002672217401403,
+    "ml_retrain_frequency": 10.996807815110905
+  }
+}

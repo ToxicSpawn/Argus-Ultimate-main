@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "argus.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "argus.labels" . | nindent 4 }}
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: {{ .Values.argus.service.metricsPort | quote }}
+    prometheus.io/path: "/metrics"
+spec:
+  type: {{ .Values.argus.service.type }}
+  ports:
+    - port: {{ .Values.argus.service.metricsPort }}
+      targetPort: metrics
+      protocol: TCP
+      name: metrics
+  selector:
+    {{- include "argus.selectorLabels" . | nindent 4 }}

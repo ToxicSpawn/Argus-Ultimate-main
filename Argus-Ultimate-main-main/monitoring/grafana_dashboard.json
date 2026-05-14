@@ -1,0 +1,811 @@
+{
+  "dashboard": {
+    "title": "ARGUS Trading Dashboard",
+    "uid": "argus-trading-v2",
+    "version": 2,
+    "schemaVersion": 38,
+    "refresh": "30s",
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "browser",
+    "tags": [
+      "argus",
+      "trading",
+      "crypto"
+    ],
+    "panels": [
+      {
+        "id": 1,
+        "title": "\ud83d\udcc8 Total P&L (AUD)",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 0,
+          "y": 0,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "expr": "argus_total_pnl_aud",
+            "legendFormat": "Total P&L AUD",
+            "refId": "A",
+            "interval": ""
+          }
+        ],
+        "options": {
+          "tooltip": {
+            "mode": "single"
+          },
+          "legend": {
+            "displayMode": "list",
+            "placement": "bottom"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 0
+                },
+                {
+                  "color": "green",
+                  "value": 50
+                }
+              ]
+            },
+            "unit": "currencyAUD"
+          },
+          "overrides": []
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      },
+      {
+        "id": 2,
+        "title": "\ud83d\udcca Daily P&L (30 days)",
+        "type": "barchart",
+        "gridPos": {
+          "x": 12,
+          "y": 0,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "expr": "increase(argus_total_pnl_aud[1d])",
+            "legendFormat": "Daily P&L",
+            "refId": "A",
+            "interval": ""
+          }
+        ],
+        "options": {
+          "orientation": "auto",
+          "tooltip": {
+            "mode": "single"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD"
+          },
+          "overrides": []
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      },
+      {
+        "id": 3,
+        "title": "\ud83e\udd67 Strategy Allocation",
+        "type": "piechart",
+        "gridPos": {
+          "x": 0,
+          "y": 8,
+          "w": 6,
+          "h": 8
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "expr": "argus_strategy_weight{strategy=~\".+\"}",
+            "legendFormat": "{{strategy}}",
+            "refId": "A",
+            "interval": ""
+          }
+        ],
+        "options": {
+          "tooltip": {
+            "mode": "single"
+          },
+          "legend": {
+            "displayMode": "table"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {},
+          "overrides": []
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      },
+      {
+        "id": 4,
+        "title": "\ud83c\udfaf Win Rate by Strategy",
+        "type": "bargauge",
+        "gridPos": {
+          "x": 6,
+          "y": 8,
+          "w": 6,
+          "h": 8
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "expr": "argus_win_rate{strategy=~\".+\"}",
+            "legendFormat": "{{strategy}}",
+            "refId": "A",
+            "interval": ""
+          }
+        ],
+        "options": {
+          "orientation": "horizontal",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 0.45
+                },
+                {
+                  "color": "green",
+                  "value": 0.55
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      },
+      {
+        "id": 5,
+        "title": "\ud83d\udcc9 Drawdown",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 12,
+          "y": 8,
+          "w": 12,
+          "h": 8
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "expr": "argus_current_drawdown_pct",
+            "legendFormat": "Current Drawdown %",
+            "refId": "A",
+            "interval": ""
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "expr": "argus_max_drawdown_pct",
+            "legendFormat": "Max Drawdown %",
+            "refId": "B",
+            "interval": ""
+          }
+        ],
+        "options": {
+          "tooltip": {
+            "mode": "multi"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "custom": {
+              "fillOpacity": 10,
+              "gradientMode": "opacity"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 5
+                },
+                {
+                  "color": "red",
+                  "value": 15
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      },
+      {
+        "id": 6,
+        "title": "\ud83d\udcb0 Funding Harvest P&L (AUD)",
+        "type": "stat",
+        "gridPos": {
+          "x": 0,
+          "y": 16,
+          "w": 6,
+          "h": 5
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "expr": "argus_funding_harvest_total_aud",
+            "legendFormat": "Funding P&L",
+            "refId": "A",
+            "interval": ""
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ]
+          },
+          "colorMode": "value",
+          "graphMode": "area"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD",
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      },
+      {
+        "id": 7,
+        "title": "\ud83d\udd04 Active Harvests",
+        "type": "stat",
+        "gridPos": {
+          "x": 6,
+          "y": 16,
+          "w": 6,
+          "h": 5
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "expr": "argus_funding_active_positions",
+            "legendFormat": "Active",
+            "refId": "A",
+            "interval": ""
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ]
+          },
+          "colorMode": "background"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          },
+          "overrides": []
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      },
+      {
+        "id": 8,
+        "title": "\ud83d\udce1 Current Funding Rates",
+        "type": "bargauge",
+        "gridPos": {
+          "x": 12,
+          "y": 16,
+          "w": 12,
+          "h": 5
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "expr": "argus_funding_rate{symbol=~\".+\", exchange=~\".+\"}",
+            "legendFormat": "{{symbol}} @ {{exchange}}",
+            "refId": "A",
+            "interval": ""
+          }
+        ],
+        "options": {
+          "orientation": "horizontal",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "blue",
+                  "value": null
+                },
+                {
+                  "color": "green",
+                  "value": 0.0005
+                },
+                {
+                  "color": "super-light-green",
+                  "value": 0.002
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      },
+      {
+        "id": 9,
+        "title": "\u26d3\ufe0f On-Chain Net Flow (BTC)",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 0,
+          "y": 21,
+          "w": 8,
+          "h": 6
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "expr": "argus_onchain_exchange_net_flow_btc",
+            "legendFormat": "BTC Net Flow",
+            "refId": "A",
+            "interval": ""
+          }
+        ],
+        "options": {
+          "tooltip": {
+            "mode": "single"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "fillOpacity": 20
+            },
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 1000
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      },
+      {
+        "id": 10,
+        "title": "\ud83d\udcca Options Put/Call Ratio",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 8,
+          "y": 21,
+          "w": 8,
+          "h": 6
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "expr": "argus_options_pcr",
+            "legendFormat": "P/C Ratio",
+            "refId": "A",
+            "interval": ""
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "expr": "argus_options_iv_skew",
+            "legendFormat": "IV Skew",
+            "refId": "B",
+            "interval": ""
+          }
+        ],
+        "options": {
+          "tooltip": {
+            "mode": "multi"
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          },
+          "overrides": []
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      },
+      {
+        "id": 11,
+        "title": "\ud83c\udf0d Macro Regime Scalar",
+        "type": "gauge",
+        "gridPos": {
+          "x": 16,
+          "y": 21,
+          "w": 8,
+          "h": 6
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "expr": "argus_macro_position_scalar",
+            "legendFormat": "Macro Scalar",
+            "refId": "A",
+            "interval": ""
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "red",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 0.5
+                },
+                {
+                  "color": "green",
+                  "value": 0.85
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      },
+      {
+        "id": 12,
+        "title": "\ud83d\udd17 Avg Pairwise Correlation",
+        "type": "gauge",
+        "gridPos": {
+          "x": 0,
+          "y": 27,
+          "w": 6,
+          "h": 6
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "expr": "argus_avg_pairwise_correlation",
+            "legendFormat": "Correlation",
+            "refId": "A",
+            "interval": ""
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "min": 0,
+            "max": 1,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 0.8
+                },
+                {
+                  "color": "red",
+                  "value": 0.92
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      },
+      {
+        "id": 13,
+        "title": "\u26a1 Exchange Latency (ms)",
+        "type": "bargauge",
+        "gridPos": {
+          "x": 6,
+          "y": 27,
+          "w": 8,
+          "h": 6
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "expr": "argus_exchange_latency_ms{exchange=~\".+\"}",
+            "legendFormat": "{{exchange}}",
+            "refId": "A",
+            "interval": ""
+          }
+        ],
+        "options": {
+          "orientation": "horizontal",
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 100
+                },
+                {
+                  "color": "red",
+                  "value": 500
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      },
+      {
+        "id": 14,
+        "title": "\ud83d\udfe2 System Health",
+        "type": "stat",
+        "gridPos": {
+          "x": 14,
+          "y": 27,
+          "w": 10,
+          "h": 6
+        },
+        "targets": [
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "expr": "argus_system_healthy",
+            "legendFormat": "Healthy",
+            "refId": "A",
+            "interval": ""
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "expr": "argus_kill_switch_active",
+            "legendFormat": "Kill Switch",
+            "refId": "B",
+            "interval": ""
+          },
+          {
+            "datasource": {
+              "type": "prometheus",
+              "uid": "prometheus"
+            },
+            "expr": "argus_circuit_breaker_active",
+            "legendFormat": "Circuit Breaker",
+            "refId": "C",
+            "interval": ""
+          }
+        ],
+        "options": {
+          "reduceOptions": {
+            "calcs": [
+              "lastNotNull"
+            ]
+          },
+          "colorMode": "background",
+          "graphMode": "none"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              {
+                "type": "value",
+                "options": {
+                  "0": {
+                    "text": "OFF",
+                    "color": "red"
+                  },
+                  "1": {
+                    "text": "ON",
+                    "color": "green"
+                  }
+                }
+              }
+            ]
+          },
+          "overrides": []
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "prometheus"
+        }
+      }
+    ],
+    "templating": {
+      "list": []
+    },
+    "annotations": {
+      "list": []
+    },
+    "links": [],
+    "editable": true,
+    "graphTooltip": 1,
+    "fiscalYearStartMonth": 0,
+    "liveNow": false
+  },
+  "overwrite": true,
+  "folderId": 0
+}

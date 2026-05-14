@@ -1,0 +1,287 @@
+# =============================================================================
+# Argus Ultimate - RTX 5080 PC Profile (v8.7.0)
+# Optimized for: Intel Core Ultra 9 285K + RTX 5080 16GB + 64GB DDR5
+# =============================================================================
+# Run with: py main.py paper --profile rtx5080_pc
+# =============================================================================
+
+# Inherit from paper profile and override with GPU optimizations
+_base: "paper"
+
+# ============================================================================
+# HARDWARE PROFILE
+# ============================================================================
+hardware:
+  # Your PC specs
+  cpu: "Intel Core Ultra 9 285K (24 cores, 5.7GHz, LGA 1851)"
+  ram: "64GB DDR5 6000MHz (Corsair Vengeance RGB)"
+  gpu: "NVIDIA RTX 5080 16GB GDDR7"
+  motherboard: "Gigabyte Z890 AORUS ELITE WIFI7"
+  psu: "Corsair RM1200x SHIFT 1200W 80+ Gold"
+
+  # Network: 2x Solarflare XtremeScale SFN8522-PLUS 10GbE
+  network:
+    enabled: true
+    adapters:
+      - name: "Solarflare XtremeScale SFN8522-PLUS Port1"
+        interface: "sf0"
+        role: "primary"
+        connected_to: "Exchange 1 (MEXC/Bybit)"
+      - name: "Solarflare XtremeScale SFN8522-PLUS Port2"
+        interface: "sf1"
+        role: "secondary"
+        connected_to: "Exchange 2 (Kraken/Coinbase)"
+    driver_mode: "onload"           # OpenOnload kernel bypass
+    onload_profile: "latency"       # Min latency optimization
+    enable_kernel_bypass: true
+    enable_hardware_timestamping: true  # PTP
+    target_latency_us: 1            # <1 microsecond target
+    rx_ring_size: 4096
+    tx_ring_size: 4096
+    sfn8522_optimizations:
+      pio_mode: true
+      ctpio_mode: true
+      rx_coalescing: false          # Disable for min latency
+      busy_poll_us: 100000
+
+  # GPU Acceleration Settings (RTX 5080)
+  gpu_settings:
+    enabled: true
+    device: "cuda:0"
+    device_name: "NVIDIA GeForce RTX 5080"
+    memory_gb: 16
+    memory_type: "GDDR7"
+    boost_clock_mhz: 2700
+    tensor_cores: true
+    cuda_cores: 10000
+    # RTX 5080 optimizations
+    mixed_precision: true        # fp16 for ~2x throughput
+    tf32_enabled: true           # TensorFloat-32 for Ampere+
+    cudnn_benchmark: true        # cuDNN auto-tuning
+    flash_attention: true        # Flash Attention for transformer models
+    torch_compile: true          # torch.compile() for 10-30% speedup
+
+  # CPU optimizations (Core Ultra 9 285K)
+  cpu_settings:
+    cores: 24
+    p_cores: 8                   # Performance cores
+    e_cores: 16                  # Efficiency cores
+    hyperthreading: true
+    avx512: true
+    numa_aware: true             # For memory locality
+
+  # Memory settings
+  memory_settings:
+    swap_enabled: false           # 64GB is plenty
+    gc_collect_interval: 300     # Seconds between GC
+    tensorrt_cache: "models/cache/trt"  # TensorRT engine cache
+
+# ============================================================================
+# ML CONFIGURATION (GPU Accelerated)
+# ============================================================================
+ml:
+  enabled: true
+  device: "cuda"                 # Use GPU
+  fallback_device: "cpu"
+  precision: "fp16"              # Mixed precision for RTX 5080
+
+  # Training settings
+  training:
+    enabled: true
+    batch_size: 256              # RTX 5080 16GB can handle this
+    validation_split: 0.15
+    early_stopping_patience: 10
+    use_amp: true                # Automatic Mixed Precision
+    gradient_accumulation: 4     # Effective batch 1024
+
+  # Inference settings
+  inference:
+    batch_size: 128              # Larger batches for inference
+    use_tensorrt: true            # TensorRT optimization
+    use_triton: true              # NVIDIA Triton inference server
+
+  # Model paths
+  models:
+    deeplob: "models/deeplob_weights.pt"
+    regime_classifier: "models/regime_classifier.pt"
+    sentiment: "models/sentiment_model"
+    ensemble: "models/ensemble_weights.pt"
+
+# ============================================================================
+# ADVANCED AI/ML FEATURES
+# ============================================================================
+advanced_features:
+  # GPU-accelerated features
+  enable_gpu_ml: true
+  enable_cuda: true
+
+  # Neural network models
+  neural_networks:
+    enabled: true
+    architecture: "transformer"   # Transformer-based for sequence modeling
+    layers: 6
+    hidden_size: 256
+    attention_heads: 8
+
+  # Deep learning models
+  deep_learning:
+    enabled: true
+    use_gpu: true
+    compile_models: true          # torch.compile()
+
+  # LLM Sentiment (uses transformers)
+  llm_sentiment:
+    enabled: true
+    model: "finbert"             # Financial BERT
+    device: "cuda"
+    batch_size: 32
+    use_gpu: true
+
+# ============================================================================
+# QUANTUM SIMULATION (GPU Accelerated)
+# ============================================================================
+quantum:
+  enabled: true
+  use_gpu: true                   # GPU-accelerated quantum simulation
+  simulator: "qiskit"            # or "pennylane"
+
+  # Quantum Monte Carlo (GPU accelerated)
+  quantum_monte_carlo:
+    enabled: true
+    use_gpu: true
+    n_samples: 100000            # GPU can handle many samples
+    threads: 1024
+
+  # QAOA optimization (GPU)
+  qaoa:
+    enabled: true
+    use_gpu: true
+    max_qubits: 30               # RTX 5080 can handle this
+    shots: 10000
+
+# ============================================================================
+# RISK MANAGEMENT (Enhanced for GPU)
+# ============================================================================
+risk:
+  # Monte Carlo simulations (GPU)
+  monte_carlo:
+    n_scenarios: 10000           # GPU can run 10K+ scenarios
+    use_gpu: true
+    confidence_levels: [0.90, 0.95, 0.99, 0.999]
+    time_horizon_days: 252
+
+  # VaR calculation
+  var:
+    enabled: true
+    use_gpu: true
+    method: "historical"         # or "parametric", "monte_carlo"
+    confidence: 0.99
+
+  # Tail risk (GPU)
+  tail_risk:
+    enabled: true
+    use_gpu: true
+    n_simulations: 50000
+
+# ============================================================================
+# TRADING CONFIGURATION
+# ============================================================================
+trading:
+  mode: "paper"                  # Change to "live" when ready
+  initial_capital: 1000          # $1,000 USD
+
+  # Execution
+  execution:
+    max_latency_ms: 100          # Target execution latency
+    use_gpu_order_routing: true   # GPU-optimized order routing
+    primary_exchange: "mexc"     # MEXC for zero fees
+    testnet: false
+
+  # Pairs (MEXC available pairs - zero fees!)
+  pairs:
+    - "BTC/USDT"
+    - "ETH/USDT"
+    - "SOL/USDT"
+    - "XRP/USDT"
+    - "DOGE/USDT"
+    - "ADA/USDT"
+    - "LINK/USDT"
+    - "AVAX/USDT"
+    - "DOT/USDT"
+    - "MATIC/USDT"
+
+  max_concurrent_positions: 5
+
+# ============================================================================
+# PERFORMANCE TUNING
+# ============================================================================
+performance:
+  # Threading
+  async_workers: 24              # Match CPU cores
+  thread_pool_size: 24
+
+  # Memory
+  cache_size_mb: 8192            # 8GB cache
+  tensor_cache_mb: 4096          # 4GB for tensor cache
+
+  # Batch processing
+  batch_processing: true
+  batch_size: 512
+
+  # Network
+  connection_pool_size: 100
+  keep_alive: true
+  use_kernel_bypass: true        # Solarflare Onload
+  network_priority: "highest"     # QoS for trading traffic
+
+# ============================================================================
+# 10GbE ARBITRAGE (Solarflare Dual-Port)
+# ============================================================================
+arbitrage:
+  enabled: true
+  min_profit_threshold_pct: 0.05   # 0.05% minimum spread
+  max_execution_time_ms: 50        # <50ms execution target
+  enable_flash_arbitrage: true      # Microsecond opportunities
+  cross_exchange_enabled: true      # Multi-exchange arbitrage
+  # Dual-port config: Port1 -> MEXC/Bybit, Port2 -> Kraken/Coinbase
+  exchange_mapping:
+    primary_port: "sf0"
+    secondary_port: "sf1"
+  latency_check_interval_ms: 100    # Monitor latency
+
+# ============================================================================
+# MONITORING & LOGGING
+# ============================================================================
+monitoring:
+  gpu_monitoring: true            # Monitor GPU usage
+  gpu_utilization_interval: 5     # Seconds
+  memory_monitoring: true
+  performance_dashboard: true
+
+logging:
+  level: "INFO"
+  gpu_debug: true                 # Debug GPU operations
+  profile_performance: true
+
+# ============================================================================
+# MEXC EXCHANGE CONFIGURATION
+# ============================================================================
+# MEXC: 0% maker fee on spot and futures - BEST for $1K capital
+# Sign up: https://www.mexc.com
+# API: https://www.mexc.com/usercenter/pages/api-management
+# ============================================================================
+mexc:
+  api_key: "YOUR_MEXC_API_KEY"      # Replace with your MEXC API key
+  api_secret: "YOUR_MEXC_API_SECRET" # Replace with your MEXC API secret
+  testnet: false                      # false = live trading
+  enabled: true
+  # Trading fees: 0% maker, 0.1% taker (Argus targets maker orders)
+  spot_maker_fee: 0.0
+  spot_taker_fee: 0.001
+  futures_maker_fee: 0.0
+  futures_taker_fee: 0.0002
+  # Risk limits for MEXC
+  max_position_per_pair_pct: 0.20    # Max 20% per pair
+  max_daily_loss_pct: 0.10          # Max 10% daily loss
+  min_trade_usd: 10                 # $10 minimum per trade
+  max_trade_usd: 100               # $100 max per trade (10% of $1K)

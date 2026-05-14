@@ -1,0 +1,68 @@
+{
+  "captured_at": "2026-03-07T00:00:00+00:00",
+  "host": {
+    "hostname": "argus-r740",
+    "sysname": "Linux",
+    "release": "6.8.0-lowlat",
+    "machine": "x86_64",
+    "chassis_model": "PowerEdge R740"
+  },
+  "cpu": {
+    "model_name": "Intel(R) Xeon(R) Gold 6248 CPU @ 2.50GHz",
+    "logical_cpus": 80,
+    "physical_cores": 40
+  },
+  "memory": {
+    "mem_total_kib": 201326592,
+    "mem_total_gib": 192.0,
+    "dimm_type": "DDR4-2933 RDIMM ECC"
+  },
+  "network": {
+    "interfaces": [
+      {
+        "name": "ens1f0",
+        "speed_mbps": 10000,
+        "driver": "i40e",
+        "model": "Intel X710"
+      },
+      {
+        "name": "ens1f1",
+        "speed_mbps": 10000,
+        "driver": "i40e",
+        "model": "Intel X710"
+      }
+    ]
+  },
+  "storage": {
+    "lsblk": [
+      {
+        "name": "nvme0n1",
+        "type": "disk",
+        "size": "1.5T",
+        "rota": 0,
+        "model": "Dell Express Flash NVMe PM1725b 1.6TB U.2"
+      },
+      {
+        "name": "nvme1n1",
+        "type": "disk",
+        "size": "1.5T",
+        "rota": 0,
+        "model": "Dell Express Flash NVMe PM1725b 1.6TB U.2"
+      },
+      {
+        "name": "sda",
+        "type": "disk",
+        "size": "1.8T",
+        "rota": 0,
+        "model": "SAS SSD"
+      },
+      {
+        "name": "sdb",
+        "type": "disk",
+        "size": "1.8T",
+        "rota": 0,
+        "model": "SAS SSD"
+      }
+    ]
+  }
+}

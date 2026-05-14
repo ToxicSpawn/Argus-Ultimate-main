@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+IFACE="${1:-${IFACE_PRIMARY}}"
+CPU_LIST="${2:-${EXEC_CPUS}}"
+
+mapfile -t CPUS < <(
+python3 - "${CPU_LIST}" <<'PY'
+import sys
+raw = sys.argv[1]
+out = []
+for part in raw.split(","):
+    part = part.strip()
+    if not part:
+        continue
+    if "-" in part:
+        a, b = part.split("-", 1)
+        out.extend(range(int(a), int(b) + 1))
+    else:
+        out.append(int(part))
+for c in out:
+    print(c)
+PY
+)
+
+if [[ ${#CPUS[@]} -eq 0 ]]; then
+  echo "No CPU cores parsed from ${CPU_LIST}" >&2
+  exit 1
+fi
+
+idx=0
+while read -r irq; do
+    cpu="${CPUS[$((idx % ${#CPUS[@]}))]}"
+    echo "${cpu}" >"/proc/irq/${irq}/smp_affinity_list"
+    idx=$((idx + 1))
+done < <(grep -E "${IFACE}(|-TxRx|-(rx|tx)-[0-9]+)" /proc/interrupts | awk -F: '{print $1}' | tr -d ' ')

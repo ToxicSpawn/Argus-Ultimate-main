@@ -1,0 +1,75 @@
+{
+  "report_type": "MiFIDII_BEST_EXECUTION",
+  "generated_at": "2026-04-21T11:01:05.042258+00:00",
+  "entity_name": "ARGUS Trading",
+  "report": {
+    "trade_id": "t1",
+    "symbol": "BTC/USD",
+    "venue": "kraken",
+    "order_timestamp": "2026-04-21T00:00:00+00:00",
+    "execution_timestamp": "2026-04-21T00:00:01+00:00",
+    "quantity": 1.0,
+    "price": 100.0,
+    "total_cost": 1.02,
+    "spread_cost": 0.02,
+    "market_impact_cost": 0.0,
+    "venue_latency_ms": 1000.0,
+    "price_improvement": 1.0
+  },
+  "transaction_cost_analysis": {
+    "trade_id": "t1",
+    "symbol": "BTC/USD",
+    "venue": "kraken",
+    "notional": 100.0,
+    "spread_cost": 0.02,
+    "market_impact_cost": 0.0,
+    "implementation_shortfall": 1.0,
+    "explicit_cost": 0.0,
+    "price_improvement": 1.0,
+    "total_cost": 1.02,
+    "tca": {
+      "spread_cost_bps": 0.0,
+      "slippage_cost_bps": 0.0,
+      "timing_cost_bps": 0.0,
+      "market_impact_cost_bps": 0.015,
+      "total_cost_bps": 0.015,
+      "implementation_shortfall": 1.0
+    }
+  },
+  "regulatory_submission": {
+    "schema": "MIFIDII_BEST_EXECUTION",
+    "entity_name": "ARGUS Trading",
+    "trade_id": "t1",
+    "symbol": "BTC/USD",
+    "venue": "kraken",
+    "order_timestamp": "2026-04-21T00:00:00+00:00",
+    "execution_timestamp": "2026-04-21T00:00:01+00:00",
+    "quantity": 1.0,
+    "price": 100.0,
+    "total_cost": 1.02,
+    "spread_cost": 0.02,
+    "market_impact_cost": 0.0,
+    "venue_latency_ms": 1000.0,
+    "price_improvement": 1.0,
+    "transaction_cost_analysis": {
+      "trade_id": "t1",
+      "symbol": "BTC/USD",
+      "venue": "kraken",
+      "notional": 100.0,
+      "spread_cost": 0.02,
+      "market_impact_cost": 0.0,
+      "implementation_shortfall": 1.0,
+      "explicit_cost": 0.0,
+      "price_improvement": 1.0,
+      "total_cost": 1.02,
+      "tca": {
+        "spread_cost_bps": 0.0,
+        "slippage_cost_bps": 0.0,
+        "timing_cost_bps": 0.0,
+        "market_impact_cost_bps": 0.015,
+        "total_cost_bps": 0.015,
+        "implementation_shortfall": 1.0
+      }
+    }
+  }
+}

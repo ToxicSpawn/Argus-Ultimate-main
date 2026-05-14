@@ -1,0 +1,82 @@
+# =============================================================================
+# Argus v6.4.0 — PC NODE (Intel Core Ultra 9 285K + RTX 5080 16GB)
+# =============================================================================
+# PAPER trading + ML training + GPU inference node.
+# Sends DeepLOB inference signals to R7525 over LAN (port 9200).
+# NEVER submits live orders — R7525 handles all real execution.
+#
+# This node pulls state from 'argus-state' every 5 minutes to keep
+# the paper engine and monitoring dashboard in sync with live P&L.
+# =============================================================================
+
+node:
+  role: "paper"                       # maps to NodeRole.PAPER_PC
+  hostname: "argus-pc"
+  node_id: "pc-gpu"                   # unique identifier for state/dedup files
+  live_server_hostname: "argus-r7525" # R7525 LAN hostname for signal delivery
+
+hardware:
+  cpu: "Intel Core Ultra 9 285K (24 cores, 5.7GHz)"
+  ram: "64GB DDR5 6000MHz"
+  gpu: "NVIDIA RTX 5080 16GB GDDR7"
+  role_description: "ML training, GPU inference, paper trading, strategy testing, monitoring"
+  notes: >
+    P-cores for inference loop (low latency), E-cores for background training.
+    RTX 5080 tensor cores accelerate DeepLOB forward pass.
+    Mixed precision (fp16) gives ~2x throughput vs fp32.
+
+lan_bridge:
+  signal_sender_target: "argus-r7525:9200"  # send DeepLOB signals to R7525
+  inference_batch_size: 32                  # LOB snapshots per inference call
+  inference_interval_ms: 100                # send signal every 100 ms
+  reconnect_interval_s: 5                   # retry LAN connection on drop
+  queue_max_size: 1024                      # drop oldest if sender queue fills
+
+state_sync:
+  branch: "argus-state"
+  push_interval_s: 300
+  auto_push: false                    # PC does not push — R7525 is the state source
+  auto_pull: true                     # pull R7525 state every 5 minutes
+  git_user_name: "Argus State Bot"
+  git_user_email: "argus-bot@argus.local"
+
+trading:
+  paper_trading: true                 # NEVER live on PC — enforced in NodeOrchestrator
+  initial_capital_usd: 620.0          # mirrors R7525 starting capital for comparison
+  fill_probability: 0.6               # realistic fill simulation
+  slippage_bps: 2.0                   # bid-ask slippage
+  commission_rate_bps: 7.0            # exchange maker/taker fee estimate
+  duplicate_order_guard: true
+
+gpu:
+  device: "cuda:0"
+  mixed_precision: true               # fp16 on RTX 5080 for ~2x throughput
+  tensor_cores: true                  # explicitly enable TF32 / HMMA paths
+  deeplob_model_path: "models/deeplob_weights.pt"
+  training_batch_size: 256            # fits comfortably in 16GB GDDR7
+  inference_batch_size: 64
+  compile_model: true                 # torch.compile() for extra speed
+  cudnn_benchmark: true               # allow cuDNN to auto-tune kernels
+
+training:
+  enabled: true
+  schedule: "daily"                   # retrain every 24 h on fresh market data
+  data_lookback_days: 90
+  validation_split: 0.15
+  early_stopping_patience: 10
+  checkpoint_dir: "models/checkpoints"
+  use_amp: true                       # automatic mixed precision during training
+
+monitoring:
+  show_live_comparison: true          # show paper vs live P&L dashboard
+  dashboard_refresh_s: 5
+  alert_pnl_divergence_pct: 20.0     # alert if paper/live P&L diverge by >20%
+  alert_signal_gap_ms: 500           # alert if no signal sent for >500 ms
+
+logging:
+  level: "DEBUG"
+  file: "logs/argus_paper.log"
+  max_size_mb: 50
+  backup_count: 10
+  include_timestamps: true
+  structured_json: false              # human-readable on dev machine

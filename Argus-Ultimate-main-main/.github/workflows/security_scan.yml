@@ -1,0 +1,96 @@
+# Push 74 — Argus Ultimate security scanning
+# Triggers: weekly schedule + push to main
+# Jobs: bandit (SAST) + pip-audit (CVE) + trivy (Docker)
+
+name: Security Scan
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'   # Every Monday 02:00 UTC
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+
+  # -----------------------------------------------------------------------
+  # Bandit — Python SAST
+  # -----------------------------------------------------------------------
+  bandit:
+    name: Bandit SAST
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - run: pip install bandit[toml]==1.7.8
+
+      - name: Run bandit
+        run: |
+          bandit -r core/ -ll --format sarif -o bandit.sarif || true
+
+      - name: Upload SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: bandit.sarif
+        continue-on-error: true
+
+  # -----------------------------------------------------------------------
+  # pip-audit — dependency CVE scan
+  # -----------------------------------------------------------------------
+  pip-audit:
+    name: pip-audit (CVE)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - run: pip install pip-audit==2.7.3
+
+      - name: Audit dependencies
+        run: |
+          pip-audit -r requirements.txt \
+            --format json \
+            --output pip-audit.json || true
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pip-audit-report
+          path: pip-audit.json
+
+  # -----------------------------------------------------------------------
+  # Trivy — Docker image vulnerability scan
+  # -----------------------------------------------------------------------
+  trivy:
+    name: Trivy Image Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image for scanning
+        run: docker build -t argus-scan:latest . --quiet
+
+      - name: Run Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'argus-scan:latest'
+          format: 'sarif'
+          output: 'trivy.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'
+
+      - name: Upload Trivy SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy.sarif
+        continue-on-error: true

@@ -1,0 +1,37 @@
+# Standalone promtail sidecar — include in main compose or run standalone
+# Push 99 — RegimeGrafana
+version: "3.9"
+
+services:
+  promtail:
+    image: grafana/promtail:2.9.4
+    container_name: argus-promtail
+    restart: unless-stopped
+    volumes:
+      - ./promtail.yaml:/etc/promtail/config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - argus_logs:/app/logs:ro
+      - promtail_positions:/tmp
+    command:
+      - -config.file=/etc/promtail/config.yaml
+      - -config.expand-env=true
+    environment:
+      - LOKI_URL=${LOKI_URL:-http://loki:3100}
+    networks:
+      - argus_net
+    labels:
+      com.argus.service: promtail
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  argus_logs:
+    external: true
+  promtail_positions:
+
+networks:
+  argus_net:
+    external: true

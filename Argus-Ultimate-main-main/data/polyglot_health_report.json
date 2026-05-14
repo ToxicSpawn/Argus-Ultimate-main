@@ -1,0 +1,126 @@
+{
+  "polyglot_components_loaded": 11,
+  "status": {
+    "rust": {
+      "available": false,
+      "backend": "fallback",
+      "latency_ms": 0.0
+    },
+    "c": {
+      "available": false,
+      "backend": "fallback",
+      "latency_ms": 0.0
+    },
+    "javascript": {
+      "available": false,
+      "backend": "fallback",
+      "latency_ms": 0.0
+    },
+    "go": {
+      "available": false,
+      "backend": "fallback",
+      "latency_ms": 0.0
+    },
+    "cuda": {
+      "available": true,
+      "backend": "native",
+      "latency_ms": 0.0
+    },
+    "cpp": {
+      "available": false,
+      "backend": "fallback",
+      "latency_ms": 0.0
+    },
+    "julia": {
+      "available": true,
+      "backend": "native",
+      "latency_ms": 0.0
+    },
+    "r": {
+      "available": false,
+      "backend": "fallback",
+      "latency_ms": 0.0
+    },
+    "lua": {
+      "available": false,
+      "backend": "fallback",
+      "latency_ms": 0.0
+    },
+    "elixir": {
+      "available": false,
+      "backend": "fallback",
+      "latency_ms": 0.0
+    },
+    "zig": {
+      "available": false,
+      "backend": "fallback",
+      "latency_ms": 0.0
+    }
+  },
+  "benchmarks": {
+    "rust_correlation": {
+      "native_ms": 0.0,
+      "fallback_ms": 0.0,
+      "speedup_factor": 0.0
+    },
+    "c_ema": {
+      "native_ms": 0.0,
+      "fallback_ms": 0.0,
+      "speedup_factor": 0.0
+    },
+    "go_route": {
+      "native_ms": 0.0,
+      "fallback_ms": 0.0,
+      "speedup_factor": 0.0
+    },
+    "cuda_mc_var": {
+      "native_ms": 0.0,
+      "fallback_ms": 0.0,
+      "speedup_factor": 0.0
+    },
+    "cpp_orderbook": {
+      "native_ms": 0.0,
+      "fallback_ms": 0.0,
+      "speedup_factor": 1.0
+    },
+    "julia_optimize": {
+      "native_ms": 5.333,
+      "fallback_ms": 5.333,
+      "speedup_factor": 1.0
+    },
+    "r_stats": {
+      "native_ms": 0.0,
+      "fallback_ms": 0.0,
+      "speedup_factor": 1.0
+    },
+    "lua_evaluate": {
+      "native_ms": 0.0,
+      "fallback_ms": 0.0,
+      "speedup_factor": 1.0
+    },
+    "elixir_health": {
+      "native_ms": 0.0,
+      "fallback_ms": 0.0,
+      "speedup_factor": 1.0
+    },
+    "zig_sharpe": {
+      "native_ms": 0.0,
+      "fallback_ms": 0.0,
+      "speedup_factor": 1.0
+    }
+  },
+  "orchestrator_order_book": {
+    "language_used": "rust",
+    "success": true,
+    "result": {
+      "spread_bps": 9.995002498750056,
+      "imbalance": 0.11111111111111115,
+      "mid": 100.05,
+      "depth_bps": 9.995002498750056,
+      "language": "rust",
+      "spread_mult": 1.0,
+      "took_ms": 0.0
+    },
+    "execution_time_ms": 13.928099999702681
+  }
+}

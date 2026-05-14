@@ -1,0 +1,22 @@
+constitution:
+  version: 1
+  profile: shadow
+  limits:
+    max_gross_exposure_pct: 0.35
+    max_single_symbol_exposure_pct: 0.10
+    max_cluster_exposure_pct: 0.18
+    max_daily_loss_pct: 0.03
+    max_drawdown_pct: 0.06
+    max_open_intents: 6
+    max_consecutive_losses: 4
+  safety:
+    block_new_risk_on_data_degradation: true
+    block_new_risk_on_reconciliation_staleness: true
+    require_signed_promotion_bundle: true
+    block_research_modules_from_live: true
+    require_soak_evidence: true
+    require_operator_ack_after_reconciliation_freeze: true
+  venues:
+    allow_cross_venue_live: false
+    allow_market_orders: false
+    allow_only_approved_symbols: true

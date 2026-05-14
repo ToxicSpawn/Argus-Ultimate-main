@@ -1,0 +1,15 @@
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    uid: prometheus-argus
+    jsonData:
+      timeInterval: "5s"
+      httpMethod: POST
+      exemplarTraceIdDestinations: []
+    version: 1
+    editable: true

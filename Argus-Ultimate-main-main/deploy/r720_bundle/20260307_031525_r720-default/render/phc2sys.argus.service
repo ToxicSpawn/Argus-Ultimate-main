@@ -1,0 +1,13 @@
+[Unit]
+Description=Argus PHC to System Clock Sync (enp3s0f0)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/phc2sys -s enp3s0f0 -c CLOCK_REALTIME -w -m
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

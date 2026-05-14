@@ -1,0 +1,98 @@
+version: 1
+policy:
+  live_permissions: "Do not broaden trading permissions; keep live gated and off by default."
+  ambiguity_handling: "Prefer halting safely over trying to recover in ambiguous states."
+prs:
+  - id: PR-00
+    title: Guardrails + Windows Run Kit
+    doc: docs/pr_queue/PR-00.md
+  - id: PR-01
+    title: Audit Spine
+    doc: docs/pr_queue/PR-01.md
+  - id: PR-02
+    title: Order Intents Idempotency
+    doc: docs/pr_queue/PR-02.md
+  - id: PR-03
+    title: Reconciliation Loop
+    doc: docs/pr_queue/PR-03.md
+  - id: PR-04
+    title: Net-Edge Cost Gate
+    doc: docs/pr_queue/PR-04.md
+  - id: PR-05
+    title: Throttles + Fee Budgets
+    doc: docs/pr_queue/PR-05.md
+  - id: PR-06
+    title: Execution Alpha v1
+    doc: docs/pr_queue/PR-06.md
+  - id: PR-07
+    title: Targets-Based Portfolio
+    doc: docs/pr_queue/PR-07.md
+  - id: PR-08
+    title: Feature Store + Regime Engine
+    doc: docs/pr_queue/PR-08.md
+  - id: PR-09
+    title: Research Harness + Deploy Bundles
+    doc: docs/pr_queue/PR-09.md
+  - id: PR-10
+    title: Ops + Observability
+    doc: docs/pr_queue/PR-10.md
+  - id: PR-11
+    title: Soak Promotion Gate
+    doc: docs/pr_queue/PR-11.md
+  - id: PR-12
+    title: Fail-Closed Exchange Adapter
+    doc: docs/pr_queue/PR-12.md
+  - id: PR-13
+    title: Reconciliation Ownership + Operator Ack
+    doc: docs/pr_queue/PR-13.md
+  - id: PR-14
+    title: Portfolio VaR/CVaR + Cluster Drawdown Brakes
+    doc: docs/pr_queue/PR-14.md
+  - id: PR-15
+    title: Execution Quality Feedback Loop
+    doc: docs/pr_queue/PR-15.md
+  - id: PR-16
+    title: Data Quality Guardrails + Symbol Quarantine
+    doc: docs/pr_queue/PR-16.md
+  - id: PR-17
+    title: Backtest Realism Upgrade
+    doc: docs/pr_queue/PR-17.md
+  - id: PR-18
+    title: Champion-Challenger + Canary Rollout
+    doc: docs/pr_queue/PR-18.md
+  - id: PR-19
+    title: Ops Alerts + Incident Timeline Export
+    doc: docs/pr_queue/PR-19.md
+  - id: PR-20
+    title: Secrets Vault + Key Hygiene
+    doc: docs/pr_queue/PR-20.md
+  - id: PR-21
+    title: Governance + Compliance Control Pack
+    doc: docs/pr_queue/PR-21.md
+  - id: PR-22
+    title: Independent Risk Authority + Maker-Checker
+    doc: docs/pr_queue/PR-22.md
+  - id: PR-23
+    title: Segregation of Duties + RBAC Enforcement
+    doc: docs/pr_queue/PR-23.md
+  - id: PR-24
+    title: SLO/SLI + Error Budget Promotion Gate
+    doc: docs/pr_queue/PR-24.md
+  - id: PR-25
+    title: Disaster Recovery + Chaos Drill Evidence
+    doc: docs/pr_queue/PR-25.md
+  - id: PR-26
+    title: Deterministic Data Replay Gate
+    doc: docs/pr_queue/PR-26.md
+  - id: PR-27
+    title: Model Registry + Independent Validation Gate
+    doc: docs/pr_queue/PR-27.md
+  - id: PR-28
+    title: Signed Release Governance
+    doc: docs/pr_queue/PR-28.md
+  - id: PR-29
+    title: Treasury + Counterparty Exposure Governance
+    doc: docs/pr_queue/PR-29.md
+  - id: PR-30
+    title: Audit Pack Export + Controls Attestation Gate
+    doc: docs/pr_queue/PR-30.md

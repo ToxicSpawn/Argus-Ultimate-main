@@ -1,0 +1,61 @@
+# =============================================================================
+# Production overrides for R730 (or any live host)
+# =============================================================================
+# Option A: Copy unified_config.yaml to unified_config.production.yaml and
+#           replace/merge the sections below.
+# Option B: Use this file as reference and set these keys in your production config.
+# Run: python main.py live --config unified_config.production.yaml
+# =============================================================================
+
+run_template:
+  cpu: "Intel Xeon E5-2640 v4"
+  motherboard: "Dell PowerEdge R730"
+  ram: "64GB DDR4 ECC (or 32GB minimum)"
+  gpu: null
+  gpu_specs: {}
+  switches: 2
+  switch_topology: "mlag_active_active"
+  nic: "Solarflare XtremeScale SFN8522-PLUS Dual Port 10GbE PCI-E Server Adapter FH"
+
+# Stricter for live: higher confidence, lower slippage
+ai_brain:
+  min_signal_confidence: 0.72    # Live: only high-conviction signals (paper can use 0.55)
+
+execution_engine:
+  max_slippage_pct: 0.005        # 0.5% max slippage in live
+
+# Optional: tighter risk in production
+risk:
+  max_daily_loss_pct: 0.02
+  max_drawdown_pct: 0.12
+  use_volatility_adjusted_limits: true
+  circuit_breaker_dd_pct: 8.0
+  auto_reduce_after_n_losses: 3
+  auto_reduce_factor: 0.6
+
+# Alerts must be on for live; set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in .env
+monitoring:
+  alerts:
+    enabled: true
+    telegram:
+      enabled: true
+    triggers:
+      - type: "drawdown"
+        threshold: 0.12
+      - type: "daily_loss"
+        threshold: 0.02
+      - type: "consecutive_losses"
+        threshold: 2
+      - type: "error_rate"
+        threshold: 0.05
+
+# Live mode only after completing docs/LIVE_CHECKLIST.md
+runtime:
+  mode: "live"
+  institutional_mode: true
+  live_disabled_strategies:
+    - "farmer"
+    - "high_freq_grid"
+    - "hft_obi_pressure"
+    - "apeiron_tier"
+    - "ultimate"

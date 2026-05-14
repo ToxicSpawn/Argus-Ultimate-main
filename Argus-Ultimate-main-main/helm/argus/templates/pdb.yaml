@@ -1,0 +1,14 @@
+{{- if .Values.argus.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "argus.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "argus.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.argus.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "argus.selectorLabels" . | nindent 6 }}
+{{- end }}

@@ -1,0 +1,13 @@
+[Unit]
+Description=Argus PHC to System Clock Sync (${PTP_IFACE})
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/phc2sys -s ${PTP_IFACE} -c CLOCK_REALTIME -w -m
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

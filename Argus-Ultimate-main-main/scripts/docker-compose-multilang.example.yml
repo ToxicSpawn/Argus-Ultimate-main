@@ -1,0 +1,42 @@
+# Example: run 3 multilang services (rust, cpp, python). Point unified_config multi_language.endpoints to these.
+# Usage: docker-compose -f scripts/docker-compose-multilang.example.yml up -d
+# Then set in unified_config.yaml under multi_language.endpoints:
+#   rust: "http://localhost:8011"
+#   cpp: "http://localhost:8012"
+#   python: "http://localhost:8013"
+version: "3.8"
+services:
+  argus-rust:
+    build:
+      context: ../multilang/service
+      dockerfile: Dockerfile
+    environment:
+      LANGUAGE: rust
+      PORT: 8011
+    ports:
+      - "8011:8011"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8011/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 2
+
+  argus-cpp:
+    build:
+      context: ../multilang/service
+      dockerfile: Dockerfile
+    environment:
+      LANGUAGE: cpp
+      PORT: 8012
+    ports:
+      - "8012:8012"
+
+  argus-python:
+    build:
+      context: ../multilang/service
+      dockerfile: Dockerfile
+    environment:
+      LANGUAGE: python
+      PORT: 8013
+    ports:
+      - "8013:8013"

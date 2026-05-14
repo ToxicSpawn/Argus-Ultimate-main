@@ -1,0 +1,55 @@
+# Argus Ultimate — default configuration
+# Push 61: Config-Manager
+# All values can be overridden via ARGUS_* environment variables.
+
+version: "1"
+env: production   # production | paper | backtest
+
+server:
+  host: "0.0.0.0"
+  port: 8080
+  workers: 1
+  debug: false
+  log_level: info
+
+exchange:
+  name: bybit
+  api_key: "${ARGUS_EXCHANGE_API_KEY:-}"
+  api_secret: "${ARGUS_EXCHANGE_API_SECRET:-}"
+  testnet: true
+  ws_url: "wss://stream.bybit.com/v5/public/spot"
+  rest_url: "https://api.bybit.com"
+  rate_limit_per_sec: 10
+  symbols:
+    - BTCUSDT
+    - ETHUSDT
+    - SOLUSDT
+
+risk:
+  max_position_usd: 10000.0
+  max_daily_loss_usd: 500.0
+  max_drawdown_pct: 10.0
+  min_confidence: 0.60
+  max_open_positions: 5
+  halt_on_drawdown: true
+
+alerts:
+  enabled: true
+  min_level: WARNING
+  telegram_enabled: false
+  discord_enabled: false
+  email_enabled: false
+  webhook_enabled: false
+
+broadcast:
+  enabled: true
+  heartbeat_interval: 10.0
+  max_clients: 50
+
+logging:
+  level: INFO
+  format: "%(asctime)s %(levelname)-8s %(name)s: %(message)s"
+  file: null
+  json_logs: false
+  rotate_mb: 50
+  backup_count: 5

@@ -1,0 +1,1 @@
+"""ARGUS data module."""

@@ -1,0 +1,126 @@
+# Argus Ultimate — Full Production Stack
+# Push 80 / v8.16.0
+#
+# Services:
+#   argus-bot  — main trading system + FastAPI (:8080)
+#   prometheus — metrics scraper  (:9090)
+#   grafana    — dashboards        (:3000)
+#   redis      — state/cache       (:6379)
+#
+# Usage:
+#   docker-compose up -d
+#   open http://localhost:3000  (Grafana, admin/argus)
+#   open http://localhost:8080/health
+#   open http://localhost:9090  (Prometheus)
+
+version: "3.9"
+
+services:
+
+  argus-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: argus-bot
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - ARGUS_PAPER_MODE=true
+      - ARGUS_API_HOST=0.0.0.0
+      - ARGUS_API_PORT=8080
+      - ARGUS_LOG_LEVEL=INFO
+      - ARGUS_INITIAL_EQUITY=10000
+      - ARGUS_INITIAL_BALANCE=100000
+      - ARGUS_MAX_OPEN_ORDERS=10
+      - ARGUS_MAX_POSITION_USD=50000
+      - ARGUS_SIGNAL_COOLDOWN=5
+      - ARGUS_ADAPTIVE_LEARNING=true
+      - ARGUS_LEARNING_INTERVAL_SECONDS=0.5
+      - ARGUS_MAX_DRAWDOWN=0.15
+      - ARGUS_MAX_DAILY_LOSS_PCT=0.05
+      # Set real keys for live trading:
+      # - ARGUS_PAPER_MODE=false
+      # - ARGUS_BINANCE_API_KEY=your_key
+      # - ARGUS_BINANCE_API_SECRET=your_secret
+      # - ARGUS_BINANCE_TESTNET=true
+    volumes:
+      - ./config:/app/config:ro
+      - ./reports:/app/reports
+      - ./logs:/app/logs
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - argus-net
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: argus-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+    depends_on:
+      - argus-bot
+    networks:
+      - argus-net
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: argus-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=argus
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    networks:
+      - argus-net
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: argus-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - argus-net
+
+networks:
+  argus-net:
+    driver: bridge
+
+volumes:
+  prometheus-data:
+  grafana-data:
+  redis-data:

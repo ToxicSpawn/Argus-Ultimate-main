@@ -1,0 +1,107 @@
+# =============================================================================
+# Maker-Only Config Overlay — Optimised for $1k Capital
+# =============================================================================
+# Apply on top of unified_config.yaml:
+#   python main.py --config unified_config.yaml --overlay config/maker_only_config.yaml
+#
+# Designed for:
+#   - Zero-fee trading via MEXC (0% maker) or Hyperliquid (-0.01% rebate)
+#   - Capital preservation at $1,000 account size
+#   - Maximum 2 trades per day to limit fee exposure
+#   - Post-only orders only — never pays taker fees
+# =============================================================================
+
+execution:
+  # Force limit orders only — never market orders
+  default_order_type: limit
+  maker_only: true
+  post_only: true
+
+  # Retry config for maker order placement
+  maker_retry_attempts: 3
+  maker_price_step_bps: 1       # Step price back 1bps per retry
+  maker_retry_delay_ms: 50
+
+  # Spread filter: skip trades on thin books
+  min_spread_bps: 3             # Minimum 3bps spread required
+
+  # Only trade if strategy edge exceeds this threshold
+  min_expected_return_bps: 8   # 0.08% minimum expected return per trade
+
+# ────────────────────────────────────────────────────────────────────────────
+risk:
+  # Hard capital limits for $1k account
+  max_position_size_pct: 0.05   # 5% per trade = $50 max position
+  max_open_positions: 2         # Never hold more than 2 positions
+  max_daily_loss_pct: 0.03      # Stop trading if down 3% in a day ($30)
+  max_drawdown_pct: 0.10        # Emergency stop if down 10% total ($100)
+
+  # Trade frequency limiter
+  max_trades_per_day: 2
+  min_time_between_trades_sec: 300  # 5 minutes minimum between trades
+
+# ────────────────────────────────────────────────────────────────────────────
+fees:
+  # Target exchanges with zero or negative maker fees
+  # Priority order: Hyperliquid (rebate) > MEXC (free) > WOO X (low)
+  preferred_exchange: hyperliquid
+  fallback_exchange: mexc
+
+  # Fee budget: 0 means reject any trade that would incur taker fees
+  max_taker_fee_per_trade_usdc: 0.0
+
+  # Rebate tracking
+  track_rebates: true
+  rebate_log_path: logs/rebates.jsonl
+
+# ────────────────────────────────────────────────────────────────────────────
+exchanges:
+  hyperliquid:
+    enabled: true
+    type: perp_dex          # Perpetual DEX — no KYC, global access
+    maker_fee_pct: -0.0001  # -0.01% — rebate per filled maker order
+    taker_fee_pct: 0.00035  # 0.035% — never used in maker-only mode
+    post_only: true
+    # Credentials loaded from .env.vultr:
+    #   HYPERLIQUID_WALLET_ADDRESS=0x...
+    #   HYPERLIQUID_PRIVATE_KEY=0x...
+    symbols:
+      - BTC
+      - ETH
+      - SOL
+
+  mexc:
+    enabled: true
+    type: cex
+    maker_fee_pct: 0.0      # 0% maker — genuinely free
+    taker_fee_pct: 0.0005   # 0.05% taker — never used
+    post_only: true
+    # Credentials loaded from .env.vultr:
+    #   MEXC_API_KEY=...
+    #   MEXC_API_SECRET=...
+    symbols:
+      - BTC/USDT
+      - ETH/USDT
+      - SOL/USDT
+
+# ────────────────────────────────────────────────────────────────────────────
+strategy:
+  # Focus on strategies that naturally generate maker orders
+  preferred_types:
+    - mean_reversion        # Places limit orders at mean — natural maker
+    - market_making         # Quotes both sides — collects spread
+    - momentum_limit        # Enters momentum with limit — avoids chasing
+
+  # Avoid strategies that require market orders
+  disabled_types:
+    - breakout_market       # Would require taker orders
+    - stop_loss_market      # Market stop — use limit stops instead
+
+# ────────────────────────────────────────────────────────────────────────────
+monitoring:
+  # Alert when daily rebates earned
+  rebate_alert_threshold_usdc: 0.10
+  # Alert on any taker fee paid (should be 0 always)
+  taker_fee_alert: true
+  # Daily PnL report to Discord
+  daily_report: true

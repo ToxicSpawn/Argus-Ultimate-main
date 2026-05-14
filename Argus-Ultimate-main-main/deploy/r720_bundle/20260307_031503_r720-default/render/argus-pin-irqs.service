@@ -1,0 +1,12 @@
+[Unit]
+Description=Pin enp3s0f0 IRQs to execution cores (4-15)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/argus-pin-irqs.sh enp3s0f0 4-15
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

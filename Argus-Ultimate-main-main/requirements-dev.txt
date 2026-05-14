@@ -1,0 +1,28 @@
+# Development / test dependencies
+pytest>=8.0
+pytest-asyncio>=0.23
+pytest-cov>=5.0
+pytest-timeout>=2.3
+pytest-mock>=3.14
+
+# Linting & formatting
+ruff>=0.4
+mypy>=1.9
+
+# Security
+bandit[toml]>=1.7
+
+# Type stubs
+types-pyyaml
+types-python-dateutil
+types-pytz
+
+# Pre-commit
+pre-commit>=3.7
+
+# Profiling
+py-spy>=0.4.2
+line-profiler>=4.1
+
+# Load testing
+locust>=2.24

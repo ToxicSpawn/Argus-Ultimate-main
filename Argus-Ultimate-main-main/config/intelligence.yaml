@@ -1,0 +1,30 @@
+# Argus optional intelligence layer defaults.
+# Safe-by-default: these features enrich research/advisory outputs only and do
+# not alter live execution unless explicitly consumed by strategy code.
+
+intelligence:
+  reporting:
+    enabled: true
+    quantstats_optional: true
+  historical_data:
+    binance_vision_enabled: true
+    kraken_archive_enabled: true
+    download_on_startup: false
+  walk_forward:
+    enabled: true
+    train_size: 500
+    test_size: 100
+  drift:
+    enabled: true
+    backend: psi_fallback
+    psi_threshold: 0.25
+  forecast_advisor:
+    enabled: false
+    model: naive_momentum_volatility
+  smart_money:
+    enabled: false
+    require_api_key: false
+  memory:
+    enabled: false
+    backend: local_jsonl
+    path: runtime/intelligence_memory.jsonl

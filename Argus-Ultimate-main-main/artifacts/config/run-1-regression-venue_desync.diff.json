@@ -1,0 +1,30 @@
+{
+  "config_hash": "sha256:40c279463d0a6a339ccb3ce8a3d9002aa75d26df2da287258357143bc0b594e9",
+  "diff": {
+    "changed": {
+      "ladder_stage": {
+        "new": "PAPER",
+        "old": null
+      },
+      "manifest_hash": {
+        "new": "run-1-regression-venue_desync",
+        "old": null
+      },
+      "profile": {
+        "new": "paper",
+        "old": null
+      },
+      "runtime_path": {
+        "new": "intent->liquidity->constitution->governance->route->submit->reconcile->attribute->replay_audit->proving_review",
+        "old": null
+      },
+      "strict_governance": {
+        "new": true,
+        "old": null
+      }
+    },
+    "current_key_count": 5,
+    "previous_key_count": 0
+  },
+  "run_id": "run-1-regression-venue_desync"
+}

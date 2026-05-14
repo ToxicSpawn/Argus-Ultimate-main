@@ -1,0 +1,30 @@
+{
+  "config_hash": "sha256:930f1a501fc7c18c7bec8cb448e4005a8423148d59745dc917bf2b9d57d12d96",
+  "diff": {
+    "changed": {
+      "ladder_stage": {
+        "new": "PAPER",
+        "old": null
+      },
+      "manifest_hash": {
+        "new": "elite-batch-latency_spike",
+        "old": null
+      },
+      "profile": {
+        "new": "paper",
+        "old": null
+      },
+      "runtime_path": {
+        "new": "intent->liquidity->constitution->governance->route->submit->reconcile->attribute->replay_audit->proving_review",
+        "old": null
+      },
+      "strict_governance": {
+        "new": true,
+        "old": null
+      }
+    },
+    "current_key_count": 5,
+    "previous_key_count": 0
+  },
+  "run_id": "elite-batch-latency_spike"
+}

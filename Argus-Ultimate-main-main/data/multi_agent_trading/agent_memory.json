@@ -1,0 +1,598 @@
+{
+  "decisions": [
+    {
+      "action": "buy",
+      "confidence": 0.3085595785569454,
+      "created_at": 1776855719.7837448,
+      "decision_id": "cf068f3dfdf341e889a9254ff5146006",
+      "net_score": 0.11037699213087751,
+      "outcome": {
+        "detected_regime": "range_bound",
+        "recommended_size": 0.0021266448537254276
+      },
+      "reasoning_chain": [
+        "Collected 8 specialist views for BTCUSD.",
+        "Market regime agent detected range_bound.",
+        "Bull/Bear debate resolved to buy with confidence 0.54.",
+        "Weighted vote aggregation produced hold with net score 0.11.",
+        "Recommended size after portfolio and risk overlays is 0.21%.",
+        "Synthesis for BTCUSD: consensus bias is buy.",
+        "Synthesis for BTCUSD: consensus bias is buy.",
+        "Synthesis for BTCUSD: consensus bias is buy."
+      ],
+      "symbol": "BTCUSD"
+    },
+    {
+      "action": "hold",
+      "confidence": 0.16656817221075734,
+      "created_at": 1776855926.7275908,
+      "decision_id": "a66d907aebb74652810e82f2b1caf782",
+      "net_score": 0.04129848008385745,
+      "outcome": {
+        "detected_regime": "range_bound",
+        "recommended_size": 5.814924004192872e-05
+      },
+      "reasoning_chain": [
+        "Collected 8 specialist views for BTCUSDT.",
+        "Market regime agent detected range_bound.",
+        "Bull/Bear debate resolved to hold with confidence 0.26.",
+        "Weighted vote aggregation produced hold with net score 0.04.",
+        "Recommended size after portfolio and risk overlays is 0.01%.",
+        "Synthesis for BTCUSDT: consensus bias is hold.",
+        "Synthesis for BTCUSDT: consensus bias is hold.",
+        "Synthesis for BTCUSDT: consensus bias is hold."
+      ],
+      "symbol": "BTCUSDT"
+    },
+    {
+      "action": "buy",
+      "confidence": 0.3085595785569454,
+      "created_at": 1776856155.4069388,
+      "decision_id": "6d4ce0675d9245f6b8227eb5a2781223",
+      "net_score": 0.11037699213087751,
+      "outcome": {
+        "decision_id": "6d4ce0675d9245f6b8227eb5a2781223",
+        "detected_regime": "range_bound",
+        "horizon": "1d",
+        "market_regime": "range_bound",
+        "prompt_variants": {
+          "bear_researcher": "036169ee877e0265",
+          "bull_researcher": "bf8e7e1a2b8a3ce2",
+          "fund_manager": "3e9c91bdf7a0948f",
+          "fundamental_analyst": "63415230890a57b7",
+          "market_regime_agent": "0202e8f49d3a0b7c",
+          "risk_manager": "549500eb559bcc02",
+          "sentiment_analyst": "96152324077213b3",
+          "technical_analyst": "02f341eb2cb7b052"
+        },
+        "quality": 0.34855957855694536,
+        "realized_return": 0.04,
+        "recommended_size": 0.0021266448537254276,
+        "source": "smoke",
+        "symbol": "BTCUSD"
+      },
+      "reasoning_chain": [
+        "Collected 8 specialist views for BTCUSD.",
+        "Market regime agent detected range_bound.",
+        "Bull/Bear debate resolved to buy with confidence 0.54.",
+        "Weighted vote aggregation produced hold with net score 0.11.",
+        "Recommended size after portfolio and risk overlays is 0.21%.",
+        "Synthesis for BTCUSD: consensus bias is buy.",
+        "Synthesis for BTCUSD: consensus bias is buy.",
+        "Synthesis for BTCUSD: consensus bias is buy."
+      ],
+      "symbol": "BTCUSD"
+    }
+  ],
+  "edges": [
+    {
+      "created_at": 1776855719.7842503,
+      "edge_id": "e04366ec377b4b39a45608131153d36a",
+      "properties": {
+        "index": 0
+      },
+      "relation": "LEADS_TO",
+      "source_id": "cf068f3dfdf341e889a9254ff5146006",
+      "target_id": "053f00e5ade74e659a12c6d5d1291d76"
+    },
+    {
+      "created_at": 1776855719.7842503,
+      "edge_id": "d0eb900bf65949649218bcc8db1e98ed",
+      "properties": {
+        "index": 1
+      },
+      "relation": "LEADS_TO",
+      "source_id": "053f00e5ade74e659a12c6d5d1291d76",
+      "target_id": "35e818c0e04445e9b10a09b989816fda"
+    },
+    {
+      "created_at": 1776855719.7842503,
+      "edge_id": "76d01ec599fe4832a8ed3fa66b47c9df",
+      "properties": {
+        "index": 2
+      },
+      "relation": "LEADS_TO",
+      "source_id": "35e818c0e04445e9b10a09b989816fda",
+      "target_id": "91e85d3678d94624b7dc3cc41ad527d7"
+    },
+    {
+      "created_at": 1776855719.7842503,
+      "edge_id": "8a9b7f7570c2474a99be9886bd832ab3",
+      "properties": {
+        "index": 3
+      },
+      "relation": "LEADS_TO",
+      "source_id": "91e85d3678d94624b7dc3cc41ad527d7",
+      "target_id": "8a1296282eea4c4db70e1167d351a76f"
+    },
+    {
+      "created_at": 1776855719.7842503,
+      "edge_id": "335c06b90a9c453bba14599f88566955",
+      "properties": {
+        "index": 4
+      },
+      "relation": "LEADS_TO",
+      "source_id": "8a1296282eea4c4db70e1167d351a76f",
+      "target_id": "d805138f63734251a934c5ee7766c67d"
+    },
+    {
+      "created_at": 1776855719.7842503,
+      "edge_id": "c0c28a0f77a84be6b2e4577de682de60",
+      "properties": {
+        "index": 5
+      },
+      "relation": "LEADS_TO",
+      "source_id": "d805138f63734251a934c5ee7766c67d",
+      "target_id": "0ccd81a8f2334218b3e206d62c6ee37d"
+    },
+    {
+      "created_at": 1776855719.7842503,
+      "edge_id": "a918bb8e6a3642e6b92faebda31ece6d",
+      "properties": {
+        "index": 6
+      },
+      "relation": "LEADS_TO",
+      "source_id": "0ccd81a8f2334218b3e206d62c6ee37d",
+      "target_id": "d78a72d96f0f43e9a183aa7ff3ce35bb"
+    },
+    {
+      "created_at": 1776855719.7842503,
+      "edge_id": "9bc48525236c4f439b670f34c7ce6ab6",
+      "properties": {
+        "index": 7
+      },
+      "relation": "LEADS_TO",
+      "source_id": "d78a72d96f0f43e9a183aa7ff3ce35bb",
+      "target_id": "d28dcc1a4bc64e879e1dfbc4aaf86c8d"
+    },
+    {
+      "created_at": 1776855926.728094,
+      "edge_id": "b29341eb5faf4fc29bf49a212adb3959",
+      "properties": {
+        "index": 0
+      },
+      "relation": "LEADS_TO",
+      "source_id": "a66d907aebb74652810e82f2b1caf782",
+      "target_id": "f8d178c6c4b34c628fa0ec28c349a3ae"
+    },
+    {
+      "created_at": 1776855926.728094,
+      "edge_id": "bf5dad74a6c94b2fa855dc09648ff59f",
+      "properties": {
+        "index": 1
+      },
+      "relation": "LEADS_TO",
+      "source_id": "f8d178c6c4b34c628fa0ec28c349a3ae",
+      "target_id": "07615088853247cbb74ce905aac41899"
+    },
+    {
+      "created_at": 1776855926.728094,
+      "edge_id": "224fefb105f84d3897ea5e815ae8c3c1",
+      "properties": {
+        "index": 2
+      },
+      "relation": "LEADS_TO",
+      "source_id": "07615088853247cbb74ce905aac41899",
+      "target_id": "ac0c428364474e6f8f3dd5626fb69387"
+    },
+    {
+      "created_at": 1776855926.728094,
+      "edge_id": "4a0593a39788492695eb17e64f264362",
+      "properties": {
+        "index": 3
+      },
+      "relation": "LEADS_TO",
+      "source_id": "ac0c428364474e6f8f3dd5626fb69387",
+      "target_id": "a4c17763a7b64f41b79f5c68fe63e818"
+    },
+    {
+      "created_at": 1776855926.728094,
+      "edge_id": "309e2cd472e54a3cad1499e62c27b826",
+      "properties": {
+        "index": 4
+      },
+      "relation": "LEADS_TO",
+      "source_id": "a4c17763a7b64f41b79f5c68fe63e818",
+      "target_id": "9bc4583b60454e21a18264d0adebb45f"
+    },
+    {
+      "created_at": 1776855926.728094,
+      "edge_id": "7b800c79061e4bd0bc2d9356dd65a77f",
+      "properties": {
+        "index": 5
+      },
+      "relation": "LEADS_TO",
+      "source_id": "9bc4583b60454e21a18264d0adebb45f",
+      "target_id": "8ac336805f9446adabd6b23993b9e5bb"
+    },
+    {
+      "created_at": 1776855926.728094,
+      "edge_id": "ef183f93f0394047834f8099ad12cadf",
+      "properties": {
+        "index": 6
+      },
+      "relation": "LEADS_TO",
+      "source_id": "8ac336805f9446adabd6b23993b9e5bb",
+      "target_id": "bbdeede6313046a08ad1c464139c80a7"
+    },
+    {
+      "created_at": 1776855926.728094,
+      "edge_id": "7985498975ae4f728dd8e10fe0c3242d",
+      "properties": {
+        "index": 7
+      },
+      "relation": "LEADS_TO",
+      "source_id": "bbdeede6313046a08ad1c464139c80a7",
+      "target_id": "30eaa07154bd4ad0930e6433cf3dfc99"
+    },
+    {
+      "created_at": 1776856155.407955,
+      "edge_id": "9797e7ffedd54789a57dfa2233247bba",
+      "properties": {
+        "index": 0
+      },
+      "relation": "LEADS_TO",
+      "source_id": "6d4ce0675d9245f6b8227eb5a2781223",
+      "target_id": "cc082d2d65bc446fae2e5c004dd53c08"
+    },
+    {
+      "created_at": 1776856155.407955,
+      "edge_id": "b52c5d1c59d148dfb7be8802eed8a428",
+      "properties": {
+        "index": 1
+      },
+      "relation": "LEADS_TO",
+      "source_id": "cc082d2d65bc446fae2e5c004dd53c08",
+      "target_id": "39fd864e92b34c998237a6a2ae4ec735"
+    },
+    {
+      "created_at": 1776856155.407955,
+      "edge_id": "41272bb48e3c4223ad80645571753d5e",
+      "properties": {
+        "index": 2
+      },
+      "relation": "LEADS_TO",
+      "source_id": "39fd864e92b34c998237a6a2ae4ec735",
+      "target_id": "39c8a1a6a606491fb3dd7a8b66bc3fb3"
+    },
+    {
+      "created_at": 1776856155.407955,
+      "edge_id": "d58dee81881749dd9edfd6625bfcbb61",
+      "properties": {
+        "index": 3
+      },
+      "relation": "LEADS_TO",
+      "source_id": "39c8a1a6a606491fb3dd7a8b66bc3fb3",
+      "target_id": "4e7bb58a56f14f69ac1467d4a48ca5f6"
+    },
+    {
+      "created_at": 1776856155.407955,
+      "edge_id": "fee0dbd93e4446f69133f2451cfd6c79",
+      "properties": {
+        "index": 4
+      },
+      "relation": "LEADS_TO",
+      "source_id": "4e7bb58a56f14f69ac1467d4a48ca5f6",
+      "target_id": "6ed86fa5a09a47c588386ba59fe2df6e"
+    },
+    {
+      "created_at": 1776856155.407955,
+      "edge_id": "d2f56ebb40474d949732311cc15bd1ca",
+      "properties": {
+        "index": 5
+      },
+      "relation": "LEADS_TO",
+      "source_id": "6ed86fa5a09a47c588386ba59fe2df6e",
+      "target_id": "60a11fb3563f4da4946b849241fa64aa"
+    },
+    {
+      "created_at": 1776856155.407955,
+      "edge_id": "ed845c130cdb421885a4d68e0b8136c4",
+      "properties": {
+        "index": 6
+      },
+      "relation": "LEADS_TO",
+      "source_id": "60a11fb3563f4da4946b849241fa64aa",
+      "target_id": "6a0f78c7c99d4c69bbc1ffede7c94ae2"
+    },
+    {
+      "created_at": 1776856155.407955,
+      "edge_id": "499d879a6e5b4c27a00b8177f45bb2a8",
+      "properties": {
+        "index": 7
+      },
+      "relation": "LEADS_TO",
+      "source_id": "6a0f78c7c99d4c69bbc1ffede7c94ae2",
+      "target_id": "581f2d24c9ad47bf95c221cbbbea33ab"
+    },
+    {
+      "created_at": 1776856155.4084597,
+      "edge_id": "3ef03aeff43448ac8b01095edc001f6d",
+      "properties": {},
+      "relation": "RESULTED_IN",
+      "source_id": "6d4ce0675d9245f6b8227eb5a2781223",
+      "target_id": "da8b75d981f94d0e85cb06b1b0efa331"
+    }
+  ],
+  "nodes": [
+    {
+      "created_at": 1776855719.7837448,
+      "label": "Decision",
+      "node_id": "cf068f3dfdf341e889a9254ff5146006",
+      "properties": {
+        "action": "buy",
+        "confidence": 0.3085595785569454,
+        "net_score": 0.11037699213087751,
+        "symbol": "BTCUSD"
+      }
+    },
+    {
+      "created_at": 1776855719.7842503,
+      "label": "ReasoningStep",
+      "node_id": "053f00e5ade74e659a12c6d5d1291d76",
+      "properties": {
+        "index": 0,
+        "text": "Collected 8 specialist views for BTCUSD."
+      }
+    },
+    {
+      "created_at": 1776855719.7842503,
+      "label": "ReasoningStep",
+      "node_id": "35e818c0e04445e9b10a09b989816fda",
+      "properties": {
+        "index": 1,
+        "text": "Market regime agent detected range_bound."
+      }
+    },
+    {
+      "created_at": 1776855719.7842503,
+      "label": "ReasoningStep",
+      "node_id": "91e85d3678d94624b7dc3cc41ad527d7",
+      "properties": {
+        "index": 2,
+        "text": "Bull/Bear debate resolved to buy with confidence 0.54."
+      }
+    },
+    {
+      "created_at": 1776855719.7842503,
+      "label": "ReasoningStep",
+      "node_id": "8a1296282eea4c4db70e1167d351a76f",
+      "properties": {
+        "index": 3,
+        "text": "Weighted vote aggregation produced hold with net score 0.11."
+      }
+    },
+    {
+      "created_at": 1776855719.7842503,
+      "label": "ReasoningStep",
+      "node_id": "d805138f63734251a934c5ee7766c67d",
+      "properties": {
+        "index": 4,
+        "text": "Recommended size after portfolio and risk overlays is 0.21%."
+      }
+    },
+    {
+      "created_at": 1776855719.7842503,
+      "label": "ReasoningStep",
+      "node_id": "0ccd81a8f2334218b3e206d62c6ee37d",
+      "properties": {
+        "index": 5,
+        "text": "Synthesis for BTCUSD: consensus bias is buy."
+      }
+    },
+    {
+      "created_at": 1776855719.7842503,
+      "label": "ReasoningStep",
+      "node_id": "d78a72d96f0f43e9a183aa7ff3ce35bb",
+      "properties": {
+        "index": 6,
+        "text": "Synthesis for BTCUSD: consensus bias is buy."
+      }
+    },
+    {
+      "created_at": 1776855719.7842503,
+      "label": "ReasoningStep",
+      "node_id": "d28dcc1a4bc64e879e1dfbc4aaf86c8d",
+      "properties": {
+        "index": 7,
+        "text": "Synthesis for BTCUSD: consensus bias is buy."
+      }
+    },
+    {
+      "created_at": 1776855926.7275908,
+      "label": "Decision",
+      "node_id": "a66d907aebb74652810e82f2b1caf782",
+      "properties": {
+        "action": "hold",
+        "confidence": 0.16656817221075734,
+        "net_score": 0.04129848008385745,
+        "symbol": "BTCUSDT"
+      }
+    },
+    {
+      "created_at": 1776855926.728094,
+      "label": "ReasoningStep",
+      "node_id": "f8d178c6c4b34c628fa0ec28c349a3ae",
+      "properties": {
+        "index": 0,
+        "text": "Collected 8 specialist views for BTCUSDT."
+      }
+    },
+    {
+      "created_at": 1776855926.728094,
+      "label": "ReasoningStep",
+      "node_id": "07615088853247cbb74ce905aac41899",
+      "properties": {
+        "index": 1,
+        "text": "Market regime agent detected range_bound."
+      }
+    },
+    {
+      "created_at": 1776855926.728094,
+      "label": "ReasoningStep",
+      "node_id": "ac0c428364474e6f8f3dd5626fb69387",
+      "properties": {
+        "index": 2,
+        "text": "Bull/Bear debate resolved to hold with confidence 0.26."
+      }
+    },
+    {
+      "created_at": 1776855926.728094,
+      "label": "ReasoningStep",
+      "node_id": "a4c17763a7b64f41b79f5c68fe63e818",
+      "properties": {
+        "index": 3,
+        "text": "Weighted vote aggregation produced hold with net score 0.04."
+      }
+    },
+    {
+      "created_at": 1776855926.728094,
+      "label": "ReasoningStep",
+      "node_id": "9bc4583b60454e21a18264d0adebb45f",
+      "properties": {
+        "index": 4,
+        "text": "Recommended size after portfolio and risk overlays is 0.01%."
+      }
+    },
+    {
+      "created_at": 1776855926.728094,
+      "label": "ReasoningStep",
+      "node_id": "8ac336805f9446adabd6b23993b9e5bb",
+      "properties": {
+        "index": 5,
+        "text": "Synthesis for BTCUSDT: consensus bias is hold."
+      }
+    },
+    {
+      "created_at": 1776855926.728094,
+      "label": "ReasoningStep",
+      "node_id": "bbdeede6313046a08ad1c464139c80a7",
+      "properties": {
+        "index": 6,
+        "text": "Synthesis for BTCUSDT: consensus bias is hold."
+      }
+    },
+    {
+      "created_at": 1776855926.728094,
+      "label": "ReasoningStep",
+      "node_id": "30eaa07154bd4ad0930e6433cf3dfc99",
+      "properties": {
+        "index": 7,
+        "text": "Synthesis for BTCUSDT: consensus bias is hold."
+      }
+    },
+    {
+      "created_at": 1776856155.4069388,
+      "label": "Decision",
+      "node_id": "6d4ce0675d9245f6b8227eb5a2781223",
+      "properties": {
+        "action": "buy",
+        "confidence": 0.3085595785569454,
+        "net_score": 0.11037699213087751,
+        "symbol": "BTCUSD"
+      }
+    },
+    {
+      "created_at": 1776856155.407955,
+      "label": "ReasoningStep",
+      "node_id": "cc082d2d65bc446fae2e5c004dd53c08",
+      "properties": {
+        "index": 0,
+        "text": "Collected 8 specialist views for BTCUSD."
+      }
+    },
+    {
+      "created_at": 1776856155.407955,
+      "label": "ReasoningStep",
+      "node_id": "39fd864e92b34c998237a6a2ae4ec735",
+      "properties": {
+        "index": 1,
+        "text": "Market regime agent detected range_bound."
+      }
+    },
+    {
+      "created_at": 1776856155.407955,
+      "label": "ReasoningStep",
+      "node_id": "39c8a1a6a606491fb3dd7a8b66bc3fb3",
+      "properties": {
+        "index": 2,
+        "text": "Bull/Bear debate resolved to buy with confidence 0.54."
+      }
+    },
+    {
+      "created_at": 1776856155.407955,
+      "label": "ReasoningStep",
+      "node_id": "4e7bb58a56f14f69ac1467d4a48ca5f6",
+      "properties": {
+        "index": 3,
+        "text": "Weighted vote aggregation produced hold with net score 0.11."
+      }
+    },
+    {
+      "created_at": 1776856155.407955,
+      "label": "ReasoningStep",
+      "node_id": "6ed86fa5a09a47c588386ba59fe2df6e",
+      "properties": {
+        "index": 4,
+        "text": "Recommended size after portfolio and risk overlays is 0.21%."
+      }
+    },
+    {
+      "created_at": 1776856155.407955,
+      "label": "ReasoningStep",
+      "node_id": "60a11fb3563f4da4946b849241fa64aa",
+      "properties": {
+        "index": 5,
+        "text": "Synthesis for BTCUSD: consensus bias is buy."
+      }
+    },
+    {
+      "created_at": 1776856155.407955,
+      "label": "ReasoningStep",
+      "node_id": "6a0f78c7c99d4c69bbc1ffede7c94ae2",
+      "properties": {
+        "index": 6,
+        "text": "Synthesis for BTCUSD: consensus bias is buy."
+      }
+    },
+    {
+      "created_at": 1776856155.407955,
+      "label": "ReasoningStep",
+      "node_id": "581f2d24c9ad47bf95c221cbbbea33ab",
+      "properties": {
+        "index": 7,
+        "text": "Synthesis for BTCUSD: consensus bias is buy."
+      }
+    },
+    {
+      "created_at": 1776856155.4084597,
+      "label": "Outcome",
+      "node_id": "da8b75d981f94d0e85cb06b1b0efa331",
+      "properties": {
+        "horizon": "1d",
+        "realized_return": 0.04,
+        "source": "smoke"
+      }
+    }
+  ]
+}

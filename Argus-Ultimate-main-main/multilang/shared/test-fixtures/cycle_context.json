@@ -1,0 +1,12 @@
+{
+  "portfolio_value_aud": 1000.0,
+  "cash_balance_aud": 500.0,
+  "signals": 3,
+  "signals_count": 3,
+  "primary_exchange": "kraken",
+  "symbol": "BTC/AUD",
+  "timeframe": "1h",
+  "cycle_id": 42,
+  "regime": "trend",
+  "regime_confidence": 0.75
+}

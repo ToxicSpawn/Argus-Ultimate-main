@@ -1,0 +1,12 @@
+[Unit]
+Description=Pin ${IFACE_PRIMARY} IRQs to execution cores (${EXEC_CPUS})
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/argus-pin-irqs.sh ${IFACE_PRIMARY} ${EXEC_CPUS}
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

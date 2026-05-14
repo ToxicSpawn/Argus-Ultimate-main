@@ -1,0 +1,9 @@
+README.md
+PROTOCOL.md
+docker-compose.yml
+.dockerignore
+__pycache__
+*.pyc
+.pytest_cache
+.env
+*.md

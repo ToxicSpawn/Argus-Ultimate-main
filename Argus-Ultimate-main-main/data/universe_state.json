@@ -1,0 +1,60 @@
+{
+  "pairs": {
+    "BTC/USD": {
+      "status": "active",
+      "avg_volume_usd": 0.0,
+      "bid_ask_spread_pct": 0.0,
+      "atr_pct": 0.0,
+      "paper_trades": 0,
+      "paper_wins": 0,
+      "paper_pnl": 0.0,
+      "paper_sharpe": 0.0,
+      "discovered_at": 1776813281.5178037,
+      "rejection_reasons": []
+    },
+    "ETH/USD": {
+      "status": "active",
+      "avg_volume_usd": 0.0,
+      "bid_ask_spread_pct": 0.0,
+      "atr_pct": 0.0,
+      "paper_trades": 0,
+      "paper_wins": 0,
+      "paper_pnl": 0.0,
+      "paper_sharpe": 0.0,
+      "discovered_at": 1776813281.5178037,
+      "rejection_reasons": []
+    }
+  },
+  "stats": {
+    "total_pairs": 2,
+    "active_pairs": [
+      "BTC/USD",
+      "ETH/USD"
+    ],
+    "active_count": 2,
+    "paper_testing_count": 0,
+    "blacklisted_count": 0,
+    "demoted_count": 0,
+    "total_discovered": 2,
+    "total_promoted": 0,
+    "total_demoted": 0,
+    "status_breakdown": {
+      "active": 2
+    }
+  },
+  "thresholds": {
+    "min_volume_usd": 1000000,
+    "max_spread_pct": 0.002,
+    "min_atr_pct": 0.01,
+    "max_atr_pct": 0.15,
+    "min_orderbook_depth_usd": 100000,
+    "paper_trades_required": 10,
+    "paper_min_win_rate": 0.4,
+    "paper_min_sharpe": 0.0,
+    "max_pairs": 30,
+    "evaluation_interval_hours": 24,
+    "demotion_threshold": -0.02,
+    "cooldown_hours": 48
+  },
+  "saved_at": 1776929619.9800634
+}

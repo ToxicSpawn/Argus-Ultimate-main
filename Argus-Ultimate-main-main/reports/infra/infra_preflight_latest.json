@@ -1,0 +1,21 @@
+{
+  "checked_at": "2026-03-06T16:06:38.665711+00:00",
+  "status": "FAIL",
+  "source_status": "FAIL",
+  "thresholds": {
+    "max_age_hours": 24.0,
+    "max_clock_offset_us": 250.0,
+    "require_onload": false,
+    "require_hugepages": false
+  },
+  "age_hours": 0.007164485277777778,
+  "fail_reasons": [
+    "required check failed: platform_linux",
+    "required check failed: kernel_isolation_configured",
+    "required check failed: cpu_governor_all_performance",
+    "required check failed: irqbalance_disabled",
+    "required check failed: ntp_synced",
+    "required check failed: hardware_timestamping",
+    "clock offset unavailable (chrony not reporting)"
+  ]
+}

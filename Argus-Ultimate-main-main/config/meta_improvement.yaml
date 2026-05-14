@@ -1,0 +1,258 @@
+# Meta-Improvement Configuration
+# =============================
+# Enables the highest level of Argus self-improvement.
+# This configuration makes Argus evolve its own evolution mechanisms.
+
+meta_improvement:
+  enabled: true
+  
+  description: |
+    Level 5 Self-Improvement: Argus improves HOW it improves.
+    
+    This creates a recursive improvement loop:
+    - Level 1: Base trading (strategies generate signals)
+    - Level 2: Online learning (learn from trades, adapt parameters)  
+    - Level 3: Meta-learning (learn how to learn better)
+    - Level 4: Evolutionary optimization (evolve strategies themselves)
+    - Level 5: Meta-improvement (evolve HOW Argus improves itself)
+  
+  # Evolutionary Strategy Optimization
+  evolution:
+    enabled: true
+    population_size: 50              # Number of strategy genomes
+    generations_per_hour: 12       # Evolve 12 times per hour
+    elite_count: 5                 # Keep top 5 performers
+    mutation_rate: 0.1             # 10% mutation probability
+    crossover_rate: 0.7            # 70% crossover probability
+    
+    # Strategy types to evolve
+    strategy_types:
+      - momentum
+      - mean_reversion
+      - breakout
+      - trend_following
+    
+    # Parameters to evolve per strategy
+    momentum_params:
+      - short_window        # 5-20 range
+      - long_window         # 30-60 range
+      - min_strength        # 0.001-0.005 range
+      - acceleration_threshold
+    
+    mean_reversion_params:
+      - lookback            # 30-100 range
+      - base_threshold      # 1.0-2.5 range
+      - vol_scale           # 0.5-1.5 range
+
+  # Auto Feature Engineering
+  feature_engineering:
+    enabled: true
+    max_features: 100              # Maximum discovered features
+    discovery_interval: 600        # Discover new features every 10 minutes
+    min_correlation: 0.1         # Minimum predictive correlation
+    
+    # Base features to combine
+    base_features:
+      - returns
+      - volatility
+      - sma_ratio
+      - momentum
+      - zscore
+      - rsi
+      - macd
+    
+    # Operators for feature combination
+    combination_operators:
+      - add
+      - subtract
+      - multiply
+      - divide
+      - power
+      - lag
+
+  # Hyper-Parameter Meta-Optimization
+  hyperparameter_optimization:
+    enabled: true
+    population_size: 10            # Number of learning configs
+    evolution_interval: 1800     # Evolve hyperparams every 30 minutes
+    
+    # Parameters to meta-optimize
+    learning_params:
+      learning_rate:
+        min: 0.0001
+        max: 0.1
+        log_scale: true
+      
+      forgetting_factor:
+        min: 0.95
+        max: 0.9999
+      
+      regularization:
+        min: 0.00001
+        max: 0.01
+        log_scale: true
+      
+      adaptation_speed:
+        min: 0.01
+        max: 0.5
+      
+      exploration_rate:
+        min: 0.05
+        max: 0.5
+    
+    # Meta-parameters (how fast hyperparams evolve)
+    meta_params:
+      meta_learning_rate: 0.001
+      meta_adaptation_speed: 0.05
+
+  # Strategy Composition
+  strategy_composition:
+    enabled: true
+    
+    # When to create composite strategies
+    create_when:
+      min_component_strategies: 2
+      min_regime_duration: 300     # 5 minutes in regime
+      performance_threshold: 0.6     # 60% win rate
+    
+    # Composition types
+    composition_methods:
+      - weighted_sum          # Weighted average of signals
+      - confidence_weighted   # Weight by confidence scores
+      - regime_specific       # Different weights per regime
+      - performance_based     # Weight by recent performance
+    
+    # Optimization
+    weight_optimization:
+      method: gradient_descent
+      learning_rate: 0.01
+      update_interval: 50        # Update every 50 trades
+
+  # Meta-Improvement Controller
+  controller:
+    enabled: true
+    
+    # Improvement cycle timing
+    improvement_interval: 300      # 5 minutes between cycles
+    
+    # Performance requirements for improvement
+    min_trades_for_improvement: 10
+    min_data_points: 1000
+    
+    # Safety limits
+    max_mutation_rate: 0.2         # Never exceed 20% mutation
+    min_fitness_threshold: 0.3   # Don't deploy strategies below 0.3 fitness
+    
+    # Logging
+    log_improvements: true
+    log_level: INFO
+    
+    # Export improvements
+    auto_export: true
+    export_interval: 3600        # Export every hour
+    export_path: "improvements/"
+
+  # Integration with existing systems
+  integration:
+    # Hook into orchestrator
+    orchestrator_hooks:
+      on_trade: true
+      on_tick: true
+      on_regime_change: true
+    
+    # Use evolved strategies
+    strategy_override:
+      enabled: true
+      min_fitness: 0.5
+      gradual_transition: true   # Blend evolved with base gradually
+    
+    # Feature usage
+    use_discovered_features:
+      ml_models: true
+      strategy_signals: true
+      regime_detection: true
+
+  # Performance monitoring
+  monitoring:
+    enabled: true
+    
+    metrics:
+      - improvement_cycles
+      - evolution_generations
+      - discovered_features_count
+      - best_strategy_fitness
+      - average_population_fitness
+      - hyperparameter_convergence
+      - composite_strategy_count
+    
+    alerts:
+      on_major_improvement: true
+      on_new_best_strategy: true
+      on_feature_discovery: true
+      on_convergence: true
+
+  # Sydney, Australia Specific Settings
+  sydney_settings:
+    # Optimize for ASX/BTC Markets hours
+    active_hours:
+      start: "09:00"    # 9 AM Sydney
+      end: "17:00"      # 5 PM Sydney
+    
+    # Higher improvement frequency during active hours
+    active_improvement_multiplier: 1.5
+    
+    # AUD-specific optimizations
+    base_currency: AUD
+    fee_optimization: true
+    maker_rebate_focus: true  # Focus on maker orders for -0.05% rebate
+
+# Hardware optimization for your PC
+hardware_optimization:
+  enabled: true
+  
+  cpu:
+    use_cores: 20              # 20 of 24 cores for evolution
+    parallel_evolution: true
+    thread_pool_size: 40
+  
+  gpu:
+    accelerate_feature_discovery: true
+    accelerate_strategy_evaluation: true
+    batch_size: 64
+    mixed_precision: true      # FP16 for 2x speed
+  
+  memory:
+    cache_evolution_data: true
+    cache_size_gb: 8
+    preload_strategies: true
+
+# Safety and risk management for self-improvement
+safety:
+  enabled: true
+  
+  # Don't deploy improvements during high volatility
+  volatility_threshold: 0.05   # 5% daily volatility
+  
+  # Gradual rollout
+  canary_deployment: true
+  canary_percentage: 10        # Test on 10% of trades first
+  
+  # Rollback on performance degradation
+  auto_rollback: true
+  rollback_threshold: -0.1     # Rollback if performance drops 10%
+  
+  # Human oversight (optional)
+  require_approval_for_major_changes: false
+  approval_threshold: 0.8      # Fitness > 0.8 auto-approved
+  
+  # Emergency stop
+  emergency_stop_on:
+    - consecutive_losses: 5
+    - drawdown_exceeded: 0.15    # 15% drawdown
+    - evolution_stuck: true      # No improvement for 10 generations
+
+# Export this configuration
+default_export:
+  format: yaml
+  include_timestamp: true
+  include_fitness_history: true

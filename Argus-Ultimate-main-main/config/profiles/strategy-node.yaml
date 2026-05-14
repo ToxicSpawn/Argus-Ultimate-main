@@ -1,0 +1,18 @@
+runtime:
+  mode: paper
+  node_role: strategy-node
+  live_require_paper_edge: true
+  live_min_trades_paper: 20
+  live_min_win_rate_pct: 45
+  soak_gate:
+    enabled: true
+    max_age_hours: 24
+  command_bus:
+    enabled: true
+    db_path: data/command_bus.db
+    queue: default
+    hmac_key_env: ARGUS_COMMAND_HMAC_KEY
+    instruction_ttl_seconds: 5.0
+    require_signature: true
+    max_batch: 64
+    max_notional_aud: 0.0

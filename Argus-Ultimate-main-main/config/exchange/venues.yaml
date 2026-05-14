@@ -1,0 +1,141 @@
+# ============================================================================
+# ARGUS ULTIMATE — EXCHANGE: VENUES
+# Authoritative source for: exchange credentials env vars, fees, trading pairs,
+# execution routing, capital settings, FX rate.
+# Do NOT set these in unified_config.yaml (legacy).
+# ============================================================================
+
+primary: "binance"
+secondary: "kraken"
+use_ccxt: true
+supported:
+  - "binance"
+  - "kraken"
+  - "mexc"
+
+# ── Capital ───────────────────────────────────────────────────────────────
+capital:
+  starting_capital_aud: 1000.0
+  currency: "AUD"
+  min_position_size_aud: 15.0
+  max_position_size_aud: 180.0
+  max_position_pct: 0.35
+  max_total_exposure_pct: 0.95
+  max_concurrent_positions: 5
+  enable_micro_positions: false
+  flash_position_max_aud: 0.0
+
+# ── FX ────────────────────────────────────────────────────────────────────
+fx:
+  aud_to_usd: 0.65    # Replace with real-time feed in production
+
+# ── Exchange fee tables ───────────────────────────────────────────────────
+kraken:
+  maker_fee: 0.0016
+  taker_fee: 0.0026
+  min_order_size: 0.0001
+  api_key_env: "KRAKEN_API_KEY"
+  api_secret_env: "KRAKEN_SECRET"
+
+binance:
+  maker_fee: 0.001
+  taker_fee: 0.001
+  min_order_size: 0.0001
+  api_key_env: "BINANCE_API_KEY"
+  api_secret_env: "BINANCE_SECRET"
+
+coinbase_advanced:
+  maker_fee: 0.006
+  taker_fee: 0.008
+  min_order_size: 1.0
+  api_key_env: "COINBASE_API_KEY"
+  api_secret_env: "COINBASE_SECRET"
+
+mexc:
+  maker_fee: 0.0
+  taker_fee: 0.0001
+  min_order_size: 5.0
+  api_key_env: "MEXC_API_KEY"
+  api_secret_env: "MEXC_API_SECRET"
+  base_url: "https://api.mexc.com"
+  websocket_url: "wss://wbs.mexc.com/ws"
+  notes: "Transfer BTC/ETH from Kraken to MEXC for zero-fee trading"
+
+# ── Trading pairs universe ────────────────────────────────────────────────
+best_symbols:
+  - "BTC/USD"
+  - "ETH/USD"
+  - "SOL/USD"
+  - "XRP/USD"
+  - "DOGE/USD"
+  - "LINK/USD"
+  - "ARB/USD"
+  - "MATIC/USD"
+  - "BTC/AUD"
+  - "ETH/AUD"
+
+trading_pairs:
+  - "BTC/USDT"
+  - "ETH/USDT"
+  - "SOL/USDT"
+  - "XRP/USDT"
+  - "DOGE/USDT"
+  - "ADA/USDT"
+
+# ── Execution ─────────────────────────────────────────────────────────────
+execution:
+  slippage_pct: 0.0015
+  commission_reserve_pct: 0.05
+  signal_cooldown_bars: 4
+
+execution_routing:
+  enabled: true
+  weights:
+    liquidity: 0.40
+    latency: 0.20
+    fees: 0.20
+    reliability: 0.20
+  max_venues: 3
+
+execution_engine:
+  enabled: true
+  order_type: "market"
+  retry_attempts: 3
+  retry_delay_seconds: 5
+  max_slippage_pct: 0.005
+  order_fill_timeout_seconds: 30
+  max_spread_bps: 50
+  use_is_gate: true
+  max_avg_is_bps: 25
+  vwap_large_order_threshold_aud: 80.0
+  use_twap_for_large_orders: true
+  portfolio_weight_method: "hrp"
+  multi_venue_enabled: true
+  multi_venue_min_notional_aud: 200.0
+  twap_min_notional_usd: 250.0
+  twap_duration_minutes: 5.0
+  use_venue_routing_by_spread: true
+  dca_levels_pct: [0.33, 0.33, 0.34]
+  iceberg_enabled: true
+  iceberg_visible_pct: 0.10
+  iceberg_min_visible_qty: 0.001
+  iceberg_randomize_visible: true
+  iceberg_max_duration: 300
+  dark_pool_enabled: false
+  use_correlation_aware_sizing: true
+  max_correlated_exposure: 0.6
+  trade_ledger:
+    enabled: true
+    db_path: "data/unified_trades.db"
+    retention_days: 365
+  execution_quality_feedback_enabled: true
+  execution_quality_lookback: 50
+  execution_quality_min_samples: 5
+  execution_quality_target_slippage_bps: 12.0
+  execution_quality_adverse_rate_threshold: 0.55
+  execution_quality_disable_maker_adverse_rate: 0.80
+  execution_quality_timeout_adjust_down_pct: 0.25
+  execution_quality_timeout_adjust_up_pct: 0.10
+  execution_quality_min_timeout_scale: 0.25
+  execution_quality_max_timeout_scale: 1.50
+  execution_quality_max_slice_multiplier: 4

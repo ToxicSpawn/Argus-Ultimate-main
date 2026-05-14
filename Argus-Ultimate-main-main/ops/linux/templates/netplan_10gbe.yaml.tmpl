@@ -1,0 +1,19 @@
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    ${IFACE_PRIMARY}:
+      dhcp4: false
+      addresses:
+        - ${IP_PRIMARY_CIDR}
+      gateway4: ${GATEWAY4}
+      nameservers:
+        addresses: [${DNS_SERVERS_CSV}]
+      mtu: ${MTU}
+      optional: true
+    ${IFACE_SECONDARY}:
+      dhcp4: false
+      addresses:
+        - ${IP_SECONDARY_CIDR}
+      mtu: ${MTU}
+      optional: true

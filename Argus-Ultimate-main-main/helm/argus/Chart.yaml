@@ -1,0 +1,25 @@
+apiVersion: v2
+name: argus
+description: Argus Ultimate — Algorithmic Trading Bot
+type: application
+version: 8.21.0
+appVersion: "8.21.0"
+keywords:
+  - trading
+  - crypto
+  - hft
+  - argus
+maintainers:
+  - name: ToxicSpawn
+home: https://github.com/ToxicSpawn/Argus-Ultimate-main
+sources:
+  - https://github.com/ToxicSpawn/Argus-Ultimate-main
+dependencies:
+  - name: prometheus
+    version: "25.x.x"
+    repository: "https://prometheus-community.github.io/helm-charts"
+    condition: prometheus.enabled
+  - name: grafana
+    version: "7.x.x"
+    repository: "https://grafana.github.io/helm-charts"
+    condition: grafana.enabled

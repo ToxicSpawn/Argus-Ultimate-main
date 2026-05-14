@@ -1,0 +1,65 @@
+{
+  "completed": {
+    "BTCUSDT_1d_3y": {
+      "candles": 1095,
+      "timestamp": "2026-04-26T13:42:52.022292"
+    },
+    "BTCUSDT_4h_3y": {
+      "candles": 6570,
+      "timestamp": "2026-04-26T13:42:52.911194"
+    },
+    "BTCUSDT_1h_3y": {
+      "candles": 26280,
+      "timestamp": "2026-04-26T13:42:56.875540"
+    },
+    "ETHUSDT_1d_3y": {
+      "candles": 1095,
+      "timestamp": "2026-04-26T13:42:57.366364"
+    },
+    "ETHUSDT_4h_3y": {
+      "candles": 6570,
+      "timestamp": "2026-04-26T13:42:59.136529"
+    },
+    "ETHUSDT_1h_3y": {
+      "candles": 26280,
+      "timestamp": "2026-04-26T13:43:06.585203"
+    },
+    "BNBUSDT_1d_3y": {
+      "candles": 1095,
+      "timestamp": "2026-04-26T13:43:07.172903"
+    },
+    "BNBUSDT_4h_3y": {
+      "candles": 6570,
+      "timestamp": "2026-04-26T13:43:08.949526"
+    },
+    "BNBUSDT_1h_3y": {
+      "candles": 26280,
+      "timestamp": "2026-04-26T13:43:13.087989"
+    },
+    "SOLUSDT_1d_3y": {
+      "candles": 1095,
+      "timestamp": "2026-04-26T13:43:13.394185"
+    },
+    "SOLUSDT_4h_3y": {
+      "candles": 6570,
+      "timestamp": "2026-04-26T13:43:14.244916"
+    },
+    "SOLUSDT_1h_3y": {
+      "candles": 26280,
+      "timestamp": "2026-04-26T13:43:17.480372"
+    },
+    "XRPUSDT_1d_3y": {
+      "candles": 1095,
+      "timestamp": "2026-04-26T13:43:17.788607"
+    },
+    "XRPUSDT_4h_3y": {
+      "candles": 6570,
+      "timestamp": "2026-04-26T13:43:18.633904"
+    },
+    "XRPUSDT_1h_3y": {
+      "candles": 26280,
+      "timestamp": "2026-04-26T13:43:21.903206"
+    }
+  },
+  "failed": {}
+}

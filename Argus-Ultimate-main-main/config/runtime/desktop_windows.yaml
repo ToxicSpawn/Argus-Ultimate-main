@@ -1,0 +1,7 @@
+runtime:
+  environment: desktop_windows
+  node_role: execution-node
+  platform: windows
+  manifest_emit_path: reports/runtime_manifest.json
+  event_journal_path: reports/event_journal.jsonl
+  audit_log_path: reports/audit_log.jsonl

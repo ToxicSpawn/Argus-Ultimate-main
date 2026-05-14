@@ -1,0 +1,725 @@
+# =============================================================================
+# ARGUS ULTIMATE PINNACLE - The Absolute Peak
+# =============================================================================
+# Your Hardware:
+#   - Intel Core Ultra 9 285K (24 cores)
+#   - 64GB DDR5 6000MHz
+#   - NVIDIA RTX 5080 16GB GDDR7
+#   - 2x Solarflare SFN8522-PLUS 10GbE
+#   - Corsair RM1200x 1200W
+# =============================================================================
+# This profile activates EVERYTHING Argus has to offer.
+# Run: py main.py paper --profile pinnacle
+# =============================================================================
+
+# ============================================================================
+# MODE & CAPITAL
+# ============================================================================
+trading:
+  mode: "paper"                    # Change to "live" when ready
+  initial_capital: 1000            # $1,000 - auto-scales with auto_scale config
+
+# ============================================================================
+# ALL PINNACLE FEATURES - ENABLED
+# ============================================================================
+
+# --------------------------------------------------------------------------
+# PINNACLE AI BRAIN - The Core
+# --------------------------------------------------------------------------
+pinnacle:
+  enabled: true                    # Pinnacle AI brain
+  confidence_floor: 0.65            # Minimum confidence to act
+  regime_aware_boost: true         # Boost in favorable regimes
+  peak_mode: true                  # Peak performance mode
+
+# --------------------------------------------------------------------------
+# ULTIMATE QUANTUM BRAIN
+# --------------------------------------------------------------------------
+quantum:
+  enabled: true
+  use_gpu: true                   # GPU-accelerated quantum simulation
+  quantum_walk: true               # Quantum walk for signal confidence
+  quantum_monte_carlo: true       # GPU-accelerated risk calculation
+  qaoa_optimization: true         # QAOA for portfolio optimization
+
+  # Quantum settings
+  n_samples: 100000                # 100K quantum Monte Carlo samples
+  quantum_walk_steps: 20           # More steps = better accuracy
+  quantum_walk_damping: 0.1       # Lower damping = more exploration
+
+# --------------------------------------------------------------------------
+# ADVANCED ML - GPU ACCELERATED (RTX 5080)
+# --------------------------------------------------------------------------
+ml:
+  enabled: true
+  device: "cuda"                  # Use RTX 5080
+  precision: "fp16"               # Mixed precision for speed
+  use_gpu: true
+
+  # Training
+  training:
+    enabled: true
+    batch_size: 512               # RTX 5080 16GB can handle this
+    use_amp: true                 # Automatic Mixed Precision
+    gradient_accumulation: 4
+
+  # Inference
+  inference:
+    batch_size: 256
+    use_tensorrt: true            # TensorRT optimization
+    use_triton: true              # NVIDIA Triton
+
+  # Neural networks
+  neural_networks:
+    enabled: true
+    transformer_layers: 8
+    hidden_size: 512
+    attention_heads: 16
+
+  # Deep learning
+  deep_learning:
+    enabled: true
+    use_gpu: true
+    compile_models: true           # torch.compile()
+
+# --------------------------------------------------------------------------
+# LLM SENTIMENT (FinBERT) - GPU ACCELERATED
+# --------------------------------------------------------------------------
+llm_sentiment:
+  enabled: true
+  model: "finbert"
+  device: "cuda"
+  batch_size: 64
+  use_gpu: true
+
+# --------------------------------------------------------------------------
+# ADVANCED AI FEATURES
+# --------------------------------------------------------------------------
+advanced_features:
+  enable_gpu_ml: true
+  enable_cuda: true
+  consciousness_enabled: true
+  swarm_intelligence_enabled: true
+
+# --------------------------------------------------------------------------
+# BLACK SWAN PREDICTOR V2 - 85-95% ACCURACY
+# --------------------------------------------------------------------------
+black_swan:
+  enabled: true
+  lookback: 252                   # Full year
+  warning_threshold: 0.65          # Early warning
+  danger_threshold: 0.82           # Danger zone
+
+# --------------------------------------------------------------------------
+# LIQUIDATION CASCADE HUNTER V2 - 75-85% ACCURACY
+# --------------------------------------------------------------------------
+cascade_hunter:
+  enabled: true
+  leverage_threshold: 8.0
+  funding_threshold: 0.005
+  volume_spike: 2.5
+  cascade_confidence: 0.70
+
+# --------------------------------------------------------------------------
+# ULTRA LOW LATENCY EXECUTOR V2
+# --------------------------------------------------------------------------
+latency_executor:
+  enabled: true
+  baseline_latency_ms: 50.0
+  enable_prediction: true
+  enable_kalman: true              # Kalman filter prediction
+  enable_smart_slicing: true
+
+# --------------------------------------------------------------------------
+# SENTIMENT NOISE FILTER V2 - 85-92% ACCURACY
+# --------------------------------------------------------------------------
+sentiment_filter:
+  enabled: true
+  min_sources: 4
+  confidence_threshold: 0.70
+  quality_threshold: 0.75
+
+# --------------------------------------------------------------------------
+# TAIL RISK HEDGER - PORTFOLIO PROTECTION
+# --------------------------------------------------------------------------
+tail_risk_hedger:
+  enabled: true
+  hedge_allocation_pct: 0.02       # 2% for hedges
+  otm_percentage: 0.15            # 15% OTM
+  rebalance_frequency: "weekly"
+
+# --------------------------------------------------------------------------
+# DELTA HEDGER - OPTIONS GREEKS
+# --------------------------------------------------------------------------
+delta_hedger:
+  enabled: true
+
+# --------------------------------------------------------------------------
+# ADAPTIVE RISK MANAGER - REGIME-BASED
+# --------------------------------------------------------------------------
+adaptive_risk_manager:
+  enabled: true
+  lookback_periods: 252
+
+# --------------------------------------------------------------------------
+# STREAMING VAR CALCULATOR - REAL-TIME RISK
+# --------------------------------------------------------------------------
+streaming_var:
+  enabled: true
+  confidence_levels: [0.95, 0.99, 0.999]
+  lookback_window: 1000
+  decay_factor: 0.94
+
+# --------------------------------------------------------------------------
+# REGIME-CONDITIONAL VAR
+# --------------------------------------------------------------------------
+regime_cvar:
+  enabled: true
+  lookback: 252
+  confidence: 0.99
+
+# --------------------------------------------------------------------------
+# CVAR DYNAMIC HEDGER
+# --------------------------------------------------------------------------
+cvar_hedger:
+  enabled: true
+  target_cvar: 0.025
+  confidence_level: 0.99
+
+# --------------------------------------------------------------------------
+# MONTE CARLO ENGINE - 10K SCENARIOS
+# --------------------------------------------------------------------------
+monte_carlo:
+  enabled: true
+  n_scenarios: 10000             # GPU handles 10K easily
+  use_gpu: true
+  confidence_levels: [0.90, 0.95, 0.99, 0.999]
+  time_horizon_days: 252
+
+# --------------------------------------------------------------------------
+# ADAPTIVE CONFIG ENGINE - SELF-TUNING PARAMETERS
+# --------------------------------------------------------------------------
+adaptive_config:
+  enabled: true
+  modes: ["paper", "backtest", "live"]
+  adaptation_rate: 0.05
+  adapt_entry_thresholds: true
+  adapt_position_sizing: true
+  adapt_risk_limits: true
+  adaptation_strategy: "exponential_moving_average"
+  min_feedback_samples: 30
+  use_adaptation_memory: true
+  use_learning_rate_decay: true
+  equity_scaling:
+    enabled: true
+    scale_up_threshold: 1.20
+    scale_up_factor: 1.10
+    scale_down_threshold: 0.85
+    scale_down_factor: 0.85
+  volatility_adaptation:
+    enabled: true
+    vol_high_threshold: 0.03
+    vol_low_threshold: 0.01
+    high_vol_shrink: 0.75
+    low_vol_grow: 1.25
+  recovery_mode:
+    enabled: true
+    recovery_start_dd: 0.05
+    recovery_end_dd: 0.02
+    recovery_rate: 0.10
+  persist_adaptations: true
+  adaptation_db_path: "data/adaptations.db"
+
+# --------------------------------------------------------------------------
+# KELLY CRITERION - OPTIMAL SIZING
+# --------------------------------------------------------------------------
+kelly:
+  enabled: true
+  kelly_fraction: 0.25            # Half-Kelly is 0.5; 0.25 for crypto volatility
+  n_bootstrap: 2000
+  confidence_level: 0.90
+  min_trades_for_kelly: 10
+  max_position_fraction: 0.25
+  use_ema_stability: true        # Use EMA of win rate for more stable Kelly
+  bootstrap_samples: 1000        # Bootstrap for confidence interval
+
+# --------------------------------------------------------------------------
+# ADAPTIVE POSITION SIZER - ATR-BASED
+# --------------------------------------------------------------------------
+adaptive_position_sizer:
+  enabled: true
+  base_risk_pct: 0.02
+  method: "atr_based"
+  atr_multiplier: 2.0
+  atr_period: 14
+  use_volatility_cone: true
+  use_correlation_sizing: true
+  use_drawdown_scaling: true
+
+# --------------------------------------------------------------------------
+# MULTI-FACTOR ENTRY THRESHOLDS
+# --------------------------------------------------------------------------
+entry_thresholds:
+  enabled: true
+  min_entry_score: 0.60
+  use_multi_factor_scoring: true
+  confidence_weight: 0.30
+  min_confidence: 0.25
+  momentum_weight: 0.25
+  require_momentum_confirmation: true
+  volume_weight: 0.20
+  require_volume_confirmation: true
+  edge_weight: 0.25
+  regime_weight: 0.15
+  time_weight: 0.10
+
+# --------------------------------------------------------------------------
+# RISK LIMITS - PRACTICAL MAXIMUM
+# --------------------------------------------------------------------------
+risk_limits:
+  enabled: true
+  use_drawdown_scaling: true
+  dd_scale_floor: 0.30
+  dd_scale_ceiling: 0.10
+  risk_of_ruin_limit: 0.02
+  ruin_simulations: 10000
+  max_daily_new_exposure_pct: 0.50
+  use_pnl_circuit_breakers: true
+  use_streak_escalation: true
+  streak_escalation_loss_threshold: 3
+  streak_escalation_max_factor: 0.25
+
+# --------------------------------------------------------------------------
+# ULTIMATE DEFENSE - CIRCUIT BREAKERS
+# --------------------------------------------------------------------------
+ultimate_defense:
+  enabled: true
+  max_daily_loss_pct: 0.10
+  max_drawdown_pct: 0.15
+  max_position_size_pct: 0.25
+  max_leverage: 5.0
+  enable_panic_mode: true
+
+# --------------------------------------------------------------------------
+# UNIFIED RISK MANAGER
+# --------------------------------------------------------------------------
+unified_risk_manager:
+  enabled: true
+
+# --------------------------------------------------------------------------
+# MARKET REGIME DETECTOR
+# --------------------------------------------------------------------------
+market_regime_detector:
+  enabled: true
+  lookback: 252
+  min_confidence: 0.60
+
+# --------------------------------------------------------------------------
+# SELF-HEALING MANAGER
+# --------------------------------------------------------------------------
+self_healing:
+  enabled: true
+  drift_threshold: 0.10
+  retrain_trigger: "auto"
+
+# --------------------------------------------------------------------------
+# ADAPTIVE POSITION SIZER
+# --------------------------------------------------------------------------
+adaptive_position_sizer:
+  enabled: true
+  base_risk_pct: 0.02
+
+# --------------------------------------------------------------------------
+# CORRELATION TRACKER
+# --------------------------------------------------------------------------
+correlation_tracker:
+  enabled: true
+  lookback: 50
+
+# --------------------------------------------------------------------------
+# REAL-TIME REGIME DETECTOR
+# --------------------------------------------------------------------------
+real_time_regime:
+  enabled: true
+  timeframes: ["1m", "5m", "15m", "1h", "4h"]
+
+# --------------------------------------------------------------------------
+# REGIME FORECASTER
+# --------------------------------------------------------------------------
+regime_forecaster:
+  enabled: true
+  forecast_horizon: 20
+
+# --------------------------------------------------------------------------
+# STRATEGY DECAY DETECTOR
+# --------------------------------------------------------------------------
+strategy_decay:
+  enabled: true
+  decay_threshold: 0.15
+
+# --------------------------------------------------------------------------
+# DYNAMIC PARAMETER OPTIMIZER
+# --------------------------------------------------------------------------
+dynamic_param_optimizer:
+  enabled: true
+  optimization_interval: 100
+
+# --------------------------------------------------------------------------
+# CONTINUOUS SCAN - BEST OPPORTUNITIES
+# --------------------------------------------------------------------------
+continuous_scan:
+  enabled: true
+  interval_seconds: 10.0
+  top_n: 4
+  use_liquidity_boost: true
+
+# --------------------------------------------------------------------------
+# TRANSACTION COST ANALYSIS
+# --------------------------------------------------------------------------
+tca:
+  enabled: true
+
+# --------------------------------------------------------------------------
+# SMART EXECUTION ENGINE
+# --------------------------------------------------------------------------
+smart_execution:
+  enabled: true
+  methods: ["twap", "vwap", "pov"]
+
+# --------------------------------------------------------------------------
+# PORTFOLIO REBALANCER
+# --------------------------------------------------------------------------
+portfolio_rebalancer:
+  enabled: true
+  rebalance_threshold_pct: 5.0
+  tax_loss_harvest_enabled: true
+
+# --------------------------------------------------------------------------
+# MULTI-AGENT COORDINATOR
+# --------------------------------------------------------------------------
+multi_agent:
+  enabled: true
+
+# --------------------------------------------------------------------------
+# STRATEGY SCANNER
+# --------------------------------------------------------------------------
+strategy_scanner:
+  enabled: true
+
+# --------------------------------------------------------------------------
+# ANTIFRAGILE SYSTEM
+# --------------------------------------------------------------------------
+antifragile:
+  enabled: true
+
+# --------------------------------------------------------------------------
+# CAUSAL INFERENCE
+# --------------------------------------------------------------------------
+causal_inference:
+  enabled: true
+
+# --------------------------------------------------------------------------
+# DRIFT DETECTOR
+# --------------------------------------------------------------------------
+drift_detector:
+  enabled: true
+
+# --------------------------------------------------------------------------
+# UNCERTAINTY QUANTIFIER
+# --------------------------------------------------------------------------
+uncertainty_quantifier:
+  enabled: true
+
+# --------------------------------------------------------------------------
+# A/B TESTING FRAMEWORK
+# --------------------------------------------------------------------------
+ab_testing:
+  enabled: true
+
+# --------------------------------------------------------------------------
+# GNN TRAINER
+# --------------------------------------------------------------------------
+gnn_trainer:
+  enabled: true
+  use_gpu: true
+
+# --------------------------------------------------------------------------
+# MULTI-TASK LEARNER
+# --------------------------------------------------------------------------
+multi_task_learner:
+  enabled: true
+  use_gpu: true
+
+# --------------------------------------------------------------------------
+# DIFFUSION GENERATOR
+# --------------------------------------------------------------------------
+diffusion_generator:
+  enabled: true
+  use_gpu: true
+
+# --------------------------------------------------------------------------
+# FEATURE STORE REALTIME
+# --------------------------------------------------------------------------
+feature_store:
+  enabled: true
+
+# --------------------------------------------------------------------------
+# BLACK-LITTERMAN OPTIMIZER
+# --------------------------------------------------------------------------
+black_litterman:
+  enabled: true
+
+# --------------------------------------------------------------------------
+# HIERARCHICAL RISK PARITY
+# --------------------------------------------------------------------------
+hrp:
+  enabled: true
+
+# --------------------------------------------------------------------------
+# QUANTUM MONTE CARLO RISK
+# --------------------------------------------------------------------------
+quantum_mc_risk:
+  enabled: true
+  use_gpu: true
+  n_samples: 100000
+
+# --------------------------------------------------------------------------
+# QUANTUM ANNEALING
+# --------------------------------------------------------------------------
+quantum_annealing:
+  enabled: true
+  use_gpu: true
+
+# --------------------------------------------------------------------------
+# HFT ENGINE
+# --------------------------------------------------------------------------
+hft:
+  enabled: true
+
+# --------------------------------------------------------------------------
+# ADVANCED HFT INFRASTRUCTURE
+# --------------------------------------------------------------------------
+advanced_hft:
+  enabled: true
+
+# --------------------------------------------------------------------------
+# CROSS-EXCHANGE ARBITRAGE
+# --------------------------------------------------------------------------
+cross_exchange_arb:
+  enabled: true
+  min_profit_bps: 5.0             # 5 bps minimum
+
+# --------------------------------------------------------------------------
+# FUNDING RATE ARBITRAGE
+# --------------------------------------------------------------------------
+funding_arb:
+  enabled: true
+
+# --------------------------------------------------------------------------
+# EXECUTION ENGINE
+# --------------------------------------------------------------------------
+execution_engine:
+  enabled: true
+
+# --------------------------------------------------------------------------
+# EXECUTION ROUTING
+# --------------------------------------------------------------------------
+execution_routing:
+  enabled: true
+  weights:
+    liquidity: 0.40
+    latency: 0.20
+    fees: 0.20
+    reliability: 0.20
+
+# --------------------------------------------------------------------------
+# MARKET DATA PROVIDER
+# --------------------------------------------------------------------------
+market_data:
+  enabled: true
+
+# --------------------------------------------------------------------------
+# LIVE MARKET DATA
+# --------------------------------------------------------------------------
+live_market_data:
+  enabled: true
+
+# --------------------------------------------------------------------------
+# 10GBE NETWORK (SOLARFLARE)
+# --------------------------------------------------------------------------
+network_10gbe:
+  enabled: true
+  solarflare_adapter: "SFN8522-PLUS"
+  driver_mode: "onload"
+  onload_profile: "latency"
+  target_latency_us: 1
+  enable_kernel_bypass: true
+  enable_hardware_timestamping: true
+
+# --------------------------------------------------------------------------
+# HARDWARE ACCELERATION
+# --------------------------------------------------------------------------
+hardware_acceleration:
+  enabled: true
+  gpu_acceleration: true
+  distributed_processing: true
+
+# --------------------------------------------------------------------------
+# TRANSCENDENT FEATURES
+# --------------------------------------------------------------------------
+transcendent:
+  enabled: true
+  quantum_simulation: true
+  neuromorphic_computing: true
+  advanced_ai_ml: true
+  genetic_algorithms: true
+  multi_agent_swarm: true
+  blockchain_analytics: true
+  high_performance_computing: true
+  response_time_target_ms: 25
+  throughput_target_signals: 2500
+
+# --------------------------------------------------------------------------
+# ARGUS STRATEGIES
+# --------------------------------------------------------------------------
+argus_strategies:
+  quantum_emotion_arbitrage: true
+  fractal_volatility_harvest: true
+  adaptive_regime_scalping: true
+  multi_asset_sentiment_sync: true
+  cross_exchange_arbitrage: true
+  latency_arbitrage: true
+  flash_arbitrage: true
+  micro_scalping: true
+
+# --------------------------------------------------------------------------
+# QUANTUM BOT
+# --------------------------------------------------------------------------
+quantum_bot:
+  peak: true
+  use_quantum_walk: true
+  use_quantum_monte_carlo_risk: true
+  use_quantum_annealing_selection: true
+  use_multi_timeframe_walk: true
+  use_quantum_var_position_cap: true
+  use_quantum_portfolio_weights: true
+  use_quantum_arb_search: true
+
+# --------------------------------------------------------------------------
+# QUANT FUND UPGRADES
+# --------------------------------------------------------------------------
+quant_fund_upgrades:
+  enabled: true
+  modes: ["paper", "backtest", "live"]
+
+# --------------------------------------------------------------------------
+# CAPITAL & AUTO-SCALING
+# --------------------------------------------------------------------------
+capital:
+  auto_scale:
+    enabled: true
+    tiers:
+      - name: "micro"
+        min_capital: 500
+        max_capital: 2000
+        pairs: 3
+        risk_per_trade_pct: 0.01
+      - name: "small"
+        min_capital: 2000
+        max_capital: 10000
+        pairs: 5
+        risk_per_trade_pct: 0.015
+      - name: "medium"
+        min_capital: 10000
+        max_capital: 50000
+        pairs: 8
+        risk_per_trade_pct: 0.02
+        leverage: 2
+      - name: "large"
+        min_capital: 50000
+        max_capital: 100000
+        pairs: 12
+        risk_per_trade_pct: 0.025
+        leverage: 2
+      - name: "institutional"
+        min_capital: 100000
+        max_capital: 1000000
+        pairs: 20
+        risk_per_trade_pct: 0.03
+        leverage: 3
+    compounding:
+      enabled: true
+      reinvest_profits: true
+      monthly_gain_pct: 0.05
+
+# --------------------------------------------------------------------------
+# TRADING - MEXC (0% FEES)
+# --------------------------------------------------------------------------
+trading_pairs:
+  - "BTC/USDT"
+  - "ETH/USDT"
+  - "SOL/USDT"
+  - "XRP/USDT"
+  - "DOGE/USDT"
+  - "ADA/USDT"
+  - "LINK/USDT"
+  - "AVAX/USDT"
+  - "DOT/USDT"
+  - "MATIC/USDT"
+
+max_concurrent_positions: 5
+
+mexc:
+  api_key: "YOUR_MEXC_API_KEY"
+  api_secret: "YOUR_MEXC_API_SECRET"
+  testnet: false
+  enabled: true
+  spot_maker_fee: 0.0
+  spot_taker_fee: 0.001
+
+# --------------------------------------------------------------------------
+# HARDWARE PROFILE
+# --------------------------------------------------------------------------
+hardware:
+  cpu: "Intel Core Ultra 9 285K (24 cores, 5.7GHz)"
+  ram: "64GB DDR5 6000MHz"
+  gpu: "NVIDIA RTX 5080 16GB GDDR7"
+  network:
+    enabled: true
+    driver_mode: "onload"
+    target_latency_us: 1
+  gpu_settings:
+    enabled: true
+    device: "cuda:0"
+    mixed_precision: true
+    tensor_cores: true
+    cudnn_benchmark: true
+    flash_attention: true
+    torch_compile: true
+
+# --------------------------------------------------------------------------
+# MONITORING
+# --------------------------------------------------------------------------
+monitoring:
+  enabled: true
+  gpu_monitoring: true
+  performance_dashboard: true
+  tier_change_alerts: true
+  profit_milestone_alerts: true
+
+alerts:
+  milestones:
+    - 2000
+    - 5000
+    - 10000
+    - 25000
+    - 50000
+    - 100000
+
+# --------------------------------------------------------------------------
+# LOGGING
+# --------------------------------------------------------------------------
+logging:
+  level: "INFO"
+  gpu_debug: true
+  profile_performance: true

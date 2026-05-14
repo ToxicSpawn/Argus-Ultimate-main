@@ -1,0 +1,30 @@
+{
+  "config_hash": "sha256:05850f7899d5f982b15c27f101d9c38adaa96be0d3a6e2dd0e76d4d1b5e1729e",
+  "diff": {
+    "changed": {
+      "ladder_stage": {
+        "new": "PAPER",
+        "old": null
+      },
+      "manifest_hash": {
+        "new": "run-1-regression-liquidity_vacuum_open",
+        "old": null
+      },
+      "profile": {
+        "new": "paper",
+        "old": null
+      },
+      "runtime_path": {
+        "new": "intent->liquidity->constitution->governance->route->submit->reconcile->attribute->replay_audit->proving_review",
+        "old": null
+      },
+      "strict_governance": {
+        "new": true,
+        "old": null
+      }
+    },
+    "current_key_count": 5,
+    "previous_key_count": 0
+  },
+  "run_id": "run-1-regression-liquidity_vacuum_open"
+}

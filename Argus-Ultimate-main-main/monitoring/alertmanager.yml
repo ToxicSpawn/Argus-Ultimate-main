@@ -1,0 +1,115 @@
+# Argus Ultimate — Alertmanager configuration
+# Push 84
+#
+# Routes:
+#   critical  → Telegram (immediate) + webhook
+#   warning   → Telegram (5m group wait)
+#   default   → webhook only
+#
+# Set these environment variables to activate:
+#   ARGUS_TELEGRAM_BOT_TOKEN   — from @BotFather
+#   ARGUS_TELEGRAM_CHAT_ID     — your chat or group ID
+#   ARGUS_WEBHOOK_URL          — optional generic webhook (Discord, Slack, PagerDuty)
+
+global:
+  resolve_timeout: 5m
+  smtp_require_tls: true
+
+templates:
+  - /etc/alertmanager/templates/*.tmpl
+
+route:
+  group_by: [alertname, strategy, symbol]
+  group_wait: 10s
+  group_interval: 5m
+  repeat_interval: 1h
+  receiver: webhook-default
+
+  routes:
+    # Critical — immediate, no grouping delay
+    - matchers:
+        - severity = critical
+      receiver: telegram-critical
+      group_wait: 0s
+      repeat_interval: 15m
+      continue: true
+
+    # Critical also hits webhook
+    - matchers:
+        - severity = critical
+      receiver: webhook-critical
+      group_wait: 0s
+      repeat_interval: 15m
+
+    # Warning — 5m group wait to reduce noise
+    - matchers:
+        - severity = warning
+      receiver: telegram-warning
+      group_wait: 5m
+      repeat_interval: 4h
+
+receivers:
+
+  - name: webhook-default
+    webhook_configs:
+      - url: "${ARGUS_WEBHOOK_URL:-http://localhost:9999/noop}"
+        send_resolved: true
+        http_config:
+          follow_redirects: true
+
+  - name: telegram-critical
+    telegram_configs:
+      - bot_token: "${ARGUS_TELEGRAM_BOT_TOKEN}"
+        chat_id: "${ARGUS_TELEGRAM_CHAT_ID}"
+        message: |
+          🚨 *ARGUS CRITICAL*
+          *{{ .GroupLabels.alertname }}*
+          {{ range .Alerts }}
+          • {{ .Annotations.summary }}
+          {{ .Annotations.description }}
+          {{ if .Annotations.runbook }}📖 [Runbook]({{ .Annotations.runbook }}){{ end }}
+          {{ end }}
+        parse_mode: Markdown
+        send_resolved: true
+        disable_notifications: false
+
+  - name: telegram-warning
+    telegram_configs:
+      - bot_token: "${ARGUS_TELEGRAM_BOT_TOKEN}"
+        chat_id: "${ARGUS_TELEGRAM_CHAT_ID}"
+        message: |
+          ⚠️ *ARGUS WARNING*
+          *{{ .GroupLabels.alertname }}*
+          {{ range .Alerts }}
+          • {{ .Annotations.summary }}
+          {{ end }}
+        parse_mode: Markdown
+        send_resolved: true
+        disable_notifications: false
+
+  - name: webhook-critical
+    webhook_configs:
+      - url: "${ARGUS_WEBHOOK_URL:-http://localhost:9999/noop}"
+        send_resolved: true
+        http_config:
+          follow_redirects: true
+
+inhibit_rules:
+  # Suppress warning-level drawdown if critical is already firing
+  - source_matchers:
+      - alertname = DrawdownBreachCritical
+    target_matchers:
+      - alertname = DrawdownBreachWarning
+    equal: [strategy]
+
+  # Suppress strategy warnings if the process is down
+  - source_matchers:
+      - alertname = ArgusProcessDown
+    target_matchers:
+      - severity = warning
+
+  # Suppress fill-rate and slippage warnings if kill switch is active
+  - source_matchers:
+      - alertname = KillSwitchActive
+    target_matchers:
+      - alertname =~ "LowFillRate|HighSlippage|OrderLatencyHigh"

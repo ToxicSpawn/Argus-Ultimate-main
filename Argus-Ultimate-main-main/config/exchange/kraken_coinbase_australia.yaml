@@ -1,0 +1,7 @@
+exchange:
+  primary: kraken
+  secondary: coinbase_advanced
+  base_currency: AUD
+  approved_symbols:
+    - BTC/AUD
+    - ETH/AUD

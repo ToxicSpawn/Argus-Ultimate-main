@@ -1,0 +1,217 @@
+# =============================================================================
+# Argus Flash Loan Configuration
+# =============================================================================
+# Copy this section to unified_config.yaml and update with your values
+
+flash_loans:
+  # Enable/disable flash loan trading
+  enabled: false  # Set to true after setup
+  
+  # ===========================================================================
+  # Profitability Thresholds
+  # ===========================================================================
+  min_profit_usd: 50           # Minimum net profit to execute
+  min_profit_percent: 0.001    # 0.1% minimum spread
+  
+  # ===========================================================================
+  # Risk Limits
+  # ===========================================================================
+  max_loan_usd: 1000000        # Maximum single loan ($1M)
+  max_daily_loans: 50          # Maximum loans per day
+  max_gas_price_gwei: 100      # Don't trade if gas > 100 gwei
+  max_daily_gas_usd: 500       # Maximum daily gas spend
+  
+  # ===========================================================================
+  # Scan Settings
+  # ===========================================================================
+  scan_interval_seconds: 1     # How often to scan
+  verify_before_execute: true  # Re-check prices before execution
+  simulation_required: true    # Simulate before sending tx
+  
+  # ===========================================================================
+  # Flash Loan Providers (priority order)
+  # ===========================================================================
+  providers:
+    aave_v3:
+      enabled: true
+      pool_address: "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2"  # Ethereum
+      fee_percent: 0.09
+    balancer:
+      enabled: true
+      vault_address: "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
+      fee_percent: 0.0
+    dydx:
+      enabled: false  # Deprecated
+      fee_percent: 0.0
+  
+  # ===========================================================================
+  # Chains to Monitor
+  # ===========================================================================
+  chains:
+    ethereum:
+      enabled: true
+      rpc_url: "${ETH_RPC_URL}"  # Set in .env
+      ws_url: "${ETH_WS_URL}"    # Set in .env
+      gas_cost_usd: 30.0
+      min_profit_usd: 100        # Higher threshold due to gas
+      
+    arbitrum:
+      enabled: true
+      rpc_url: "${ARBITRUM_RPC_URL}"
+      ws_url: "${ARBITRUM_WS_URL}"
+      gas_cost_usd: 0.50
+      min_profit_usd: 20         # Lower threshold (cheap gas)
+      aave_pool: "0x794a61358D6845594F94dc1DB02A252b5b4814aD"
+      
+    polygon:
+      enabled: true
+      rpc_url: "${POLYGON_RPC_URL}"
+      ws_url: "${POLYGON_WS_URL}"
+      gas_cost_usd: 0.01
+      min_profit_usd: 5          # Very low threshold
+      aave_pool: "0x794a61358D6845594F94dc1DB02A252b5b4814aD"
+      
+    bsc:
+      enabled: false
+      rpc_url: "${BSC_RPC_URL}"
+      gas_cost_usd: 0.20
+      min_profit_usd: 10
+  
+  # ===========================================================================
+  # Tokens to Monitor
+  # ===========================================================================
+  tokens:
+    # Tier 1 - Highest liquidity (most opportunities)
+    - symbol: "WETH"
+      address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+      decimals: 18
+      min_loan_usd: 10000
+      
+    - symbol: "USDC"
+      address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+      decimals: 6
+      min_loan_usd: 50000
+      
+    - symbol: "USDT"
+      address: "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+      decimals: 6
+      min_loan_usd: 50000
+      
+    - symbol: "DAI"
+      address: "0x6B175474E89094C44Da98b954EedeAC495271d0F"
+      decimals: 18
+      min_loan_usd: 50000
+      
+    - symbol: "WBTC"
+      address: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
+      decimals: 8
+      min_loan_usd: 10000
+      
+    # Tier 2 - Good opportunities
+    - symbol: "stETH"
+      address: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"
+      decimals: 18
+      min_loan_usd: 5000
+      
+    - symbol: "frxETH"
+      address: "0x5E842234923Eb628d04cF22ce1f2818440237E83"
+      decimals: 18
+      min_loan_usd: 5000
+      
+    - symbol: "CRV"
+      address: "0xD533a949740bb330647537d24238822849B37289"
+      decimals: 18
+      min_loan_usd: 2000
+  
+  # ===========================================================================
+  # DEXes to Monitor
+  # ===========================================================================
+  dexes:
+    uniswap_v2:
+      enabled: true
+      router: "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D"
+      factory: "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"
+      fee: 0.003
+      
+    uniswap_v3:
+      enabled: true
+      router: "0xE592427A0AEce92De3Edee1F18E0157C05861564"
+      factory: "0x1F98431c8aD98523631AE4a59f267346ea31F984"
+      fee: 0.003  # Varies by pool (0.01%, 0.05%, 0.3%, 1%)
+      
+    sushiswap:
+      enabled: true
+      router: "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F"
+      factory: "0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac"
+      fee: 0.003
+      
+    curve:
+      enabled: true
+      router: "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7"
+      fee: 0.0004  # 0.04%
+      
+    balancer:
+      enabled: true
+      vault: "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
+      fee: 0.0025  # Varies
+  
+  # ===========================================================================
+  # MEV Protection
+  # ===========================================================================
+  mev_protection:
+    enabled: true
+    use_private_mempool: true
+    flashbots_enabled: true
+    flashbots_auth_key: "${FLASHBOTS_AUTH_KEY}"  # Set in .env
+    private_tx_max_priority_fee: 10  # gwei
+    bundle_timeout_seconds: 10
+    
+  # ===========================================================================
+  # Smart Contract
+  # ===========================================================================
+  contract:
+    # Deploy ArgusFlashLoanExecutor.sol first
+    executor_address: "${FLASH_LOAN_CONTRACT_ADDRESS}"  # Set in .env
+    
+  # ===========================================================================
+  # Wallet Configuration
+  # ===========================================================================
+  wallet:
+    # NEVER put private key here - use .env file
+    address: "${FLASH_LOAN_WALLET_ADDRESS}"  # Set in .env
+    # private_key: "${FLASH_LOAN_PRIVATE_KEY}"  # Set in .env, NEVER commit
+  
+  # ===========================================================================
+  # Monitoring & Alerts
+  # ===========================================================================
+  monitoring:
+    enabled: true
+    log_all_scans: false        # Only log profitable opportunities
+    log_executions: true        # Log all executions
+    alert_on_execution: true    # Alert when trade executes
+    alert_on_failure: true      # Alert when trade fails
+    
+    # Alert channels
+    telegram_alerts: true
+    discord_alerts: false
+    
+  # ===========================================================================
+  # Advanced Settings
+  # ===========================================================================
+  advanced:
+    # Multi-hop arbitrage
+    multi_hop_enabled: true
+    max_hops: 3
+    
+    # Triangular arbitrage (3 tokens)
+    triangular_arb_enabled: true
+    
+    # Cross-chain arbitrage (requires bridges)
+    cross_chain_arb_enabled: false
+    
+    # Liquidation bot
+    liquidation_bot_enabled: false
+    
+    # Copy trading
+    copy_trading_enabled: false
+    watched_wallets: []

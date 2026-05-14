@@ -1,0 +1,17 @@
+generated_at=2026-03-06T16:04:55.154700+00:00
+trade_count=33
+decision_count=66
+latency_p50_ms=0.0000
+latency_p90_ms=0.0000
+latency_p99_ms=0.0000
+slippage_p50_bps=0.0000
+slippage_p90_bps=0.0000
+slippage_p99_bps=0.0000
+net_edge_p50_bps=410.0000
+net_edge_p90_bps=410.0000
+net_edge_p99_bps=410.0000
+timeout_rate=0.00000000
+error_rate=0.01515152
+fee_churn_ratio=0.00016400
+reject_histogram={"MIN_CONFIDENCE": 3, "DUPLICATE_SIGNAL": 6, "ORDER_FAILED": 1, "RECON_REQUIRED_LOCK": 56}
+route_histogram={}

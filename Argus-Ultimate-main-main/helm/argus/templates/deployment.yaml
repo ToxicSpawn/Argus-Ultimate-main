@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "argus.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "argus.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.argus.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "argus.selectorLabels" . | nindent 6 }}
+  strategy:
+    type: Recreate  # Trading bot — never run two instances simultaneously
+  template:
+    metadata:
+      labels:
+        {{- include "argus.selectorLabels" . | nindent 8 }}
+      annotations:
+        {{- toYaml .Values.argus.podAnnotations | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "argus.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.argus.securityContext | nindent 8 }}
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: argus
+          image: "{{ .Values.argus.image.repository }}:{{ .Values.argus.image.tag }}"
+          imagePullPolicy: {{ .Values.argus.image.pullPolicy }}
+          command: {{ toJson .Values.argus.command }}
+          {{- if .Values.argus.args }}
+          args: {{ toJson .Values.argus.args }}
+          {{- end }}
+          ports:
+            - name: metrics
+              containerPort: 8080
+              protocol: TCP
+          envFrom:
+            {{- toYaml .Values.argus.envFrom | nindent 12 }}
+          env:
+            {{- toYaml .Values.argus.env | nindent 12 }}
+          livenessProbe:
+            {{- toYaml .Values.argus.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.argus.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.argus.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ .Values.argus.persistence.mountPath }}
+            - name: config
+              mountPath: /app/config
+              readOnly: true
+      volumes:
+        - name: data
+          {{- if .Values.argus.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "argus.fullname" . }}-data
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: config
+          configMap:
+            name: {{ include "argus.fullname" . }}-config
+      {{- with .Values.argus.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.argus.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.argus.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

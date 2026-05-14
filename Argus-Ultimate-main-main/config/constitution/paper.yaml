@@ -1,0 +1,22 @@
+constitution:
+  version: 1
+  profile: paper
+  limits:
+    max_gross_exposure_pct: 0.90
+    max_single_symbol_exposure_pct: 0.30
+    max_cluster_exposure_pct: 0.50
+    max_daily_loss_pct: 0.10
+    max_drawdown_pct: 0.12
+    max_open_intents: 20
+    max_consecutive_losses: 20
+  safety:
+    block_new_risk_on_data_degradation: false
+    block_new_risk_on_reconciliation_staleness: false
+    require_signed_promotion_bundle: false
+    block_research_modules_from_live: false
+    require_soak_evidence: false
+    require_operator_ack_after_reconciliation_freeze: false
+  venues:
+    allow_cross_venue_live: false
+    allow_market_orders: true
+    allow_only_approved_symbols: false

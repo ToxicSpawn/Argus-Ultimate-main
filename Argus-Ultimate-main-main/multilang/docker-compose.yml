@@ -1,0 +1,98 @@
+# All 23 language services. Same image; each container runs with LANGUAGE and PORT set.
+# From repo root: docker compose -f multilang/docker-compose.yml up -d
+# Bot config: point multi_language.endpoints to http://argus-<lang>:<port> when bot runs in same network,
+# or http://localhost:8011, http://localhost:8012, ... when bot runs on host.
+
+services:
+  argus-rust:
+    build: .
+    environment: { LANGUAGE: rust, PORT: "8011" }
+    ports: ["8011:8011"]
+  argus-cpp:
+    build: .
+    environment: { LANGUAGE: cpp, PORT: "8012" }
+    ports: ["8012:8012"]
+  argus-cuda:
+    build: .
+    environment: { LANGUAGE: cuda, PORT: "8013" }
+    ports: ["8013:8013"]
+  argus-go:
+    build: .
+    environment: { LANGUAGE: go, PORT: "8014" }
+    ports: ["8014:8014"]
+  argus-java:
+    build: .
+    environment: { LANGUAGE: java, PORT: "8015" }
+    ports: ["8015:8015"]
+  argus-scala:
+    build: .
+    environment: { LANGUAGE: scala, PORT: "8016" }
+    ports: ["8016:8016"]
+  argus-kotlin:
+    build: .
+    environment: { LANGUAGE: kotlin, PORT: "8017" }
+    ports: ["8017:8017"]
+  argus-swift:
+    build: .
+    environment: { LANGUAGE: swift, PORT: "8018" }
+    ports: ["8018:8018"]
+  argus-csharp:
+    build: .
+    environment: { LANGUAGE: csharp, PORT: "8019" }
+    ports: ["8019:8019"]
+  argus-fsharp:
+    build: .
+    environment: { LANGUAGE: fsharp, PORT: "8020" }
+    ports: ["8020:8020"]
+  argus-javascript:
+    build: .
+    environment: { LANGUAGE: javascript, PORT: "8021" }
+    ports: ["8021:8021"]
+  argus-typescript:
+    build: .
+    environment: { LANGUAGE: typescript, PORT: "8022" }
+    ports: ["8022:8022"]
+  argus-elixir:
+    build: .
+    environment: { LANGUAGE: elixir, PORT: "8023" }
+    ports: ["8023:8023"]
+  argus-erlang:
+    build: .
+    environment: { LANGUAGE: erlang, PORT: "8024" }
+    ports: ["8024:8024"]
+  argus-clojure:
+    build: .
+    environment: { LANGUAGE: clojure, PORT: "8025" }
+    ports: ["8025:8025"]
+  argus-haskell:
+    build: .
+    environment: { LANGUAGE: haskell, PORT: "8026" }
+    ports: ["8026:8026"]
+  argus-ruby:
+    build: .
+    environment: { LANGUAGE: ruby, PORT: "8027" }
+    ports: ["8027:8027"]
+  argus-r:
+    build: .
+    environment: { LANGUAGE: r, PORT: "8028" }
+    ports: ["8028:8028"]
+  argus-julia:
+    build: .
+    environment: { LANGUAGE: julia, PORT: "8029" }
+    ports: ["8029:8029"]
+  argus-matlab:
+    build: .
+    environment: { LANGUAGE: matlab, PORT: "8030" }
+    ports: ["8030:8030"]
+  argus-crystal:
+    build: .
+    environment: { LANGUAGE: crystal, PORT: "8031" }
+    ports: ["8031:8031"]
+  argus-wasm:
+    build: .
+    environment: { LANGUAGE: webassembly, PORT: "8032" }
+    ports: ["8032:8032"]
+  argus-mojo:
+    build: .
+    environment: { LANGUAGE: mojo, PORT: "8033" }
+    ports: ["8033:8033"]

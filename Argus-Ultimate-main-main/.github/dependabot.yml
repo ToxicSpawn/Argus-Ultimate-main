@@ -1,0 +1,55 @@
+# Dependabot — automated dependency updates
+# Checks for CVEs and version bumps weekly.
+
+version: 2
+updates:
+  # Python pip dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Australia/Sydney"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "python"
+    groups:
+      # Group all minor/patch bumps into one PR per week
+      production-deps:
+        patterns:
+          - "ccxt"
+          - "numpy"
+          - "pandas"
+          - "aiohttp"
+          - "websockets"
+          - "scikit-learn"
+          - "scipy"
+        update-types:
+          - "minor"
+          - "patch"
+      dev-deps:
+        patterns:
+          - "pytest*"
+          - "ruff"
+          - "black"
+          - "mypy"
+          - "bandit"
+          - "pre-commit"
+        update-types:
+          - "minor"
+          - "patch"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+      timezone: "Australia/Sydney"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"

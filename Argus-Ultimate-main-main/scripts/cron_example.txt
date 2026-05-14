@@ -1,0 +1,28 @@
+# =============================================================================
+# Example cron entries for Argus on R730 (or any Linux host)
+# =============================================================================
+# Install: crontab -e (for user that runs the bot, or root for system paths)
+# Paths: adjust /opt/argus/repo and /opt/argus to your install dir
+# See docs/PRIORITY_ORDER.md §5 for full priority-order infra steps.
+# =============================================================================
+
+# Daily backup of config and logs (2:00 AM) – Priority 5
+0 2 * * * /opt/argus/repo/scripts/backup_config_and_logs.sh /opt/argus/repo /opt/argus/backups
+
+# Weekly health check + paper smoke (Sunday 3:00 AM) – Priority 1 & 5
+0 3 * * 0 cd /opt/argus/repo && /opt/argus/venv/bin/python scripts/health_check.py --config unified_config.yaml --paper-smoke >> /opt/argus/logs/health_check.log 2>&1
+
+# Weekly profitability check (Sunday 4:00 AM) – kill_losers + readiness + TCA; best way #12
+0 4 * * 0 cd /opt/argus/repo && /opt/argus/venv/bin/python scripts/weekly_profitability_check.py >> /opt/argus/logs/weekly_profitability.log 2>&1
+
+# Pre-live check: run manually before switching to live, or daily during paper (e.g. 5:00 AM)
+# 0 5 * * * cd /opt/argus/repo && /opt/argus/venv/bin/python scripts/pre_live_check.py --config unified_config.yaml >> /opt/argus/logs/pre_live_check.log 2>&1
+
+# Validate after deploy or git pull (run once; uncomment and use when needed)
+# 0 1 * * * cd /opt/argus/repo && /opt/argus/venv/bin/python main.py validate >> /opt/argus/logs/validate.log 2>&1
+
+# Optional: run_before_live (manual before switching to live; or daily during paper)
+# 0 5 * * * cd /opt/argus/repo && bash scripts/run_before_live.sh unified_config.yaml >> /opt/argus/logs/run_before_live.log 2>&1
+
+# Optional: monthly XGBoost retrain on recent OHLCV (e.g. 1st of month 6:00 AM)
+# 0 6 1 * * cd /opt/argus/repo && /opt/argus/venv/bin/python ml/train_xgboost.py >> /opt/argus/logs/train_xgboost.log 2>&1

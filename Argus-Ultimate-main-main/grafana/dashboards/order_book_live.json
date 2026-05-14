@@ -1,0 +1,111 @@
+{
+  "annotations": {"list": []},
+  "description": "Argus Ultimate — Live Order Book Dashboard (Push 83)",
+  "editable": true,
+  "graphTooltip": 1,
+  "id": null,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
+      "id": 200,
+      "title": "Order Book — Live",
+      "type": "row"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"drawStyle": "line", "fillOpacity": 8, "lineWidth": 2, "spanNulls": false},
+          "unit": "currencyUSD"
+        },
+        "overrides": [
+          {"matcher": {"id": "byName", "options": "Best Bid"}, "properties": [{"id": "color", "value": {"fixedColor": "green", "mode": "fixed"}}]},
+          {"matcher": {"id": "byName", "options": "Best Ask"}, "properties": [{"id": "color", "value": {"fixedColor": "red", "mode": "fixed"}}]},
+          {"matcher": {"id": "byName", "options": "Mid Price"}, "properties": [{"id": "color", "value": {"fixedColor": "yellow", "mode": "fixed"}}]}
+        ]
+      },
+      "gridPos": {"h": 10, "w": 18, "x": 0, "y": 1},
+      "id": 201,
+      "options": {"legend": {"calcs": ["last"], "displayMode": "table", "placement": "right", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "none"}},
+      "title": "Bid / Ask / Mid Price",
+      "type": "timeseries",
+      "targets": [
+        {"datasource": {"type": "prometheus", "uid": "${datasource}"}, "expr": "argus_orderbook_best_bid{symbol=~\"$symbol\"}", "legendFormat": "Best Bid — {{symbol}}", "refId": "A"},
+        {"datasource": {"type": "prometheus", "uid": "${datasource}"}, "expr": "argus_orderbook_best_ask{symbol=~\"$symbol\"}", "legendFormat": "Best Ask — {{symbol}}", "refId": "B"},
+        {"datasource": {"type": "prometheus", "uid": "${datasource}"}, "expr": "argus_orderbook_mid_price{symbol=~\"$symbol\"}", "legendFormat": "Mid — {{symbol}}", "refId": "C"}
+      ]
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {
+        "defaults": {"color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 3}, {"color": "red", "value": 8}]}, "unit": "short", "decimals": 2}
+      },
+      "gridPos": {"h": 5, "w": 6, "x": 18, "y": 1},
+      "id": 202,
+      "options": {"colorMode": "background", "graphMode": "area", "justifyMode": "center", "reduceOptions": {"calcs": ["lastNotNull"]}},
+      "title": "Spread (bps)",
+      "type": "stat",
+      "targets": [{"datasource": {"type": "prometheus", "uid": "${datasource}"}, "expr": "argus_orderbook_spread_bps{symbol=~\"$symbol\"}", "legendFormat": "{{symbol}}", "refId": "A"}]
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {
+        "defaults": {"color": {"mode": "thresholds"}, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": -0.2}, {"color": "green", "value": 0.2}]}, "unit": "short", "decimals": 3, "min": -1, "max": 1}
+      },
+      "gridPos": {"h": 5, "w": 6, "x": 18, "y": 6},
+      "id": 203,
+      "options": {"colorMode": "background", "graphMode": "area", "justifyMode": "center", "reduceOptions": {"calcs": ["lastNotNull"]}},
+      "title": "Book Imbalance",
+      "type": "stat",
+      "targets": [{"datasource": {"type": "prometheus", "uid": "${datasource}"}, "expr": "argus_orderbook_imbalance{symbol=~\"$symbol\"}", "legendFormat": "{{symbol}}", "refId": "A"}]
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"drawStyle": "line", "fillOpacity": 10, "lineWidth": 1},
+          "unit": "short"
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 11},
+      "id": 204,
+      "options": {"legend": {"calcs": ["last", "mean"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi"}},
+      "title": "Imbalance History (5m)",
+      "type": "timeseries",
+      "targets": [{"datasource": {"type": "prometheus", "uid": "${datasource}"}, "expr": "argus_orderbook_imbalance{symbol=~\"$symbol\"}", "legendFormat": "{{symbol}}", "refId": "A"}]
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "${datasource}"},
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "palette-classic"},
+          "custom": {"drawStyle": "bars", "fillOpacity": 60, "lineWidth": 1},
+          "unit": "short"
+        }
+      },
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 11},
+      "id": 205,
+      "options": {"legend": {"calcs": ["sum", "mean"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi"}},
+      "title": "Trade Volume (per min)",
+      "type": "timeseries",
+      "targets": [{"datasource": {"type": "prometheus", "uid": "${datasource}"}, "expr": "rate(argus_trade_volume_total{symbol=~\"$symbol\"}[1m])", "legendFormat": "{{symbol}}", "refId": "A"}]
+    }
+  ],
+  "refresh": "2s",
+  "schemaVersion": 38,
+  "tags": ["argus", "orderbook", "live", "push83"],
+  "templating": {
+    "list": [
+      {"current": {}, "hide": 0, "includeAll": false, "multi": false, "name": "datasource", "options": [], "query": "prometheus", "refresh": 1, "type": "datasource", "label": "Datasource"},
+      {"current": {}, "datasource": {"type": "prometheus", "uid": "${datasource}"}, "definition": "label_values(argus_orderbook_mid_price, symbol)", "hide": 0, "includeAll": true, "multi": true, "name": "symbol", "query": {"query": "label_values(argus_orderbook_mid_price, symbol)", "refId": "StandardVariableQuery"}, "refresh": 2, "sort": 1, "type": "query", "label": "Symbol"}
+    ]
+  },
+  "time": {"from": "now-15m", "to": "now"},
+  "timezone": "browser",
+  "title": "Argus — Order Book Live",
+  "uid": "argus-orderbook-83",
+  "version": 1
+}

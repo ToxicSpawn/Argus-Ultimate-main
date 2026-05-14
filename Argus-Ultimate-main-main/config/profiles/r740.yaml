@@ -1,0 +1,236 @@
+# =============================================================================
+# ARGUS Config Profile: r740
+# Dell PowerEdge R740 infrastructure overlay (upgraded from R720 hardware).
+#
+# Usage:
+#   ARGUS_CONFIG_PROFILE=r740 python main.py paper
+#   -- or --
+#   python main.py paper --profile r740
+#
+# This profile is merged on top of unified_config.yaml.
+# Only keys that differ from the base config are set here.
+# =============================================================================
+
+# Infrastructure backend selection
+infrastructure:
+  # Switch to TimescaleDB + Redis + Kafka from SQLite + in-memory + asyncio.Queue
+  backend: r740
+
+  timescaledb:
+    enabled: true
+    # Connection string read from env ARGUS_DATABASE_URL (set in .env)
+    # url_env_var: ARGUS_DATABASE_URL
+    pool_min: 2
+    pool_max: 20
+    connect_timeout: 10
+    command_timeout: 30
+
+  redis:
+    enabled: true
+    # Connection string read from env ARGUS_REDIS_URL
+    # url_env_var: ARGUS_REDIS_URL
+    pool_size: 10
+    socket_timeout: 5
+    retry_on_timeout: true
+    health_check_interval: 30
+
+  kafka:
+    enabled: true
+    # Brokers read from env ARGUS_KAFKA_BROKERS
+    # brokers_env_var: ARGUS_KAFKA_BROKERS
+    producer:
+      acks: 1                      # balance between durability and throughput
+      retries: 3
+      batch_size: 16384
+      linger_ms: 5
+      compression_type: lz4
+    consumer:
+      group_id: argus-main
+      auto_offset_reset: earliest
+      enable_auto_commit: true
+      auto_commit_interval_ms: 1000
+
+  loki:
+    enabled: true
+    # url read from env ARGUS_LOKI_URL
+
+# Tick capture — higher throughput settings for R740 TimescaleDB
+tick_capture:
+  db_path: ""                      # ignored when infrastructure.timescaledb.enabled = true
+  batch_size: 1000                 # larger batches for TimescaleDB (vs 100 for SQLite)
+  flush_interval: 1.0              # 1s flush (vs 5s for SQLite)
+
+# Trade ledger — TimescaleDB path (db_path ignored)
+storage:
+  trade_db: ""                     # ignored when TimescaleDB enabled
+  tick_db: ""
+  audit_db: ""
+
+# Health server — expose more detail when on private LAN
+health_server:
+  host: "0.0.0.0"                  # bind all interfaces (workstation + R740 can reach)
+  port: 8765
+  metrics_enabled: true
+  ready_endpoint: true
+  auth_token_env: ARGUS_HEALTH_SERVER_TOKEN
+
+# Monitoring — all sinks enabled
+monitoring:
+  grafana_url: "http://192.168.1.100:3000"
+  prometheus_pushgateway: ""       # leave blank; Prometheus scrapes health_server directly
+  loki_enabled: true
+
+# LLM signal — use local Ollama on workstation (no API cost)
+llm_signal:
+  provider: ollama
+  base_url: "http://localhost:11434"
+  model: "llama3.3:70b-instruct-q4_K_M"
+  timeout: 30
+  enabled: true
+
+# ML — larger batch sizes now that R740 holds historical data
+ml_models:
+  tft:
+    training_data_source: timescaledb   # read from ticks_daily hypertable
+    lookback_days: 730                  # 2 years
+    retrain_interval_days: 7
+
+# Backtesting — use TimescaleDB for data, results stored in R740
+backtesting:
+  data_source: timescaledb
+  results_db: ""                   # written to TimescaleDB stress_results table
+
+# Latency tracker — lower alert thresholds on LAN (no cloud latency)
+latency_tracker:
+  warn_ms: 50
+  alert_ms: 200
+
+# Performance — use more CPU since workstation is dedicated
+runtime:
+  worker_threads: 16               # Ultra 9 285K has 24 cores total
+  asyncio_debug: false
+
+# ═══════════════════════════════════════════════════════════════════════════
+# R740 Intelligence Scaling (192GB ECC RAM)
+# Hardware upgraded from R720: DDR4 vs DDR3 gives ~2x memory bandwidth,
+# NVMe vs SATA gives ~10x IOPS, and Xeon Scalable gives AVX-512 support.
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Evolution — 50x larger search space
+evolution:
+  population_size: 10000           # was 200 on workstation
+  hall_of_fame_size: 200           # was 50
+  mccv_folds: 10                   # was 3
+  robustness_jitters: 20           # was 3
+
+# Strategy Generator — more trees, deeper search
+strategy_generator:
+  population_size: 500             # was 30
+  tree_depth: 5                    # was 3
+
+# Market Data — 5 years of history in RAM
+market_data:
+  historical_lookback_hours: 43800 # 5 years (was 4380 = 6 months)
+  enable_historical_preload: true
+
+# Deep Memory Systems
+market_memory:
+  capacity: 500000                 # was 2000
+  k_nearest: 25                    # was 10 — more neighbours for better recall
+
+causal_engine:
+  event_capacity: 100000           # was 500
+
+hypothesis_engine:
+  max_active: 1000                 # was 20
+
+# Parallel Backtesting
+backtesting:
+  parallel_workers: 24             # R740 has 2x Xeon Scalable = 24 cores
+  monte_carlo_simulations: 10000   # was 200
+
+# Tick Store — full tape in RAM
+tick_store:
+  capacity_per_symbol: 500000      # ~50M total ticks across 100 pairs
+  enable_tape_replay: true
+
+# ML — more models, faster retraining
+ml_feedback:
+  max_models: 50                   # was 5
+  retrain_interval_trades: 100     # retrain every 100 trades (was never)
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 10GbE Network — Solarflare XtremeScale SFN8522-PLUS (dual port)
+# ═══════════════════════════════════════════════════════════════════════════
+network_10gbe:
+  enabled: true
+
+  # NIC 1: Real-time channel (market data + execution)
+  rt_channel:
+    local_ip: "10.0.0.1"          # workstation NIC 1 port 1
+    remote_ip: "10.0.0.2"         # R740 NIC 1 port 1
+    port: 9100
+    mtu: 1500                      # standard MTU for lowest latency
+    tcp_nodelay: true
+    so_busy_poll_us: 50            # kernel bypass polling interval
+
+  # NIC 2: Bulk data channel (history + backtest + model sync)
+  bulk_channel:
+    local_ip: "10.0.1.1"          # workstation NIC 2 port 2
+    remote_ip: "10.0.1.2"         # R740 NIC 2 port 2
+    port: 9200
+    mtu: 9000                      # jumbo frames for throughput
+    buffer_size_mb: 16             # 16MB socket buffers
+
+  # CPU affinity (pin NIC interrupts to dedicated cores)
+  cpu_affinity:
+    rt_core: 22                    # real-time NIC on core 22
+    bulk_core: 23                  # bulk NIC on core 23
+
+  # Extreme Networks X460-G2 switches (2x 48-port 10GbE)
+  switches:
+    - name: "switch-rt"
+      model: "X460-G2-48P-10GE4"
+      role: "real_time"            # dedicated to latency-sensitive traffic
+      uplinks: 2                   # 2x 10GbE SFP+ to Solarflare NICs
+      vlan_rt: 10                  # VLAN 10: real-time market data
+      qos_priority: 7             # highest CoS for trading packets
+      spanning_tree: false         # disable STP for minimum latency
+      flow_control: true           # IEEE 802.3x pause frames
+
+    - name: "switch-bulk"
+      model: "X460-G2-48P-10GE4"
+      role: "bulk_data"            # dedicated to throughput-heavy traffic
+      uplinks: 2                   # 2x 10GbE SFP+ to Solarflare NICs
+      vlan_bulk: 20                # VLAN 20: bulk data transfers
+      jumbo_frames: true           # MTU 9000 on all ports
+      link_aggregation: true       # LACP bond the 2 SFP+ uplinks = 20Gbps
+
+  # ISP: Superloop 2Gbps (Australia)
+  internet:
+    provider: "superloop"
+    speed_mbps: 2000
+    type: "fibre"
+
+  # AWS eu-west-1 VPS (London) — execution relay
+  # Architecture: ARGUS (AU) → signals → AWS VPS (London) → orders → Kraken
+  # Signal generation stays in Australia (intelligence is latency-insensitive)
+  # Order execution relayed from London VPS (1-5ms to Kraken)
+  execution_relay:
+    enabled: true
+    region: "eu-west-1"
+    expected_relay_latency_ms: 5    # VPS → Kraken
+    signal_relay_latency_ms: 280    # AU → VPS (signal transmission)
+    # Net improvement: orders hit Kraken 275ms sooner than from AU
+    # Total: signal generated (AU) → 280ms → relay (London) → 5ms → Kraken
+    # vs old: signal generated (AU) → 280ms → Kraken directly
+    # The 5ms execution means market moves ~0.025 bps during order transit
+    # vs 280ms = ~1.4 bps. Saves ~1.375 bps per trade.
+
+  routing: "workstation_gateway"
+
+  # Health monitoring
+  health_check:
+    interval_seconds: 30
+    latency_warn_us: 100           # warn if >100μs (should be <10μs)
+    latency_alert_us: 1000         # alert if >1ms (link degraded)

@@ -1,0 +1,11 @@
+{
+  "config": {
+    "ladder_stage": "PAPER",
+    "manifest_hash": "regression-clean_baseline",
+    "profile": "paper",
+    "runtime_path": "intent->liquidity->constitution->governance->route->submit->reconcile->attribute->replay_audit->proving_review",
+    "strict_governance": true
+  },
+  "config_hash": "sha256:f00026e089db26c0f91051e5fcddc0e8f92746f6fe3ecb0f1109236c50ecda3a",
+  "run_id": "regression-clean_baseline"
+}

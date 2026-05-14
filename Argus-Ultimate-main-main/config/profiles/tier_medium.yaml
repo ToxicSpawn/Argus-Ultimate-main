@@ -1,0 +1,80 @@
+# =============================================================================
+# ARGUS Capital Tier: MEDIUM ($50,000 - $500,000)
+# =============================================================================
+# Full-stack four-venue config. HFT enabled. All strategies active.
+# =============================================================================
+
+tier:
+  name: medium
+  min_aud: 50000
+  max_aud: 500000
+  description: "Full-stack four-venue config for $50k-$500k"
+
+# Position sizing
+max_position_pct: 0.20
+min_position_size_aud: 250.0
+max_concurrent_positions: 20
+max_pyramids_per_position: 3
+
+# Risk
+daily_loss_limit_pct: 0.10
+portfolio_var_limit_pct: 0.06
+portfolio_cvar_limit_pct: 0.08
+circuit_breaker_enabled: true
+
+# Stops / TPs
+stop_loss_pct: 0.010
+take_profit_pct: 0.045
+trailing_stop_enabled: true
+trailing_stop_pct: 0.015
+
+# Venues
+primary_exchange: kraken
+enabled_venues:
+  - kraken
+  - coinbase
+  - bybit
+  - okx
+
+# Strategies enabled — all
+enabled_strategies:
+  - all
+
+# Trading universe (full 48 pairs)
+trading_universe: full
+
+# Execution
+maker_enforcement: true
+intelligent_executor: true
+algo_execution: true
+twap_min_notional_usd: 5000
+vwap_min_notional_usd: 10000
+
+# HFT
+hft_enabled: true
+hft_min_capital_aud: 50000
+hft_strategies:
+  - market_maker
+  - cross_exchange_arb
+  - liquidation_cascade
+
+# Market making
+market_maker:
+  enabled: true
+  symbols:
+    - BTC/USD
+    - ETH/USD
+    - SOL/USD
+    - LINK/USD
+  spread_bps: 6.0
+  inventory_limit_pct: 0.08
+  quote_size_pct: 0.015
+
+# ML
+ml_ensemble_size: 50
+auto_retrain: true
+retrain_cycles: 1000
+
+# Meta
+confidence_threshold: 0.50
+cycle_seconds: 10

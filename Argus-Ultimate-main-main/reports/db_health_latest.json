@@ -1,0 +1,62 @@
+{
+  "generated_at_utc": "2026-03-07T16:56:34.217636+00:00",
+  "overall_ok": true,
+  "databases": [
+    {
+      "path": "data\\unified_trades.db",
+      "exists": true,
+      "file_size_bytes": 3469312,
+      "quick_check": "ok",
+      "ok": true,
+      "table_growth": {
+        "decision_events": 6059,
+        "decision_snapshots": 380,
+        "language_calls": 3059,
+        "order_intents": 21,
+        "reconciliation_events": 0,
+        "system_health_snapshots": 0,
+        "trades": 33
+      },
+      "page_count": 847,
+      "page_size": 4096,
+      "estimated_size_bytes": 3469312,
+      "error": ""
+    },
+    {
+      "path": "data\\unified_state.db",
+      "exists": true,
+      "file_size_bytes": 143360,
+      "quick_check": "ok",
+      "ok": true,
+      "table_growth": {
+        "account_state": 1,
+        "idempotency": 65,
+        "order_intent_transitions": 20,
+        "order_intents": 26,
+        "orders": 2,
+        "positions": 2,
+        "recon_recovery_history": 0,
+        "recon_recovery_state": 1
+      },
+      "page_count": 35,
+      "page_size": 4096,
+      "estimated_size_bytes": 143360,
+      "error": ""
+    },
+    {
+      "path": "data\\meta_weights.db",
+      "exists": true,
+      "file_size_bytes": 45056,
+      "quick_check": "ok",
+      "ok": true,
+      "table_growth": {
+        "meta_weight_snapshots": 58,
+        "strategy_weights": 3
+      },
+      "page_count": 11,
+      "page_size": 4096,
+      "estimated_size_bytes": 45056,
+      "error": ""
+    }
+  ]
+}

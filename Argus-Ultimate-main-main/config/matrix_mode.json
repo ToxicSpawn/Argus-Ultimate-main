@@ -1,0 +1,19 @@
+{
+  "mode": "WEIGHTED_MEAN",
+  "mean_sharpe": 0.0,
+  "mean_return_pct": 0.0,
+  "mean_win_rate": 0.0,
+  "positive_folds_pct": 0.0,
+  "generated_at": "2026-04-16T08:07:00Z",
+  "_note": "Seed file. Run: python scripts/compare_matrix_modes.py --auto-apply to update with real backtest results.",
+  "backtest_params": {
+    "symbol": "XBTUSD",
+    "interval": 60,
+    "months": 6
+  },
+  "all_modes": [
+    {"mode": "WEIGHTED_MEAN",  "mean_sharpe": 0.0, "mean_return_pct": 0.0, "mean_win_rate": 0.0, "positive_folds_pct": 0.0},
+    {"mode": "MAJORITY_VOTE",  "mean_sharpe": 0.0, "mean_return_pct": 0.0, "mean_win_rate": 0.0, "positive_folds_pct": 0.0},
+    {"mode": "MIN_AGREEMENT",  "mean_sharpe": 0.0, "mean_return_pct": 0.0, "mean_win_rate": 0.0, "positive_folds_pct": 0.0}
+  ]
+}

@@ -1,0 +1,301 @@
+# Argus Ultimate — Prometheus Alerting Rules
+# Push 84 — v8.20.0
+#
+# Groups:
+#   argus_risk       — kill switch, drawdown, daily loss, portfolio heat
+#   argus_feed       — WS disconnect, order book stale, kline buffer
+#   argus_execution  — order latency, fill rate, slippage
+#   argus_strategy   — strategy stopped, negative PnL, Sharpe degradation
+#   argus_system     — process down, high error rate
+
+groups:
+
+# ---------------------------------------------------------------------------
+# Risk alerts
+# ---------------------------------------------------------------------------
+- name: argus_risk
+  interval: 10s
+  rules:
+
+  - alert: KillSwitchActive
+    expr: argus_risk_kill_switch_active == 1
+    for: 0s
+    labels:
+      severity: critical
+      team: argus
+    annotations:
+      summary: "CRITICAL: Argus kill switch activated"
+      description: "The risk manager kill switch is active. All new orders are blocked. Immediate investigation required."
+      runbook: "https://github.com/ToxicSpawn/Argus-Ultimate-main/blob/main/UNIFIED_RUNBOOK.md#kill-switch"
+
+  - alert: DrawdownBreachWarning
+    expr: argus_strategy_drawdown_current < -0.05
+    for: 30s
+    labels:
+      severity: warning
+      team: argus
+    annotations:
+      summary: "WARNING: Strategy {{ $labels.strategy }} drawdown > 5%"
+      description: "Strategy {{ $labels.strategy }} current drawdown is {{ $value | humanizePercentage }}. Threshold: -5%."
+
+  - alert: DrawdownBreachCritical
+    expr: argus_strategy_drawdown_current < -0.10
+    for: 0s
+    labels:
+      severity: critical
+      team: argus
+    annotations:
+      summary: "CRITICAL: Strategy {{ $labels.strategy }} drawdown > 10%"
+      description: "Strategy {{ $labels.strategy }} drawdown is {{ $value | humanizePercentage }}. Kill switch threshold approaching."
+      runbook: "https://github.com/ToxicSpawn/Argus-Ultimate-main/blob/main/UNIFIED_RUNBOOK.md#drawdown-breach"
+
+  - alert: MaxDrawdownBreached
+    expr: argus_strategy_max_drawdown < -0.15
+    for: 0s
+    labels:
+      severity: critical
+      team: argus
+    annotations:
+      summary: "CRITICAL: Max drawdown > 15% on {{ $labels.strategy }}"
+      description: "Strategy {{ $labels.strategy }} all-time max drawdown is {{ $value | humanizePercentage }}."
+
+  - alert: DailyLossLimitWarning
+    expr: argus_risk_daily_loss < -500
+    for: 1m
+    labels:
+      severity: warning
+      team: argus
+    annotations:
+      summary: "WARNING: Daily loss approaching limit (${{ $value | humanize }})"
+      description: "Current daily loss is ${{ $value | humanize }}. Review positions."
+
+  - alert: DailyLossLimitCritical
+    expr: argus_risk_daily_loss < -1000
+    for: 0s
+    labels:
+      severity: critical
+      team: argus
+    annotations:
+      summary: "CRITICAL: Daily loss limit breached (${{ $value | humanize }})"
+      description: "Daily loss of ${{ $value | humanize }} has breached the critical threshold. Kill switch may activate."
+
+  - alert: PortfolioHeatHigh
+    expr: argus_risk_portfolio_heat > 0.8
+    for: 2m
+    labels:
+      severity: warning
+      team: argus
+    annotations:
+      summary: "WARNING: Portfolio heat at {{ $value | humanizePercentage }}"
+      description: "Portfolio is {{ $value | humanizePercentage }} deployed. Consider reducing exposure."
+
+  - alert: RiskOrdersBlocked
+    expr: increase(argus_risk_orders_blocked_total[5m]) > 5
+    for: 0s
+    labels:
+      severity: warning
+      team: argus
+    annotations:
+      summary: "WARNING: {{ $value }} orders blocked by risk manager (5m)"
+      description: "Risk manager blocked {{ $value }} orders in the last 5 minutes. Reason: {{ $labels.reason }}."
+
+# ---------------------------------------------------------------------------
+# Feed / connectivity alerts
+# ---------------------------------------------------------------------------
+- name: argus_feed
+  interval: 15s
+  rules:
+
+  - alert: WSFeedDisconnected
+    expr: increase(argus_ws_reconnects_total[2m]) > 2
+    for: 0s
+    labels:
+      severity: warning
+      team: argus
+    annotations:
+      summary: "WARNING: WebSocket feed reconnected {{ $value }}x in 2m ({{ $labels.stream }})"
+      description: "Stream {{ $labels.stream }} has reconnected {{ $value }} times in the last 2 minutes. Check network stability."
+
+  - alert: WSFeedDown
+    expr: increase(argus_ws_messages_total[1m]) == 0
+    for: 1m
+    labels:
+      severity: critical
+      team: argus
+    annotations:
+      summary: "CRITICAL: WebSocket feed {{ $labels.stream }} appears down (no messages 1m)"
+      description: "No WebSocket messages received on stream {{ $labels.stream }} for 1 minute. Feed may be dead."
+      runbook: "https://github.com/ToxicSpawn/Argus-Ultimate-main/blob/main/UNIFIED_RUNBOOK.md#ws-feed-down"
+
+  - alert: WSHighErrorRate
+    expr: rate(argus_ws_errors_total[5m]) > 0.5
+    for: 2m
+    labels:
+      severity: warning
+      team: argus
+    annotations:
+      summary: "WARNING: WS error rate {{ $value | humanize }}/s on {{ $labels.stream }}"
+      description: "WebSocket stream {{ $labels.stream }} error rate is {{ $value | humanize }} errors/sec over 5m."
+
+  - alert: OrderBookStale
+    expr: time() - argus_orderbook_last_update_ts > 30
+    for: 15s
+    labels:
+      severity: warning
+      team: argus
+    annotations:
+      summary: "WARNING: Order book {{ $labels.symbol }} stale ({{ $value | humanizeDuration }} old)"
+      description: "Order book for {{ $labels.symbol }} has not been updated for {{ $value | humanizeDuration }}."
+
+  - alert: KlineBufferNotReady
+    expr: argus_kline_buffer_size < 26
+    for: 5m
+    labels:
+      severity: warning
+      team: argus
+    annotations:
+      summary: "WARNING: KlineBuffer {{ $labels.symbol }}/{{ $labels.interval }} not ready ({{ $value }} candles)"
+      description: "KlineBuffer for {{ $labels.symbol }} {{ $labels.interval }} has only {{ $value }} candles. Strategies may be using incomplete data."
+
+# ---------------------------------------------------------------------------
+# Execution alerts
+# ---------------------------------------------------------------------------
+- name: argus_execution
+  interval: 30s
+  rules:
+
+  - alert: OrderLatencyHigh
+    expr: histogram_quantile(0.95, rate(argus_order_latency_seconds_bucket[5m])) * 1000 > 500
+    for: 2m
+    labels:
+      severity: warning
+      team: argus
+    annotations:
+      summary: "WARNING: Order latency p95 > 500ms on {{ $labels.strategy }}"
+      description: "p95 order latency for strategy {{ $labels.strategy }} is {{ $value | humanize }}ms over the last 5 minutes."
+
+  - alert: OrderLatencyCritical
+    expr: histogram_quantile(0.99, rate(argus_order_latency_seconds_bucket[5m])) * 1000 > 2000
+    for: 1m
+    labels:
+      severity: critical
+      team: argus
+    annotations:
+      summary: "CRITICAL: Order latency p99 > 2s on {{ $labels.strategy }}"
+      description: "p99 order latency for {{ $labels.strategy }} is {{ $value | humanize }}ms. Possible exchange connectivity issue."
+
+  - alert: HighSlippage
+    expr: avg_over_time(argus_order_slippage[10m]) > 0.003
+    for: 5m
+    labels:
+      severity: warning
+      team: argus
+    annotations:
+      summary: "WARNING: Average slippage > 0.3% on {{ $labels.strategy }}"
+      description: "Mean slippage for {{ $labels.strategy }} is {{ $value | humanizePercentage }} over 10m. Market impact may be excessive."
+
+  - alert: LowFillRate
+    expr: argus_order_fill_rate < 0.7
+    for: 5m
+    labels:
+      severity: warning
+      team: argus
+    annotations:
+      summary: "WARNING: Fill rate {{ $value | humanizePercentage }} on {{ $labels.strategy }}"
+      description: "Order fill rate for {{ $labels.strategy }} has dropped below 70%. Review order types and market conditions."
+
+# ---------------------------------------------------------------------------
+# Strategy performance alerts
+# ---------------------------------------------------------------------------
+- name: argus_strategy
+  interval: 60s
+  rules:
+
+  - alert: StrategyStopped
+    expr: argus_strategy_active == 0
+    for: 1m
+    labels:
+      severity: critical
+      team: argus
+    annotations:
+      summary: "CRITICAL: Strategy {{ $labels.strategy }} is not active"
+      description: "Strategy {{ $labels.strategy }} has been inactive for over 1 minute. It may have crashed."
+      runbook: "https://github.com/ToxicSpawn/Argus-Ultimate-main/blob/main/UNIFIED_RUNBOOK.md#strategy-stopped"
+
+  - alert: SharpeDegradation
+    expr: argus_strategy_sharpe_ratio < 0.5
+    for: 15m
+    labels:
+      severity: warning
+      team: argus
+    annotations:
+      summary: "WARNING: Sharpe ratio degraded on {{ $labels.strategy }} ({{ $value | humanize }})"
+      description: "Strategy {{ $labels.strategy }} Sharpe ratio has been below 0.5 for 15 minutes. Current: {{ $value | humanize }}."
+
+  - alert: NegativePnL
+    expr: argus_strategy_pnl_total < -200
+    for: 10m
+    labels:
+      severity: warning
+      team: argus
+    annotations:
+      summary: "WARNING: Strategy {{ $labels.strategy }} PnL is ${{ $value | humanize }}"
+      description: "Strategy {{ $labels.strategy }} has a negative PnL of ${{ $value | humanize }} sustained over 10 minutes."
+
+  - alert: WinRateLow
+    expr: argus_strategy_win_rate < 0.35
+    for: 30m
+    labels:
+      severity: warning
+      team: argus
+    annotations:
+      summary: "WARNING: Win rate {{ $value | humanizePercentage }} on {{ $labels.strategy }}"
+      description: "Strategy {{ $labels.strategy }} win rate has been below 35% for 30 minutes."
+
+  - alert: NoSignals
+    expr: increase(argus_signals_total[10m]) == 0
+    for: 10m
+    labels:
+      severity: warning
+      team: argus
+    annotations:
+      summary: "WARNING: No signals from {{ $labels.strategy }} in 10m"
+      description: "Strategy {{ $labels.strategy }} has not generated any signals in 10 minutes. May be stalled."
+
+# ---------------------------------------------------------------------------
+# System health alerts
+# ---------------------------------------------------------------------------
+- name: argus_system
+  interval: 30s
+  rules:
+
+  - alert: ArgusProcessDown
+    expr: up{job="argus"} == 0
+    for: 30s
+    labels:
+      severity: critical
+      team: argus
+    annotations:
+      summary: "CRITICAL: Argus process is down"
+      description: "Prometheus cannot scrape the Argus metrics endpoint. Process may have crashed."
+      runbook: "https://github.com/ToxicSpawn/Argus-Ultimate-main/blob/main/UNIFIED_RUNBOOK.md#process-down"
+
+  - alert: HighSystemErrorRate
+    expr: rate(argus_system_errors_total[5m]) > 1
+    for: 2m
+    labels:
+      severity: warning
+      team: argus
+    annotations:
+      summary: "WARNING: System error rate > 1/s ({{ $labels.component }})"
+      description: "Component {{ $labels.component }} error rate is {{ $value | humanize }} errors/sec over 5m."
+
+  - alert: PrometheusDown
+    expr: up{job="prometheus"} == 0
+    for: 1m
+    labels:
+      severity: critical
+      team: argus
+    annotations:
+      summary: "CRITICAL: Prometheus is down"
+      description: "Prometheus itself is not reachable. Alerting and metrics are offline."

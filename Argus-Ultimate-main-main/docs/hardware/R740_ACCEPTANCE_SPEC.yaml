@@ -1,0 +1,24 @@
+chassis:
+  expected_model_contains: "PowerEdge R740"
+
+cpu:
+  expected_model_contains: "Intel(R) Xeon(R) Gold"
+  expected_family: "xeon_scalable"
+  min_logical_cpus: 32
+
+memory:
+  min_total_gib: 128
+  expected_dimm_type: "DDR4"
+  expected_dimm_speed_mts: 2933
+
+network:
+  required_interfaces:
+    - ens1f0
+    - ens1f1
+  min_speed_mbps: 10000
+
+storage:
+  min_disk_count: 2
+  min_nvme_count: 2
+  nvme_health_tool: nvme-cli
+  scheduler: none

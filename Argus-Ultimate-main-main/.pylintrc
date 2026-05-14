@@ -1,0 +1,25 @@
+[MASTER]
+jobs=4
+suggestion-mode=yes
+
+[MESSAGES CONTROL]
+disable=
+    C0111,  # missing-docstring (fix later)
+    C0103,  # invalid-name (fix later)
+    R0903,  # too-few-public-methods (okay for dataclasses)
+
+enable=
+    W0631,  # undefined-loop-variable
+    W0104,  # pointless-statement
+    W0612,  # unused-variable
+    E1101,  # no-member
+    E0602,  # undefined-variable
+
+[REPORTS]
+output-format=colorized
+reports=no
+
+[DESIGN]
+max-args=10
+max-locals=25
+max-branches=15

@@ -1,0 +1,8 @@
+# Argus Kubernetes namespace — Push 64
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argus-system
+  labels:
+    app.kubernetes.io/name: argus-ultimate
+    app.kubernetes.io/managed-by: kustomize

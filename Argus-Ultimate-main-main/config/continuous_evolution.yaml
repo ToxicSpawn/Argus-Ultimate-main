@@ -1,0 +1,283 @@
+# Continuous 0.5s Evolution Configuration
+# =====================================
+# Enables real-time evolution at every market tick (0.5 seconds)
+# Strategies adapt, learn, and improve continuously at market speed
+
+continuous_evolution:
+  enabled: true
+  
+  description: |
+    Continuous Real-Time Evolution at 0.5s Market Speed
+    
+    Every 0.5 seconds, Argus performs:
+    1. Strategy micro-evolution (<20ms)
+    2. Feature discovery (<5ms, every 10 ticks)
+    3. Hyperparameter tuning (<1ms, every 20 ticks)
+    
+    Total evolution overhead: <30ms per tick
+    Trading capacity remaining: 94% (470ms of 500ms cycle)
+  
+  # Real-Time Strategy Evolution
+  strategy_evolution:
+    enabled: true
+    
+    # Micro-population per strategy (small for speed)
+    population_size: 3  # 3 variants per strategy
+    
+    # Evolution per tick
+    mutations_per_tick: 1  # Mutate 1 parameter per tick
+    selection_method: elitist  # Keep best, replace worst
+    
+    # Strategies to evolve
+    strategies:
+      momentum:
+        enabled: true
+        parameters:
+          - short_window: { min: 5, max: 15, current: 10 }
+          - long_window: { min: 30, max: 60, current: 40 }
+          - min_strength: { min: 0.001, max: 0.005, current: 0.002 }
+        
+        mutation_rates:
+          window_params: 0.1  # 10% mutation for windows
+          threshold_params: 0.15  # 15% mutation for thresholds
+      
+      mean_reversion:
+        enabled: true
+        parameters:
+          - lookback: { min: 30, max: 100, current: 50 }
+          - base_threshold: { min: 1.0, max: 2.5, current: 1.5 }
+          - vol_scale: { min: 0.5, max: 1.5, current: 1.0 }
+        
+        mutation_rates:
+          lookback: 0.12
+          threshold: 0.18
+          scale: 0.10
+    
+    # Adaptation by regime
+    regime_specific: true
+    
+    regime_multipliers:
+      high_vol:
+        mutation_scale: 1.5  # 50% larger mutations in volatile markets
+        exploration_rate: 0.3  # More exploration when volatile
+      
+      ranging:
+        mutation_scale: 0.5  # Smaller mutations in stable markets
+        exploration_rate: 0.1  # Less exploration
+      
+      trending:
+        mutation_scale: 1.0  # Normal mutations
+        exploration_rate: 0.2
+    
+    # Parameter blending (smooth transitions)
+    parameter_blending:
+      enabled: true
+      blend_factor: 0.1  # 10% new params, 90% old (per tick)
+      max_single_change: 0.05  # Max 5% change in one tick
+    
+    # Fitness scoring
+    fitness:
+      win_rate_weight: 0.4
+      pnl_weight: 0.3
+      consistency_weight: 0.2
+      recency_weight: 0.1  # Prefer younger parameter sets
+      
+      lookback_trades: 10  # Score based on last 10 trades
+      min_trades_for_scoring: 3
+
+  # Continuous Feature Discovery
+  feature_discovery:
+    enabled: true
+    
+    # Discovery timing
+    check_interval_ticks: 10  # Try new feature every 10 ticks (5 seconds)
+    
+    # Feature limits
+    max_active_features: 50
+    min_correlation_threshold: 0.15
+    
+    # Candidate features to try
+    candidate_features:
+      - returns_squared
+      - returns_cubed
+      - volatility_of_returns
+      - price_velocity
+      - price_acceleration
+      - volume_weighted_returns
+      - high_low_range
+      - gap_size
+      - momentum_divergence
+      - volume_anomaly
+    
+    # Feature pruning
+    prune_underperforming: true
+    prune_threshold: 0.45  # Remove features with <45% accuracy
+    prune_interval_ticks: 100  # Check every 50 seconds
+    
+    # Feature update
+    incremental_updates: true  # Update feature values incrementally
+    update_on_every_tick: true
+
+  # Continuous Hyperparameter Tuning
+  hyperparameter_tuning:
+    enabled: true
+    
+    # Update frequency
+    update_interval_ticks: 20  # Tune every 20 ticks (10 seconds)
+    
+    # Parameters to tune
+    hyperparameters:
+      learning_rate:
+        current: 0.01
+        min: 0.001
+        max: 0.1
+        adjustment_step: 1.05  # Multiply/divide by 5%
+      
+      adaptation_speed:
+        current: 0.1
+        min: 0.01
+        max: 0.3
+        adjustment_step: 1.05
+      
+      exploration_rate:
+        current: 0.2
+        min: 0.05
+        max: 0.5
+        adjustment_step: 1.1
+    
+    # Tuning logic
+    performance_based: true
+    
+    # If performance improving -> increase learning speed
+    # If performance degrading -> decrease learning speed
+    
+    gradient_estimation_window: 10  # Use last 10 performance points
+
+  # Performance & Safety
+  performance:
+    # Latency targets
+    max_evolution_latency_ms: 30  # Evolution must complete in <30ms
+    warning_latency_ms: 25  # Warn if approaching limit
+    
+    # Skip evolution if under pressure
+    skip_if_overloaded: true
+    load_threshold: 0.8  # Skip if system load >80%
+    
+    # Async operations
+    non_blocking: true  # Evolution never blocks trading
+    use_background_thread: true
+    
+    # Caching
+    cache_evolution_state: true
+    cache_ttl_seconds: 1  # Cache for 1 second (2 ticks)
+
+  safety:
+    # Limit parameter changes
+    max_daily_param_changes: 1000  # Max 1000 mutations per day
+    emergency_stop_on:
+      consecutive_losses: 10
+      drawdown_threshold: 0.20  # 20% drawdown
+      
+    # Rollback on degradation
+    auto_rollback: true
+    rollback_lookback_ticks: 100  # Check last 100 ticks
+    rollback_threshold: -0.15  # Rollback if -15% performance
+    
+    # Gradual deployment
+    canary_deployment: false  # Not needed for continuous (already gradual)
+    
+    # Emergency reset
+    reset_to_defaults_on:
+      - critical_error
+      - manual_request
+    
+    reset_cooldown_seconds: 300  # 5 minutes between resets
+
+  # Monitoring & Logging
+  monitoring:
+    enabled: true
+    
+    # Log frequency
+    log_every_ticks: 100  # Log summary every 100 ticks (50 seconds)
+    
+    # Metrics to track
+    metrics:
+      - evolution_latency_ms
+      - strategies_evolved
+      - parameters_mutated
+      - features_discovered
+      - features_pruned
+      - hyperparam_updates
+      - current_performance
+      
+    # Alerts
+    alerts:
+      on_high_latency: true
+      on_new_feature: true
+      on_significant_improvement: true
+      on_emergency_stop: true
+
+  # Sydney, Australia Optimizations
+  sydney_settings:
+    # Active trading hours (higher evolution rate)
+    active_hours:
+      start: "09:00"  # 9 AM Sydney (ASX open)
+      end: "17:00"    # 5 PM Sydney (ASX close)
+    
+    # During active hours
+    active_hour_multiplier: 1.2  # 20% more aggressive evolution
+    
+    # After hours (slower, more conservative)
+    after_hours:
+      mutation_scale_reduction: 0.5  # 50% smaller mutations
+      exploration_reduction: 0.5
+    
+    # AUD-specific
+    base_currency: AUD
+    optimize_for_btcmarkets: true
+
+# Hardware Optimization (Your PC)
+hardware:
+  cpu:
+    evolution_cores: 4  # Use 4 of 24 cores for evolution
+    parallel_mutations: true
+    thread_affinity: true  # Pin evolution to specific cores
+  
+  memory:
+    evolution_cache_mb: 512  # Cache for evolution data
+    feature_buffer_size: 1000  # Price history buffer
+    
+  gpu:
+    accelerate_feature_discovery: true  # Use RTX 5080
+    batch_feature_evaluation: true
+    batch_size: 32
+
+# Integration with existing systems
+integration:
+  # Hook into orchestrator
+  orchestrator_hooks:
+    on_tick: true
+    on_trade: true
+    on_signal: true
+  
+  # Strategy access
+  strategy_parameter_injection: true  # Inject evolved params into strategies
+  
+  # Learning integration
+  feed_to_online_learning: true
+  feed_to_meta_learning: true
+
+# Debug & Development
+development:
+  # Simulation mode (evolve without trading)
+  simulation_mode: false
+  
+  # Force specific mutations (testing)
+  forced_mutations: {}
+  
+  # Log detailed evolution steps
+  verbose_logging: false
+  
+  # Export evolution history
+  export_history: true
+  export_interval_hours: 1

@@ -1,0 +1,116 @@
+name: Argus AI Test Suite
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  test:
+    name: pytest (${{ matrix.python-version }})
+    runs-on: ubuntu-22.04
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install core dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Install test dependencies
+        run: |
+          pip install pytest pytest-asyncio pytest-cov hypothesis
+
+      - name: Install JAX (CPU-only for CI)
+        run: |
+          pip install jax[cpu]
+
+      - name: Install optional deps (pydantic, websockets)
+        run: |
+          pip install pydantic websockets
+
+      - name: Run test suite
+        env:
+          ARGUS_DRY_RUN: "1"
+          ARGUS_JAX: "1"
+          ARGUS_LOB_FEED: "1"
+          ARGUS_ORDER_MODE: "dry_run"
+          ARGUS_KERNEL_BYPASS: "0"
+        run: |
+          pytest tests/test_execution_engine.py -v \
+            --tb=short \
+            --cov=core \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage.xml
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-py${{ matrix.python-version }}
+          path: coverage.xml
+          retention-days: 14
+
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Ruff lint check
+        run: |
+          ruff check core/ tests/ --select E,F,W,I \
+            --ignore E501,F401,W503 \
+            --output-format=github
+
+  type-check:
+    name: Type check (pyright)
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install deps
+        run: |
+          pip install pyright pydantic
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run pyright
+        run: |
+          pyright core/argus_ai_adapter.py \
+                  core/execution_engine.py \
+                  core/q_teacher_bootstrap.py \
+                  core/config/execution_config.py \
+                  --pythonversion 3.11

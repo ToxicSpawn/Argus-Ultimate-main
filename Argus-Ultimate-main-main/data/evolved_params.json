@@ -1,0 +1,17 @@
+{
+  "best_fitness": -1000000000.0,
+  "generations": 3,
+  "population_size": 8,
+  "fitness_days": 1,
+  "source": "realtime",
+  "best_params": {
+    "se_buy_rsi": 31.825998116566772,
+    "se_sell_rsi": 69.60371190634416,
+    "se_buy_bb": 0.34325768749463725,
+    "se_sell_bb": 0.8591479663355804,
+    "se_trend_rsi_buy": 54.2703968779859,
+    "se_trend_rsi_sell": 40.33563599632388,
+    "min_signal_confidence": 0.639464670686382
+  },
+  "timestamp_utc": "2026-04-23T07:13:18.328894+00:00"
+}

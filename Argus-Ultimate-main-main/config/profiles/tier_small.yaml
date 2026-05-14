@@ -1,0 +1,86 @@
+# =============================================================================
+# ARGUS Capital Tier: SMALL ($5,000 - $50,000)
+# =============================================================================
+# Moderate dual-venue config. First tier where market making is viable.
+# =============================================================================
+
+tier:
+  name: small
+  min_aud: 5000
+  max_aud: 50000
+  description: "Moderate dual-venue config for $5k-$50k"
+
+# Position sizing
+max_position_pct: 0.25
+min_position_size_aud: 50.0
+max_concurrent_positions: 10
+max_pyramids_per_position: 2
+
+# Risk
+daily_loss_limit_pct: 0.10
+portfolio_var_limit_pct: 0.06
+portfolio_cvar_limit_pct: 0.08
+circuit_breaker_enabled: true
+
+# Stops / TPs
+stop_loss_pct: 0.012
+take_profit_pct: 0.040
+trailing_stop_enabled: true
+trailing_stop_pct: 0.015
+
+# Venues
+primary_exchange: kraken
+enabled_venues:
+  - kraken
+  - coinbase
+
+# Strategies enabled at this tier
+enabled_strategies:
+  - momentum
+  - mean_reversion
+  - breakout
+  - funding_rate_harvester
+  - bb_squeeze
+  - market_maker
+  - cross_exchange_arb
+  - liquidation_cascade
+  - kalman_pairs
+  - grid_trader
+
+# Trading universe (expanded)
+trading_pairs:
+  - BTC/USD
+  - ETH/USD
+  - SOL/USD
+  - LINK/USD
+  - AVAX/USD
+  - MATIC/USD
+  - DOT/USD
+  - ADA/USD
+  - UNI/USD
+  - ATOM/USD
+  - NEAR/USD
+  - OP/USD
+  - ARB/USD
+  - APT/USD
+  - INJ/USD
+  - SEI/USD
+
+# Execution
+maker_enforcement: true
+intelligent_executor: true
+algo_execution: true
+
+# Market making config
+market_maker:
+  enabled: true
+  symbols:
+    - BTC/USD
+    - ETH/USD
+  spread_bps: 8.0
+  inventory_limit_pct: 0.10
+  quote_size_pct: 0.02
+
+# Meta
+confidence_threshold: 0.52
+cycle_seconds: 12

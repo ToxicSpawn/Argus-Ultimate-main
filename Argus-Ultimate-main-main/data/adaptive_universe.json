@@ -1,0 +1,11 @@
+{
+  "active": [
+    "BTC/USD",
+    "ETH/USD",
+    "USDC/USDT",
+    "BTC/USDT",
+    "ETH/USDT"
+  ],
+  "stats": {},
+  "version": 1
+}

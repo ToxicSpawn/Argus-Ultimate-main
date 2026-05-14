@@ -1,0 +1,117 @@
+# Push 73 — Prometheus alerting rules for Argus Ultimate
+groups:
+  - name: argus_trading
+    interval: 30s
+    rules:
+
+      # Bot health
+      - alert: ArgusDown
+        expr: up{job="argus"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: trading_bot
+        annotations:
+          summary: "Argus trading bot is DOWN"
+          description: "Argus has been unreachable for > 1 minute."
+
+      # Drawdown breach
+      - alert: HighDrawdown
+        expr: argus_drawdown_pct > 4.0
+        for: 0m
+        labels:
+          severity: warning
+          component: risk
+        annotations:
+          summary: "Drawdown {{ $value | printf \"%.2f\" }}% approaching limit"
+          description: "Current drawdown exceeds 4% warning threshold."
+
+      - alert: DrawdownLimitBreached
+        expr: argus_drawdown_pct > 5.0
+        for: 0m
+        labels:
+          severity: critical
+          component: risk
+        annotations:
+          summary: "CRITICAL: Drawdown limit breached ({{ $value | printf \"%.2f\" }}%)"
+          description: "Drawdown has exceeded the 5% hard limit. Auto-halt may trigger."
+
+      # Daily loss limit
+      - alert: DailyLossLimitBreached
+        expr: argus_daily_pnl_usd < -500
+        for: 0m
+        labels:
+          severity: critical
+          component: risk
+        annotations:
+          summary: "Daily loss limit breached (${{ $value | printf \"%.2f\" }})"
+          description: "Daily PnL has fallen below -$500 hard limit."
+
+      # Feed disconnection
+      - alert: FeedDisconnected
+        expr: argus_feed_connected == 0
+        for: 30s
+        labels:
+          severity: high
+          component: feed
+        annotations:
+          summary: "Market data feed disconnected"
+          description: "WebSocket feed has been disconnected for > 30 seconds."
+
+      # Order rejection rate
+      - alert: HighOrderRejectRate
+        expr: rate(argus_orders_rejected_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          component: order_management
+        annotations:
+          summary: "High order rejection rate ({{ $value | printf \"%.3f\" }} req/s)"
+          description: "More than 0.1 order rejections/second over 5 minutes."
+
+  - name: infrastructure
+    interval: 60s
+    rules:
+
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: redis
+        annotations:
+          summary: "Redis is DOWN"
+          description: "Redis exporter reports Redis unreachable."
+
+      - alert: PostgresDown
+        expr: up{job="postgres"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: postgres
+        annotations:
+          summary: "Postgres is DOWN"
+          description: "Postgres exporter reports database unreachable."
+
+      - alert: HighMemoryUsage
+        expr: |
+          (container_memory_usage_bytes{name="argus"} /
+           container_spec_memory_limit_bytes{name="argus"}) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+          component: resources
+        annotations:
+          summary: "Argus container memory > 85%"
+          description: "Container memory usage has been above 85% for 5+ minutes."
+
+      - alert: HighCPUUsage
+        expr: |
+          rate(container_cpu_usage_seconds_total{name="argus"}[5m]) > 0.80
+        for: 10m
+        labels:
+          severity: warning
+          component: resources
+        annotations:
+          summary: "Argus container CPU > 80%"
+          description: "Container CPU has sustained > 80% for 10+ minutes."

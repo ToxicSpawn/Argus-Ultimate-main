@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "required_artifacts": [
+    {
+      "id": "GOV-001",
+      "path": "docs/institutional/artifacts/governance/compliance_program.md",
+      "min_bytes": 300,
+      "allow_draft": false,
+      "required_markers": [
+        "Owner:",
+        "Review cadence:"
+      ]
+    },
+    {
+      "id": "RISK-001",
+      "path": "docs/institutional/artifacts/risk/limit_hierarchy.yaml",
+      "min_bytes": 120,
+      "allow_draft": false
+    },
+    {
+      "id": "OPS-001",
+      "path": "docs/institutional/artifacts/operations/incident_response_runbook.md",
+      "min_bytes": 220,
+      "allow_draft": false
+    },
+    {
+      "id": "SEC-001",
+      "path": "docs/institutional/artifacts/security/access_control_policy.md",
+      "min_bytes": 220,
+      "allow_draft": false
+    },
+    {
+      "id": "MODEL-001",
+      "path": "docs/institutional/artifacts/model/validation_policy.md",
+      "min_bytes": 220,
+      "allow_draft": false
+    }
+  ],
+  "report_checks": [
+    {
+      "id": "REPORT-001",
+      "path": "reports/soak_gate_latest.json",
+      "required_status": "PASS",
+      "max_age_hours": 24,
+      "timestamp_keys": [
+        "checked_at"
+      ]
+    },
+    {
+      "id": "REPORT-002",
+      "path": "reports/walk_forward_latest.json",
+      "max_age_hours": 168,
+      "timestamp_keys": [
+        "checked_at",
+        "generated_at",
+        "timestamp"
+      ]
+    }
+  ],
+  "manual_attestations": [
+    {
+      "id": "LEGAL-001",
+      "path": "docs/institutional/artifacts/governance/legal_attestation.md",
+      "required_markers": [
+        "ATTESTATION_STATUS: APPROVED",
+        "SIGNED_BY:"
+      ]
+    },
+    {
+      "id": "AUDIT-001",
+      "path": "docs/institutional/artifacts/reports/monthly_controls_attestation.md",
+      "required_markers": [
+        "ATTESTATION_STATUS: APPROVED",
+        "SIGNED_BY:"
+      ]
+    }
+  ]
+}

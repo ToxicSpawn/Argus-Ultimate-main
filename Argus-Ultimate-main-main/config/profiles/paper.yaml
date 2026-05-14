@@ -1,0 +1,71 @@
+# Paper trading profile — lean, fast, constant data flow, peak signals
+# Activate: ARGUS_CONFIG_PROFILE=paper
+
+runtime:
+  mode: paper
+  live_require_paper_edge: true
+  live_min_trades_paper: 50
+  live_min_win_rate_pct: 45
+  soak_gate:
+    enabled: true
+    max_age_hours: 24
+
+# Lean symbol set — top 8 by liquidity
+trading_pairs:
+  - BTC/USD
+  - ETH/USD
+  - SOL/USD
+  - XRP/USD
+  - LINK/USD
+  - AVAX/USD
+  - DOT/USD
+  - ADA/USD
+
+# Fast cycles
+cycle_seconds: 15
+
+# Signal generation — peak sensitivity
+ai_brain:
+  min_signal_confidence: 0.35
+  max_concurrent_signals: 8
+
+# Risk
+risk:
+  max_daily_loss_pct: 0.03
+  max_drawdown_pct: 0.10
+
+# Speed: disable 23-language orchestrator (all use Python fallbacks anyway)
+multi_language:
+  enabled: false
+
+# Speed: disable evolution per-cycle (runs on cadence via code_evolution instead)
+evolution:
+  enabled: false
+
+# Enable data feeds
+tick_capture:
+  enabled: true
+  batch_size: 200
+
+fear_greed:
+  enabled: true
+  cache_ttl: 1800
+
+news_sentiment:
+  enabled: true
+
+whale_tracker:
+  enabled: true
+
+# Code evolution — faster feedback in paper
+code_evolution:
+  enabled: true
+  generation_cycles: 100
+
+# Disable target engine (signals flow direct to execution)
+portfolio_target_engine:
+  enabled: false
+
+# Self-improvement
+universal_adaptation:
+  enabled: true

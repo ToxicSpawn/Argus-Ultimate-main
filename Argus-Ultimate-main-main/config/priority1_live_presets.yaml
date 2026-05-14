@@ -1,0 +1,32 @@
+# Priority 1 presets for live (merge into unified_config or use as override)
+# See docs/PRIORITY_ORDER.md §1. Run: python scripts/validate_priority_order.py --config unified_config.yaml
+# Merge manually or: yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' unified_config.yaml config/priority1_live_presets.yaml
+
+monitoring:
+  alerts:
+    enabled: true
+    triggers:
+      - drawdown
+      - daily_loss
+      - consecutive_losses
+      - error_rate
+      - circuit_breaker
+    telegram:
+      enabled: true   # set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID in .env
+
+ai_brain:
+  live_min_signal_confidence: 0.78   # 0.78–0.82 for live
+
+edge_cost_gate:
+  modes: ["paper", "backtest", "live"]
+  live_min_edge_pct: 1.0
+  live_buffer_mult: 2.2
+
+# Optional Priority 2 (uncomment to use)
+# execution_engine:
+#   use_is_gate: true
+#   max_avg_is_bps: 20
+# evolution:
+#   load_evolved: true
+# strategy_allocator:
+#   enabled: true

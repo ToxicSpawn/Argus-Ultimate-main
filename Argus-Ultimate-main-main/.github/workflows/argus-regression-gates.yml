@@ -1,0 +1,32 @@
+# Push 50 — regression gates: add hmmlearn to install
+name: Argus Regression Gates
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  regression:
+    name: Regression Gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install deps
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio hmmlearn ccxtpro pyyaml
+
+      - name: Run regression tests
+        run: |
+          pytest tests/ \
+            -k "regression or push45 or push46 or push47 or push48 or push49 or push50" \
+            -v --timeout=120

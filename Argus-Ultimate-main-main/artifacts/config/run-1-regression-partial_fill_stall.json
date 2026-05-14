@@ -1,0 +1,11 @@
+{
+  "config": {
+    "ladder_stage": "PAPER",
+    "manifest_hash": "run-1-regression-partial_fill_stall",
+    "profile": "paper",
+    "runtime_path": "intent->liquidity->constitution->governance->route->submit->reconcile->attribute->replay_audit->proving_review",
+    "strict_governance": true
+  },
+  "config_hash": "sha256:e9bf17501826ba71c10733d9db9f2a4b1315077db8b83be5085f6821732f3f9f",
+  "run_id": "run-1-regression-partial_fill_stall"
+}

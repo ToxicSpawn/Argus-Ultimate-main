@@ -1,0 +1,46 @@
+# LEAN PROFILE — 15 essential components only
+# Everything else disabled. Fast boot, fast cycles, trades immediately.
+# Activate: ARGUS_CONFIG_PROFILE=lean
+#
+# To go back to full mode: ARGUS_CONFIG_PROFILE=paper
+
+runtime:
+  mode: paper
+  lean_mode: true
+
+trading_pairs:
+  - BTC/USD
+  - ETH/USD
+  - SOL/USD
+
+cycle_seconds: 10
+
+ai_brain:
+  min_signal_confidence: 0.30
+  max_concurrent_signals: 6
+
+risk:
+  max_daily_loss_pct: 0.03
+  max_drawdown_pct: 0.10
+
+# Disable everything non-essential
+multi_language:
+  enabled: false
+
+evolution:
+  enabled: false
+
+portfolio_target_engine:
+  enabled: false
+
+tick_capture:
+  enabled: false
+
+code_evolution:
+  enabled: false
+
+universal_adaptation:
+  enabled: false
+
+quantum_features:
+  enabled: false

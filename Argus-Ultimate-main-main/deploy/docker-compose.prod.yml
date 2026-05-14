@@ -1,0 +1,230 @@
+"""
+Docker Compose - Production Deployment
+======================================
+
+Production-ready Docker Compose configuration for Argus Ultimate.
+"""
+
+version: '3.8'
+
+services:
+  # Main Argus Trading System
+  argus:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+    container_name: argus-trading
+    restart: unless-stopped
+    environment:
+      - ARGUS_TRADING_MODE=live
+      - ARGUS_LOG_LEVEL=INFO
+      - ARGUS_CONFIG_PATH=/app/config/system.yaml
+      # API Keys (use Docker secrets in production)
+      - BINANCE_API_KEY=${BINANCE_API_KEY}
+      - BINANCE_SECRET=${BINANCE_SECRET}
+    volumes:
+      - ../config:/app/config:ro
+      - argus-data:/app/data
+      - argus-logs:/app/logs
+      - ../models:/app/models:ro
+    ports:
+      - "8080:8080"  # REST API
+      - "8081:8081"  # WebSocket
+    networks:
+      - argus-network
+    depends_on:
+      - redis
+      - postgres
+      - prometheus
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '2'
+          memory: 4G
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: argus-redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - argus-network
+    command: redis-server --appendonly yes --maxmemory 2gb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: argus-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=argus
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-argus_secure_password}
+      - POSTGRES_DB=argus_trading
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - argus-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U argus -d argus_trading"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Prometheus Metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: argus-prometheus
+    restart: unless-stopped
+    volumes:
+      - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - argus-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+
+  # Grafana Dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: argus-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=${GRAFANA_ROOT_URL:-http://localhost:3000}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ../monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ../monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    ports:
+      - "3000:3000"
+    networks:
+      - argus-network
+    depends_on:
+      - prometheus
+      - postgres
+
+  # Node Exporter (System Metrics)
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: argus-node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - argus-network
+
+  # cAdvisor (Container Metrics)
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: argus-cadvisor
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    ports:
+      - "8082:8080"
+    networks:
+      - argus-network
+
+  # Alertmanager
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: argus-alertmanager
+    restart: unless-stopped
+    volumes:
+      - ../monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    ports:
+      - "9093:9093"
+    networks:
+      - argus-network
+
+  # Loki (Log Aggregation)
+  loki:
+    image: grafana/loki:latest
+    container_name: argus-loki
+    restart: unless-stopped
+    volumes:
+      - ../monitoring/loki-config.yml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    ports:
+      - "3100:3100"
+    networks:
+      - argus-network
+    command: -config.file=/etc/loki/local-config.yaml
+
+  # Promtail (Log Collector)
+  promtail:
+    image: grafana/promtail:latest
+    container_name: argus-promtail
+    restart: unless-stopped
+    volumes:
+      - ../monitoring/promtail-config.yml:/etc/promtail/config.yml:ro
+      - argus-logs:/var/log/argus:ro
+      - /var/log:/var/log/host:ro
+    networks:
+      - argus-network
+    command: -config.file=/etc/promtail/config.yml
+
+networks:
+  argus-network:
+    driver: bridge
+
+volumes:
+  argus-data:
+    driver: local
+  argus-logs:
+    driver: local
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  alertmanager-data:
+    driver: local
+  loki-data:
+    driver: local

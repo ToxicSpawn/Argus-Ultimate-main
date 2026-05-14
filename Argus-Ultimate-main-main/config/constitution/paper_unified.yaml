@@ -1,0 +1,70 @@
+# Paper trading constitution - minimal working config
+constitution:
+  profile: paper
+  version: 1
+  description: "Paper trading configuration for Argus Ultimate"
+  node_role: single_node
+
+# Core limits for paper trading
+limits:
+  max_gross_exposure_pct: 0.90
+  max_single_symbol_exposure_pct: 0.35
+  max_cluster_exposure_pct: 0.50
+  max_daily_loss_pct: 0.35
+  max_drawdown_pct: 0.35
+  max_open_intents: 10
+  max_consecutive_losses: 20
+
+# Safety settings
+safety:
+  block_new_risk_on_data_degradation: false
+  block_new_risk_on_reconciliation_staleness: false
+  require_signed_promotion_bundle: false
+  block_research_modules_from_live: false
+  require_soak_evidence: false
+  require_operator_ack_after_reconciliation_freeze: false
+
+# Venues
+venues:
+  allow_cross_venue_live: false
+  allow_market_orders: true
+  allow_only_approved_symbols: false
+
+# Capital settings
+capital:
+  starting_capital_aud: 1000.0
+  currency: AUD
+  min_position_size_aud: 15.0
+  max_position_size_aud: 180.0
+  max_position_pct: 0.35
+  max_total_exposure_pct: 0.95
+  max_concurrent_positions: 5
+
+# FX
+fx:
+  aud_to_usd: 0.65
+
+# Risk
+risk:
+  max_daily_loss_pct: 0.35
+  max_drawdown_pct: 0.35
+  stop_loss_pct: 0.012
+  take_profit_pct: 0.035
+  max_concurrent_losses: 20
+  max_error_rate: 0.25
+  use_volatility_adjusted_limits: true
+
+# Trading pairs for paper
+trading_pairs:
+  - BTC/USDT
+  - ETH/USDT
+  - SOL/USDT
+  - XRP/USDT
+  - DOGE/USDT
+
+# Primary exchange
+exchange:
+  primary: binance
+
+# State
+restore_state: false

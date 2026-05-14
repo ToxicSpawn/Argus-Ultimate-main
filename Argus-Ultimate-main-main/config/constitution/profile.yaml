@@ -1,0 +1,31 @@
+# ============================================================================
+# ARGUS ULTIMATE — CONSTITUTION: PROFILE
+# Authoritative source for: mode, version, timezone, location.
+# Do NOT set these in unified_config.yaml (legacy).
+# ============================================================================
+
+profile: "paper"           # paper | live | hybrid | backtest
+version: "1.0.0"
+description: "Paper trading configuration — Sydney, NSW Australia"
+
+timezone: "Australia/Sydney"
+location:
+  city: "Sydney"
+  state: "NSW"
+  country: "AU"
+  timezone: "Australia/Sydney"
+
+# Hardware template (informational — used for perf targets and GPU/CPU config)
+run_template:
+  cpu: "Intel Core Ultra 9 285K"
+  motherboard: "Gigabyte Z890 AORUS ELITE WIFI7"
+  ram: "G.Skill Trident Z5 RGB 64GB (2x32GB) PC5-51200 (6400MHz) DDR5"
+  gpu: "MSI GeForce RTX 5080 16G GAMING TRIO OC"
+  gpu_specs:
+    boost_mhz: 2700
+    memory: "16GB GDDR7 (30Gbps)"
+    bus: "256-bit, PCI-E 5.0 x16"
+    features: ["DLSS 4", "Metal Backplate", "Tri FROZR 4 Thermal Design"]
+  switches: 2
+  switch_topology: "mlag_active_active"
+  nic: "Solarflare XtremeScale SFN8522-PLUS Dual Port 10GbE PCI-E Server Adapter FH"

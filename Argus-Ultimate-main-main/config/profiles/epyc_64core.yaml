@@ -1,0 +1,218 @@
+# =============================================================================
+# ARGUS ULTIMATE - 2x AMD EPYC 32-Core Configuration
+# =============================================================================
+# Hardware: 2x AMD EPYC 7543 (32-core/64-thread each)
+# Total: 64 cores / 128 threads
+# RAM: 256GB-1TB DDR4-3200 (typical)
+# =============================================================================
+
+system:
+  mode: "paper"  # Change to "live" when ready
+  capital_aud: 10000.0
+  currency: "AUD"
+  server_mode: true
+  daemon_mode: true
+
+# =============================================================================
+# CPU ALLOCATION (64 cores / 128 threads)
+# =============================================================================
+threading:
+  enabled: true
+  total_cores: 64
+  total_threads: 128
+  
+  # Core allocation
+  quantum_cores: 24      # 24 cores for quantum simulation
+  ml_cores: 16           # 16 cores for ML/AI
+  trading_cores: 16      # 16 cores for trading logic
+  system_cores: 8        # 8 cores for OS/system
+  
+  # Threading
+  max_workers: 48        # Use 75% of cores
+  io_workers: 12
+  strategy_workers: 24
+  ml_workers: 12
+  
+  # NUMA (2 sockets = 2 NUMA nodes)
+  numa_aware: true
+  numa_nodes: 2
+  cores_per_numa: 32
+  pin_threads: true
+
+# =============================================================================
+# MEMORY (256GB-1TB typical)
+# =============================================================================
+memory:
+  total_gb: 512          # Adjust to your actual RAM
+  
+  # Allocation
+  quantum_gb: 128        # 128GB for quantum simulation
+  ml_gb: 64              # 64GB for ML models
+  market_data_gb: 64     # 64GB market data cache
+  orderbook_gb: 32       # 32GB orderbook data
+  system_gb: 64          # OS and overhead
+  reserve_gb: 256        # Reserve for spikes
+  
+  # Optimization
+  huge_pages: true
+  huge_pages_gb: 64
+
+# =============================================================================
+# QUANTUM CONFIGURATION (Optimized for 64 cores)
+# =============================================================================
+quantum:
+  enabled: true
+  mode: "simulator"
+  
+  # Qubit configuration (64 cores can simulate up to 26 qubits)
+  max_qubits: 24         # 2^24 = 16.7M states (practical limit)
+  physical_qubits: 96    # 4:1 error correction
+  
+  # Quantum Singularity Engine
+  singularity_enabled: true
+  entanglement_enabled: true
+  grover_enabled: true
+  qpe_enabled: true
+  amplitude_amplification: true
+  reservoir_enabled: true
+  quantum_rl_enabled: true
+  
+  # Quantum Omega Engine
+  omega_enabled: true
+  superposition_strategies: 96
+  tunneling_enabled: true
+  entangled_portfolio: true
+  error_correction: true
+  teleportation: true
+  time_crystal: true
+  boltzmann: true
+  
+  # Performance
+  shots_per_measurement: 16384
+  parallel_circuits: 6
+  monte_carlo_samples: 50000
+
+# =============================================================================
+# TRADING CONFIGURATION
+# =============================================================================
+trading:
+  cycle_seconds: 3.0      # 3-second cycles
+  
+  # Position sizing
+  max_position_pct: 25.0
+  max_position_aud: 2500.0
+  min_position_aud: 100.0
+  max_concurrent_positions: 12
+  
+  # Leverage
+  max_leverage: 10.0
+  
+  # Risk
+  max_daily_loss_pct: 40.0
+  max_drawdown_pct: 50.0
+  stop_loss_pct: 1.5
+  take_profit_pct: 3.0
+  
+  # Confidence
+  min_signal_confidence: 0.40
+
+# =============================================================================
+# TRADING PAIRS (64 cores can handle 100+ pairs)
+# =============================================================================
+trading_pairs:
+  # Major (always active)
+  - "BTC/USD"
+  - "ETH/USD"
+  - "SOL/USD"
+  - "BNB/USD"
+  - "XRP/USD"
+  - "ADA/USD"
+  - "DOGE/USD"
+  - "DOT/USD"
+  - "AVAX/USD"
+  - "MATIC/USD"
+  
+  # Secondary
+  - "LINK/USD"
+  - "UNI/USD"
+  - "ATOM/USD"
+  - "LTC/USD"
+  - "NEAR/USD"
+  - "APT/USD"
+  - "ARB/USD"
+  - "OP/USD"
+  - "FIL/USD"
+  - "ICP/USD"
+  
+  # Cross pairs
+  - "BTC/EUR"
+  - "ETH/EUR"
+  - "BTC/GBP"
+  - "ETH/GBP"
+  - "BTC/AUD"
+  - "ETH/AUD"
+
+# =============================================================================
+# STRATEGIES (Full suite for 64 cores)
+# =============================================================================
+strategies:
+  # All enabled
+  momentum_scalper: true
+  breakout_scalper: true
+  mean_reversion: true
+  funding_rate_arb: true
+  flash_crash_sniper: true
+  market_making: true
+  cross_exchange_arb: true
+  liquidation_hunter: true
+  options_greeks: true
+  pairs_trading: true
+
+# =============================================================================
+# ML & AI (16 cores dedicated)
+# =============================================================================
+ml:
+  enabled: true
+  training_interval_hours: 4
+  online_learning: true
+  ensemble_size: 8
+  regime_detection: "hmm"
+  sentiment_model: "finbert"
+
+# =============================================================================
+# ADVANCED FEATURES
+# =============================================================================
+advanced_features:
+  # Real-time adaptation
+  realtime_adaptation: true
+  adaptation_cycle_seconds: 3.0
+  regime_update_on_tick: true
+  weight_update_every_cycle: true
+  param_tuning_interval_cycles: 3
+  champion_review_interval_cycles: 2
+  decay_check_every_cycle: true
+  
+  # Quantum features
+  quantum_adaptation: true
+  quantum_singularity: true
+  quantum_omega: true
+
+# =============================================================================
+# EXCHANGES
+# =============================================================================
+exchanges:
+  primary:
+    name: "kraken"
+    websocket: true
+  secondary:
+    name: "coinbase_advanced"
+    websocket: true
+
+# =============================================================================
+# MONITORING
+# =============================================================================
+monitoring:
+  prometheus_enabled: true
+  prometheus_port: 9090
+  api_port: 8080
+  websocket_port: 8081

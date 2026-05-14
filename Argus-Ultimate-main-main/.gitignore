@@ -1,0 +1,81 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtualenv / pyenv
+.venv/
+venv/
+env/
+.python-version
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Mypy
+.mypy_cache/
+
+# Env secrets — NEVER commit real env files
+.env
+.env.local
+.env.production
+.env.staging
+
+# Runtime / generated learning state (server-side only)
+.auto_fixer_learning.json
+.adaptive_fix_patterns.json
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+.docker/
+
+# Data
+data/*.csv
+data/*.parquet
+data/*.feather
+
+# Model checkpoints / artifacts (use Git LFS if needed)
+artifacts/*.pt
+artifacts/*.pkl
+artifacts/*.onnx
+
+# Reports
+reports/*.html
+reports/*.pdf
+
+# Generated chart / image artifacts — committed only intentionally
+*.png
+*.jpg
+*.jpeg
+!docs/reports/*.png
+!docs/reports/*.jpg
+
+# Runtime output artifacts
+output.txt
+test_output.txt
+test_results.txt
+
+# Lm Studio typo dir (legacy)
+Lm Stuido/

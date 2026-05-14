@@ -1,0 +1,20 @@
+version: 1
+owner_role: RISK
+review_cadence: monthly
+limits:
+  portfolio:
+    max_daily_loss_pct: 0.05
+    max_drawdown_pct: 0.15
+    portfolio_var_limit_pct: 0.02
+    portfolio_cvar_limit_pct: 0.03
+  execution:
+    max_slippage_pct: 0.01
+    max_spread_bps: 50
+    min_net_edge_bps_live: 15.0
+  reconciliation:
+    halt_drift_pct: 0.10
+    require_operator_ack: true
+exception_policy:
+  change_requires:
+    - risk_owner_approval
+    - compliance_notification

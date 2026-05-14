@@ -1,0 +1,30 @@
+[package]
+name = "argus_bypass_sidecar"
+version = "0.2.0"
+edition = "2021"
+authors = ["Argus AI"]
+description = "Kernel-bypass order routing sidecar — DPDK + UDP fallback"
+
+[[bin]]
+name = "argus_bypass_sidecar"
+path = "src/main.rs"
+
+[features]
+default = []
+dpdk = ["dpdk-sys"]
+
+[dependencies]
+# DPDK bindings (only needed with --features dpdk)
+# Requires: dpdk >= 23.11, libdpdk-dev, NIC bound via vfio-pci
+# Install: apt install dpdk-dev || build from source
+dpdk-sys = { version = "0.1", optional = true }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.release.build-override]
+opt-level = 3

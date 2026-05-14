@@ -1,0 +1,30 @@
+{
+  "config_hash": "sha256:81cd55fd93aaa65f36c1fb1ea035a848b4ce65a9aeddec1e28c24461ae5ba0c4",
+  "diff": {
+    "changed": {
+      "ladder_stage": {
+        "new": "PAPER",
+        "old": null
+      },
+      "manifest_hash": {
+        "new": "elite-batch-clean_baseline",
+        "old": null
+      },
+      "profile": {
+        "new": "paper",
+        "old": null
+      },
+      "runtime_path": {
+        "new": "intent->liquidity->constitution->governance->route->submit->reconcile->attribute->replay_audit->proving_review",
+        "old": null
+      },
+      "strict_governance": {
+        "new": true,
+        "old": null
+      }
+    },
+    "current_key_count": 5,
+    "previous_key_count": 0
+  },
+  "run_id": "elite-batch-clean_baseline"
+}

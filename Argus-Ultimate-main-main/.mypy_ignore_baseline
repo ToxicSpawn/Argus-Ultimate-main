@@ -1,0 +1,29 @@
+# M26 — mypy ignore baseline
+# Generated: 2026-04-15 (Batch 13)
+#
+# This file lists modules that are EXCLUDED from strict mypy checking.
+# Remove entries here as annotation coverage improves (M02 sweep).
+# The CI mypy job (H11) runs --ignore-missing-imports on these paths only;
+# core/ and risk/ are held to strict mode.
+
+[baseline_ignores]
+# Third-party stubs not yet available
+adaptive/
+argus/
+argus_live/
+argus_omega/
+backtesting/
+data/
+exchanges/
+hft_engine/
+monitoring/
+ops/
+quantum/
+services/
+utils/
+
+# Legacy entrypoints — annotation sweep pending (M02)
+run_godmode.py
+run_paper.py
+run_ultimate.py
+run_ultimate_evolution.py

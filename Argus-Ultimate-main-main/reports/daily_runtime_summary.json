@@ -1,0 +1,49 @@
+{
+  "generated_at_utc": "2026-03-07T16:56:33.986265+00:00",
+  "lookback_hours": 24.0,
+  "data_sources": {
+    "trades_db": "data\\unified_trades.db",
+    "state_db": "data\\unified_state.db",
+    "meta_db": "data\\meta_weights.db"
+  },
+  "cycles_executed": 2,
+  "decisions_generated": 302,
+  "intent_count_by_state": {
+    "FAILED": 1,
+    "SENT": 25
+  },
+  "liquidity_clamp_count": 22,
+  "slippage_summary": {
+    "avg_bps": 0.0,
+    "p90_bps": 0.0
+  },
+  "cycle_latency_ms": {
+    "avg": 0.0,
+    "p90": 0.0
+  },
+  "strategy_signal_counts": {
+    "unified_argus_ai_multilang": 81,
+    "target_rebalance": 81
+  },
+  "top_strategies_by_activity": [
+    {
+      "strategy": "unified_argus_ai_multilang",
+      "count": 81
+    },
+    {
+      "strategy": "target_rebalance",
+      "count": 81
+    }
+  ],
+  "recon_required_counts": {
+    "decision_reason_code_count": 228,
+    "state_recon_required_intents": 0,
+    "state_recovery_halted": 0
+  },
+  "meta_weight_changes": {
+    "snapshot_count": 58,
+    "changed_strategies": 0,
+    "total_abs_change": 0.0
+  },
+  "emergency_stop_count": 0
+}

@@ -1,0 +1,123 @@
+{
+  "checked_at": "2026-03-07T18:34:07.538341+00:00",
+  "status": "FAIL",
+  "summary": {
+    "total_checks": 11,
+    "passed": 9,
+    "failed": 2,
+    "score_pct": 81.82,
+    "allow_manual_unverified": false,
+    "skip_pre_live": false
+  },
+  "checks": [
+    {
+      "id": "SOAK-REFRESH-001",
+      "category": "report_refresh",
+      "ok": true,
+      "message": "soak gate refreshed with non-zero status (report generated)",
+      "details": {
+        "returncode": 1,
+        "output": "{\"status\": \"FAIL\", \"checked_at\": \"2026-03-07T18:34:07.024056+00:00\", \"start_ts\": 1772886847.018946, \"end_ts\": 1772908447.024008, \"duration_seconds\": 21600.00506210327, \"metrics\": {\"trade_count\": 0, \"decision_count\": 284, \"error_events\": 0, \"timeout_events\": 0, \"reconciliation_halts\": 0, \"duplicate_intent_count\": 0, \"error_rate\": 0.0, \"timeout_rate\": 0.0, \"max_drawdown_pct\": 0.0, \"cycle_latency_p90_ms\": 937400.9585857408, \"cycle_latency_sample_count\": 69, \"portfolio_point_count\": 70}, \"thresholds\": {\"min_duration_seconds\": 21600.0, \"min_decision_count\": 300, \"min_trade_count\": 20, \"max_error_rate\": 0.03, \"max_timeout_rate\": 0.03, \"max_reconciliation_halts\": 0, \"max_duplicate_intents\": 0, \"max_drawdown_pct\": 0.1, \"max_cycle_latency_p90_ms\": 60000.0, \"max_age_hours\": 8.0, \"report_path\": \"reports/soak_gate_latest.json\"}, \"fail_reasons\": [\"decision_count=284 below min_decision_count=300\", \"trade_count=0 below min_trade_count=20\", \"cycle_latency_p90_ms=937400.959 above max_cycle_latency_p90_ms=60000.000\"], \"config_path\": \"unified_config.yaml\", \"report_paths\": {\"timestamped\": \"reports\\\\soak_gate_20260308_053407.json\", \"latest\": \"reports\\\\soak_gate_latest.json\"}}\nreports\\soak_gate_latest.json\n",
+        "report_path": "F:\\Argus-Ultimate-main\\reports\\soak_gate_latest.json"
+      }
+    },
+    {
+      "id": "PRELIVE-001",
+      "category": "pre_live",
+      "ok": false,
+      "message": "pre_live_check failed",
+      "details": {
+        "returncode": 1,
+        "output": "PASS: Config file exists\nWARN: .env not found. For live you need KRAKEN_API_KEY and KRAKEN_SECRET_KEY in .env\nPASS: Alerts enabled\nWARN: Telegram enabled but TELEGRAM_BOT_TOKEN not set (set in .env)\nPASS: risk.max_daily_loss_pct set\nPASS: risk.max_drawdown_pct set\nWARN: ai_brain.min_signal_confidence < 0.65; consider 0.72+ for live\nPASS: edge_cost_gate.modes includes live (or not applicable)\nFAIL: live_require_paper_edge: paper has 62 closed trades (need 80) and win rate 40.3% (need 55%) | allocator has 0 trades (need 80), win rate 0.0% (need 55%)\nWARN: soak gate refresh returned non-zero (1): soak_gate_latest.json\"}, \"fail_reasons\": [\"decision_count=284 below min_decision_count=300\", \"trade_count=0 below min_trade_count=20\", \"cycle_latency_p90_ms=937400.959 above max_cycle_latency_p90_ms=60000.000\"], \"config_path\": \"unified_config.yaml\", \"report_paths\": {\"timestamped\": \"reports\\\\soak_gate_20260308_053407.json\", \"latest\": \"reports\\\\soak_gate_latest.json\"}}\nreports\\soak_gate_latest.json\n\nFAIL: soak gate status is FAIL\nPASS: Reconciliation freeze not blocking live\n\nSome checks failed. Fix before going live. See docs/LIVE_CHECKLIST.md\n"
+      }
+    },
+    {
+      "id": "GOV-001",
+      "category": "required_artifact",
+      "ok": true,
+      "message": "ok: docs/institutional/artifacts/governance/compliance_program.md",
+      "details": {
+        "path": "docs/institutional/artifacts/governance/compliance_program.md",
+        "size": 977
+      }
+    },
+    {
+      "id": "RISK-001",
+      "category": "required_artifact",
+      "ok": true,
+      "message": "ok: docs/institutional/artifacts/risk/limit_hierarchy.yaml",
+      "details": {
+        "path": "docs/institutional/artifacts/risk/limit_hierarchy.yaml",
+        "size": 460
+      }
+    },
+    {
+      "id": "OPS-001",
+      "category": "required_artifact",
+      "ok": true,
+      "message": "ok: docs/institutional/artifacts/operations/incident_response_runbook.md",
+      "details": {
+        "path": "docs/institutional/artifacts/operations/incident_response_runbook.md",
+        "size": 706
+      }
+    },
+    {
+      "id": "SEC-001",
+      "category": "required_artifact",
+      "ok": true,
+      "message": "ok: docs/institutional/artifacts/security/access_control_policy.md",
+      "details": {
+        "path": "docs/institutional/artifacts/security/access_control_policy.md",
+        "size": 501
+      }
+    },
+    {
+      "id": "MODEL-001",
+      "category": "required_artifact",
+      "ok": true,
+      "message": "ok: docs/institutional/artifacts/model/validation_policy.md",
+      "details": {
+        "path": "docs/institutional/artifacts/model/validation_policy.md",
+        "size": 538
+      }
+    },
+    {
+      "id": "REPORT-001",
+      "category": "report",
+      "ok": false,
+      "message": "status mismatch in reports/soak_gate_latest.json: got FAIL, need PASS",
+      "details": {
+        "path": "reports/soak_gate_latest.json",
+        "got": "FAIL",
+        "required": "PASS"
+      }
+    },
+    {
+      "id": "REPORT-002",
+      "category": "report",
+      "ok": true,
+      "message": "ok: reports/walk_forward_latest.json",
+      "details": {
+        "path": "reports/walk_forward_latest.json"
+      }
+    },
+    {
+      "id": "LEGAL-001",
+      "category": "manual_attestation",
+      "ok": true,
+      "message": "ok: docs/institutional/artifacts/governance/legal_attestation.md",
+      "details": {
+        "path": "docs/institutional/artifacts/governance/legal_attestation.md"
+      }
+    },
+    {
+      "id": "AUDIT-001",
+      "category": "manual_attestation",
+      "ok": true,
+      "message": "ok: docs/institutional/artifacts/reports/monthly_controls_attestation.md",
+      "details": {
+        "path": "docs/institutional/artifacts/reports/monthly_controls_attestation.md"
+      }
+    }
+  ]
+}

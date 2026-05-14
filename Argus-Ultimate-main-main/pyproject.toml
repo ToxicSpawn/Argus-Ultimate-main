@@ -1,0 +1,132 @@
+# Push 74 — Argus Ultimate pyproject.toml
+# Tool configs: ruff, black, mypy, pytest, coverage
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = [
+    "__pycache__",
+    ".venv",
+    "venv",
+    "build",
+    "dist",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "B",   # bugbear
+    "C4",  # comprehensions
+    "SIM", # simplify
+]
+ignore = [
+    "E501",  # line too long (handled by black)
+    "B008",  # do not perform calls in default args
+    "N999",  # invalid module name
+    "S101",  # use of assert (allowed in tests)
+    "S311",  # standard pseudo-random (OK for non-crypto)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S", "N", "F811"]
+"docker/*" = ["S603", "S607"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["core", "docker"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
+# -----------------------------------------------------------------------
+# Black
+# -----------------------------------------------------------------------
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | venv
+  | build
+  | dist
+)/
+'''
+
+# -----------------------------------------------------------------------
+# mypy
+# -----------------------------------------------------------------------
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+no_implicit_optional = true
+check_untyped_defs = true
+disallow_untyped_defs = false   # enable incrementally
+exclude = [
+    "tests/",
+    "docker/",
+    "venv/",
+]
+
+# -----------------------------------------------------------------------
+# pytest
+# -----------------------------------------------------------------------
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--tb=short",
+    "-q",
+    "--strict-markers",
+]
+markers = [
+    "slow: marks tests as slow (deselect with -m 'not slow')",
+    "live: marks tests requiring live exchange connectivity",
+    "integration: marks integration tests",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+# -----------------------------------------------------------------------
+# coverage
+# -----------------------------------------------------------------------
+[tool.coverage.run]
+branch = true
+source = ["core"]
+omit = [
+    "tests/*",
+    "*/__init__.py",
+    "docker/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 75
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+# -----------------------------------------------------------------------
+# bandit
+# -----------------------------------------------------------------------
+[tool.bandit]
+exclude_dirs = ["tests", "venv", ".venv"]
+skips = ["B101", "B311"]

@@ -1,0 +1,99 @@
+# ============================================================================
+# ARGUS ULTIMATE — RUNTIME: SAFETY
+# Authoritative source for: soak gate, reconciliation, circuit breakers,
+# emergency shutdown, live pre-flight checklist, institutional mode.
+# Do NOT set these in unified_config.yaml (legacy).
+# ============================================================================
+
+mode: "paper"    # Mirrors constitution/profile.yaml — must match. Set BOTH when switching to live.
+
+# ── Live pre-flight gate ──────────────────────────────────────────────────
+live_require_paper_edge: true
+live_min_trades_paper: 20
+live_min_win_rate_pct: 45.0
+
+# ── Soak gate (must pass before mode: live) ──────────────────────────────
+soak_gate:
+  enabled: true
+  report_path: "reports/soak_gate_latest.json"
+  max_age_hours: 24.0
+  min_paper_window_hours: 6.0
+  min_decision_count: 500
+  min_trade_count: 20
+  max_error_rate: 0.03
+  max_timeout_rate: 0.03
+  max_reconciliation_halts: 0
+  max_duplicate_intents: 0
+  max_drawdown_pct: 0.10
+  max_cycle_latency_p90_ms: 60000.0
+
+# ── Institutional mode ────────────────────────────────────────────────────
+institutional_mode: true    # enforce limit hierarchy + pre-trade compliance + audit on every order
+
+# ── Live disabled strategies ──────────────────────────────────────────────
+live_disabled_strategies:
+  - "farmer"
+  - "high_freq_grid"
+  - "hft_obi_pressure"
+  - "apeiron_tier"
+  - "ultimate"
+
+# ── Reconciliation ────────────────────────────────────────────────────────
+reconciliation:
+  interval_cycles: 1
+  live_every_cycle: true
+  paper_enabled: false
+  small_drift_pct: 0.02
+  halt_drift_pct: 0.10
+  require_operator_ack: true
+  freeze_file: "data/reconciliation_freeze.json"
+
+# ── Circuit breakers ──────────────────────────────────────────────────────
+circuit_breaker_dd_pct: 8.0
+var_breach_pct: 5.0
+var_breach_alert_enabled: true
+auto_reduce_after_n_losses: 3
+auto_reduce_factor: 0.6
+
+# ── Emergency shutdown ────────────────────────────────────────────────────
+emergency_shutdown:
+  enabled: true
+  latency_spike_ms: 600000   # 10 min — 48 pairs need time for OHLCV cache warmup
+  flash_crash_pct: 15.0
+  network_fail: true
+  arb_spread_bps: 500
+
+# ── Runtime safety interlock ─────────────────────────────────────────────
+runtime_safety:
+  latency_grace_cycles: 2
+  live_safe_disable_pinnacle_ai_brain: false
+  market_data:
+    ohlcv_cache_seconds: 120
+    ohlcv_poll_interval_seconds: 60
+  ohlcv_retry_attempts: 2
+  enable_historical_preload: true
+  historical_lookback_hours: 4380
+  historical_timeframe: "1h"
+  historical_cache_dir: "data/historical"
+
+# ── Fail-closed runtime ───────────────────────────────────────────────────
+fail_closed_runtime_enabled: true
+fail_closed_runtime_enforce_paper: false
+fail_closed_max_exchange_heartbeat_age_seconds: 30.0
+fail_closed_max_market_data_age_seconds: 30.0
+fail_closed_max_ticker_age_seconds: 30.0
+fail_closed_max_clock_skew_seconds: 5.0
+fail_closed_require_clock_sync: false
+
+# ── Recon-required recovery ───────────────────────────────────────────────
+recon_recovery_engine:
+  enabled: true
+  stale_threshold_seconds: 60
+  base_retry_delay_seconds: 5
+  max_retries: 5
+  halt_on_retry_exhausted: true
+
+# ── System health snapshots ───────────────────────────────────────────────
+system_health_metrics:
+  enabled: true
+  snapshot_interval_cycles: 10

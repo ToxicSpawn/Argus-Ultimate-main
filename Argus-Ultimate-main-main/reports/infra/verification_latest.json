@@ -1,0 +1,44 @@
+{
+  "checked_at": "2026-03-06T16:06:12.873564+00:00",
+  "host": "Voidus",
+  "iface": "eth0",
+  "status": "FAIL",
+  "checks": {
+    "platform_linux": false,
+    "kernel_isolation_configured": false,
+    "cpu_governor_all_performance": false,
+    "irqbalance_disabled": false,
+    "ntp_synced": false,
+    "hardware_timestamping": false,
+    "hugepages_configured": false,
+    "onload_loaded": false
+  },
+  "details": {
+    "kernel": {
+      "configured": false
+    },
+    "cpu_governor": {
+      "all_performance": false
+    },
+    "irqbalance": {
+      "disabled": false,
+      "state": "n/a"
+    },
+    "clock_sync": {
+      "ntp_synced": false,
+      "clock_offset_us": null
+    },
+    "interface_timestamps": {
+      "hardware_timestamping": false
+    },
+    "interface_driver": {
+      "available": false
+    },
+    "onload": {
+      "loaded": false
+    },
+    "hugepages": {
+      "configured": false
+    }
+  }
+}

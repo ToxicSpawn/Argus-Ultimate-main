@@ -1,0 +1,93 @@
+# Argus Deployment — Push 64
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argus
+  namespace: argus-system
+  labels:
+    app.kubernetes.io/name: argus-ultimate
+    app.kubernetes.io/component: trading-engine
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: argus
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: argus
+        app.kubernetes.io/name: argus-ultimate
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+      containers:
+        - name: argus
+          image: argus-ultimate:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          command: ["argus", "start", "--config", "/etc/argus/argus.yaml"]
+          env:
+            - name: ARGUS_ENV
+              value: production
+            - name: ARGUS_LOG_JSON
+              value: "true"
+            - name: ARGUS_EXCHANGE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: argus-secrets
+                  key: ARGUS_EXCHANGE_API_KEY
+            - name: ARGUS_EXCHANGE_API_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: argus-secrets
+                  key: ARGUS_EXCHANGE_API_SECRET
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 2
+          volumeMounts:
+            - name: argus-config
+              mountPath: /etc/argus
+              readOnly: true
+            - name: argus-data
+              mountPath: /app/data
+      volumes:
+        - name: argus-config
+          configMap:
+            name: argus-config
+        - name: argus-data
+          emptyDir: {}
+      terminationGracePeriodSeconds: 30

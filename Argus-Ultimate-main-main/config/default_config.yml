@@ -1,0 +1,72 @@
+# Argus Ultimate — Default System Configuration
+# Push 80 / v8.16.0
+# All values can be overridden via environment variables (ARGUS_ prefix)
+# or by creating config/config.yml
+
+# -----------------------------------------------------------------------
+# Exchange
+# -----------------------------------------------------------------------
+paper_mode: true                 # true = paper trading (no real orders)
+initial_balance: 100000.0        # starting paper balance (USD)
+binance_api_key: ""
+binance_api_secret: ""
+binance_testnet: true            # use Binance testnet when live=false
+
+# -----------------------------------------------------------------------
+# Strategies
+# -----------------------------------------------------------------------
+strategies:
+  - name: momentum
+    strategy_id: mom_BTCUSDT
+    symbol: BTCUSDT
+    params:
+      fast_period: 9
+      slow_period: 21
+      rsi_period: 14
+      atr_mult: 1.5
+      rsi_bull: 55
+      rsi_bear: 45
+
+  - name: mean_reversion
+    strategy_id: mr_BTCUSDT
+    symbol: BTCUSDT
+    params:
+      bb_period: 20
+      band_mult: 2.0
+      rsi_period: 14
+      rsi_oversold: 35
+      rsi_overbought: 65
+
+# -----------------------------------------------------------------------
+# Risk management
+# -----------------------------------------------------------------------
+risk:
+  initial_equity: 10000.0
+  max_symbol_drawdown_pct: 10.0
+  max_portfolio_heat: 0.80
+  var_limit_pct: 5.0
+  daily_loss_limit_pct: 3.0
+  var_window: 252
+  var_confidence: 0.95
+  kill_on_var_breach: false
+  kill_on_daily_loss: true
+
+# -----------------------------------------------------------------------
+# Execution
+# -----------------------------------------------------------------------
+max_open_orders: 10
+max_position_usd: 50000.0
+fee_rate: 0.001
+signal_cooldown: 5.0
+initial_equity: 10000.0
+
+# -----------------------------------------------------------------------
+# API server
+# -----------------------------------------------------------------------
+api_host: "0.0.0.0"
+api_port: 8080
+
+# -----------------------------------------------------------------------
+# Logging
+# -----------------------------------------------------------------------
+log_level: INFO

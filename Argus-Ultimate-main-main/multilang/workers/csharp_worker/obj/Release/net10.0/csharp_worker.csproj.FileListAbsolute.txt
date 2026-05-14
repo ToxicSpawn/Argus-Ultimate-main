@@ -1,0 +1,15 @@
+F:\Argus-Ultimate-main\multilang\workers\csharp_worker\obj\Release\net10.0\csharp_worker.GeneratedMSBuildEditorConfig.editorconfig
+F:\Argus-Ultimate-main\multilang\workers\csharp_worker\obj\Release\net10.0\csharp_worker.AssemblyInfoInputs.cache
+F:\Argus-Ultimate-main\multilang\workers\csharp_worker\obj\Release\net10.0\csharp_worker.AssemblyInfo.cs
+F:\Argus-Ultimate-main\multilang\workers\csharp_worker\obj\Release\net10.0\csharp_worker.csproj.CoreCompileInputs.cache
+F:\Argus-Ultimate-main\multilang\workers\csharp_worker\obj\Release\net10.0\csharp_worker.sourcelink.json
+F:\Argus-Ultimate-main\multilang\workers\csharp_worker\bin\Release\net10.0\csharp_worker.exe
+F:\Argus-Ultimate-main\multilang\workers\csharp_worker\bin\Release\net10.0\csharp_worker.deps.json
+F:\Argus-Ultimate-main\multilang\workers\csharp_worker\bin\Release\net10.0\csharp_worker.runtimeconfig.json
+F:\Argus-Ultimate-main\multilang\workers\csharp_worker\bin\Release\net10.0\csharp_worker.dll
+F:\Argus-Ultimate-main\multilang\workers\csharp_worker\bin\Release\net10.0\csharp_worker.pdb
+F:\Argus-Ultimate-main\multilang\workers\csharp_worker\obj\Release\net10.0\csharp_worker.dll
+F:\Argus-Ultimate-main\multilang\workers\csharp_worker\obj\Release\net10.0\refint\csharp_worker.dll
+F:\Argus-Ultimate-main\multilang\workers\csharp_worker\obj\Release\net10.0\csharp_worker.pdb
+F:\Argus-Ultimate-main\multilang\workers\csharp_worker\obj\Release\net10.0\csharp_worker.genruntimeconfig.cache
+F:\Argus-Ultimate-main\multilang\workers\csharp_worker\obj\Release\net10.0\ref\csharp_worker.dll

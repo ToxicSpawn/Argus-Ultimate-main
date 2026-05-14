@@ -1,0 +1,624 @@
+# =============================================================================
+# ARGUS ULTIMATE - Dell R7525 + Zeus GPU Configuration
+# =============================================================================
+# Maximum performance configuration for institutional-grade trading.
+#
+# Dell R7525 + Zeus GPU Specs:
+# - CPU: 2x AMD EPYC 7763 (128 cores / 256 threads)
+# - RAM: 4TB DDR4-3200
+# - GPU 1: Zeus 2c26-128 (10 TFLOPS FP64, 384 GB) - Risk & Monte Carlo
+# - GPU 2: Zeus 2c26-128 (10 TFLOPS FP64, 384 GB) - ML & Features
+# - Storage: 24x NVMe SSDs (48TB)
+# - Network: 2x 25GbE + 2x 10GbE + Zeus 400GbE
+# - Power: 2x 1600W PSUs (redundant)
+# =============================================================================
+
+# =============================================================================
+# SYSTEM CONFIGURATION
+# =============================================================================
+system:
+  mode: "live"
+  capital_aud: 50000.0
+  currency: "AUD"
+  
+  # Server-specific settings
+  server_mode: true
+  daemon_mode: true
+  log_level: "INFO"
+  log_rotation: "daily"
+  max_log_size_mb: 100
+  
+  # Node identification
+  node_id: "r7525-zeus"
+  hostname: "argus-r7525"
+
+# =============================================================================
+# HARDWARE CONFIGURATION
+# =============================================================================
+hardware:
+  # CPU
+  cpu:
+    model: "2x AMD EPYC 7763"
+    cores: 128
+    threads: 256
+    numa_nodes: 2
+    
+  # RAM
+  memory:
+    total_gb: 4096
+    type: "DDR4-3200 ECC"
+    channels_per_socket: 8
+    
+  # GPUs
+  gpus:
+    enabled: true
+    count: 2
+    model: "Bolt Zeus 2c26-128"
+    
+    gpu_1:
+      slot: "PCIe Slot 1"
+      sku: "zeus_2c26_128"
+      memory_gb: 384
+      fp64_tflops: 10.0
+      fp32_tflops: 20.0
+      fp16_tflops: 40.0
+      power_watts: 250
+      role: "risk_monte_carlo"
+      ethernet_gbs: 400
+      
+    gpu_2:
+      slot: "PCIe Slot 2"
+      sku: "zeus_2c26_128"
+      memory_gb: 384
+      fp64_tflops: 10.0
+      fp32_tflops: 20.0
+      fp16_tflops: 40.0
+      power_watts: 250
+      role: "ml_features"
+      ethernet_gbs: 400
+    
+    # GPU totals
+    total_memory_gb: 768
+    total_fp64_tflops: 20.0
+    total_power_watts: 500
+    
+  # Storage
+  storage:
+    type: "NVMe SSD"
+    count: 24
+    capacity_tb: 48
+    raid_level: "RAID 10"
+    
+  # Network
+  network:
+    primary: "2x 25GbE SFP28"
+    secondary: "2x 10GbE"
+    gpu_network: "2x 400GbE QSFP-DD (Zeus direct)"
+    
+  # Power
+  power:
+    psu_count: 2
+    psu_watts: 1600
+    redundancy: "1+1"
+    estimated_total_watts: 2100  # Server + GPUs
+
+# =============================================================================
+# ZEUS GPU INTEGRATION
+# =============================================================================
+zeus:
+  enabled: true
+  simulation_mode: false  # Real hardware when available (2027)
+  
+  # Hardware detection
+  hardware_detection:
+    auto_detect: true
+    fallback_to_simulated: true
+    
+  # Monte Carlo Engine (GPU 1)
+  monte_carlo:
+    enabled: true
+    gpu_id: 1
+    precision: "FP64"
+    
+    # Performance targets
+    max_scenarios_per_second: 10000000  # 10M scenarios/sec
+    default_scenarios: 1000000
+    max_scenarios: 50000000
+    
+    # VaR/CVaR
+    var_confidence_levels: [0.95, 0.99, 0.999]
+    var_horizon_days: [1, 7, 30]
+    cvar_enabled: true
+    
+    # Stress testing
+    stress_test_scenarios: 10000
+    stress_test_enabled: true
+    
+    # Option pricing
+    option_pricing_enabled: true
+    monte_carlo_simulations: 1000000
+    greeks_enabled: true
+    
+  # Feature Store (GPU 2)
+  feature_store:
+    enabled: true
+    gpu_id: 2
+    max_memory_gb: 384
+    
+    # Order book storage
+    order_book_levels: 100
+    order_book_snapshots: 100000
+    order_book_retention_days: 30
+    
+    # Historical data
+    historical_retention_days: 730  # 2 years
+    tick_data_enabled: true
+    ohlcv_buffer_gb: 128
+    
+    # Feature computation
+    realtime_features_enabled: true
+    feature_compute_batch_size: 10000
+    correlation_matrix_size: 500  # Max symbols
+    
+  # ML Training (GPU 2)
+  ml_training:
+    enabled: true
+    gpu_id: 2
+    precision: "FP64"
+    
+    # Training configuration
+    max_batch_size: 8192
+    learning_rate: 0.001
+    epochs: 100
+    
+    # Model storage
+    model_cache_gb: 64
+    checkpoint_interval: 100
+    
+    # Distributed training (multi-GPU)
+    distributed_enabled: true
+    gradient_accumulation_steps: 4
+    
+  # Cluster orchestration
+  cluster:
+    enabled: true
+    auto_scale: true
+    load_balancing: "round_robin"
+    
+    # Workload distribution
+    risk_workloads_gpu: 1
+    ml_workloads_gpu: 2
+    fallback_to_cpu: true
+
+# =============================================================================
+# CPU THREADING (128 cores)
+# =============================================================================
+threading:
+  enabled: true
+  max_workers: 96  # Leave 32 cores for OS/GPU drivers
+  io_workers: 16
+  strategy_workers: 48
+  ml_workers: 32
+  
+  # NUMA-aware threading (critical for EPYC)
+  numa_aware: true
+  pin_threads: true
+  numa_balancing: true
+  
+  # Async configuration
+  async_thread_pool_size: 64
+  max_concurrent_tasks: 2000
+
+# =============================================================================
+# MEMORY (4TB available)
+# =============================================================================
+memory:
+  max_heap_gb: 256  # Python heap limit
+  cache_size_gb: 512  # Market data cache
+  ohlcv_buffer_gb: 128  # Historical data buffer
+  orderbook_buffer_gb: 64  # L2/L3 orderbook data
+  
+  # GPU memory management
+  gpu_memory_pool_gb: 700  # Reserve for GPU operations
+  gpu_memory_transfer_mb: 10000  # Batch transfer size
+  
+  # NUMA memory allocation
+  numa_memory_policy: "preferred"
+  huge_pages: true
+  huge_pages_gb: 128
+
+# =============================================================================
+# STORAGE (NVMe SSDs - microsecond latency)
+# =============================================================================
+storage:
+  data_path: "/data/argus"
+  db_path: "/data/argus/db"
+  ohlcv_path: "/data/argus/ohlcv"
+  backup_path: "/backup/argus"
+  model_path: "/data/argus/models"
+  
+  # SQLite optimization for NVMe
+  sqlite_journal_mode: "wal"
+  sqlite_cache_size_mb: 256
+  sqlite_mmap_size_gb: 16
+  sqlite_synchronous: "normal"
+  
+  # Write optimization
+  batch_writes: true
+  write_buffer_size_mb: 128
+  fsync_interval_seconds: 10
+  
+  # GPU checkpoint storage
+  gpu_checkpoint_path: "/data/argus/gpu_checkpoints"
+  gpu_checkpoint_interval_minutes: 30
+
+# =============================================================================
+# NETWORK (25GbE + 10GbE + Zeus 400GbE)
+# =============================================================================
+network:
+  # Primary exchange connection
+  exchange:
+    websocket_enabled: true
+    rest_timeout_ms: 2000
+    retry_attempts: 5
+    keepalive_interval_s: 15
+    max_reconnect_attempts: 10
+    
+  # API server
+  api:
+    host: "0.0.0.0"
+    port: 8080
+    workers: 8
+    max_connections: 2000
+    cors_origins: ["*"]
+    
+  # WebSocket dashboard
+  websocket:
+    host: "0.0.0.0"
+    port: 8081
+    max_connections: 500
+    heartbeat_interval: 30
+    
+  # GPU cluster network (Zeus direct)
+  gpu_network:
+    enabled: true
+    protocol: "400GbE"
+    mtu: 9000  # Jumbo frames
+    rdma_enabled: true
+    
+  # Monitoring endpoints
+  prometheus_port: 9090
+  health_check_port: 8082
+  metrics_port: 9091
+
+# =============================================================================
+# RISK MANAGEMENT (Zeus-accelerated)
+# =============================================================================
+risk:
+  # Circuit breakers
+  circuit_breaker_enabled: true
+  daily_loss_limit_pct: 30.0
+  max_drawdown_pct: 40.0
+  
+  # VaR/CVaR (Zeus-accelerated)
+  var_confidence: 0.99
+  var_horizon_days: 1
+  cvar_enabled: true
+  var_calculation_method: "zeus_monte_carlo"
+  var_scenarios: 1000000
+  var_update_interval_seconds: 60
+  
+  # Stress testing (Zeus-accelerated)
+  stress_test_enabled: true
+  stress_test_scenarios: 10000
+  stress_test_interval_hours: 1
+  stress_test_method: "zeus_distributed"
+  
+  # Position limits
+  max_exposure_per_asset_pct: 15.0
+  max_correlated_exposure_pct: 30.0
+  max_portfolio_var_pct: 5.0
+  
+  # Hedging
+  auto_hedge_enabled: true
+  hedge_ratio: 0.5
+  hedge_rebalance_interval_minutes: 15
+  
+  # Portfolio optimization (Zeus-accelerated)
+  portfolio_optimization_enabled: true
+  optimization_method: "mean_variance"
+  rebalance_interval_hours: 4
+  optimization_scenarios: 500000
+
+# =============================================================================
+# ML & AI (Zeus-accelerated)
+# =============================================================================
+ml:
+  enabled: true
+  gpu_enabled: true
+  gpu_id: 2
+  precision: "FP64"
+  
+  # Model training (Zeus-accelerated)
+  training_interval_hours: 4
+  retrain_on_drift: true
+  drift_threshold: 0.10
+  training_batch_size: 8192
+  
+  # Ensemble (larger with Zeus)
+  ensemble_size: 20
+  ensemble_method: "stacking"
+  ensemble_diversity_weight: 0.3
+  
+  # Online learning
+  online_learning: true
+  learning_rate: 0.001
+  batch_size: 4096
+  update_frequency: "per_cycle"
+  
+  # Feature store (Zeus-backed)
+  feature_store_enabled: true
+  feature_store_backend: "zeus_gpu"
+  feature_store_ttl_hours: 72
+  feature_store_max_features: 10000
+  
+  # Models
+  regime_detection: "hmm"
+  sentiment_model: "finbert"
+  anomaly_detection: "isolation_forest"
+  correlation_model: "gnn"
+  
+  # Deep learning (Zeus-accelerated)
+  deep_learning_enabled: true
+  transformer_enabled: true
+  lstm_enabled: true
+  gnn_enabled: true
+  
+  # Model cache (GPU memory)
+  model_cache_gpu_enabled: true
+  model_cache_gpu_memory_gb: 32
+
+# =============================================================================
+# TRADING CONFIGURATION (Optimized for Zeus)
+# =============================================================================
+trading:
+  # Cycle timing (faster with Zeus)
+  cycle_seconds: 1.0  # Sub-second cycles possible
+  
+  # Position sizing (scaled for $50K capital)
+  max_position_pct: 20.0
+  max_position_aud: 10000.0
+  min_position_aud: 500.0
+  max_concurrent_positions: 15
+  
+  # Leverage
+  max_leverage: 5.0
+  margin_call_threshold: 0.85
+  
+  # Risk limits
+  max_daily_loss_pct: 25.0
+  max_drawdown_pct: 35.0
+  stop_loss_pct: 2.0
+  take_profit_pct: 4.0
+  
+  # Confidence thresholds (higher with Zeus accuracy)
+  min_signal_confidence: 0.50
+  min_quantum_confidence: 0.45
+  min_ml_confidence: 0.55
+
+# =============================================================================
+# STRATEGIES (Full Suite - Zeus-optimized)
+# =============================================================================
+strategies:
+  # All strategies enabled
+  momentum_scalper: true
+  breakout_scalper: true
+  mean_reversion: true
+  funding_rate_arb: true
+  flash_crash_sniper: true
+  market_making: true
+  cross_exchange_arb: true
+  liquidation_hunter: true
+  grid_trading: true
+  statistical_arb: true
+  
+  # Zeus-optimized parameters
+  momentum:
+    rsi_period: 14
+    macd_fast: 12
+    macd_slow: 26
+    bb_period: 20
+    bb_std: 2.0
+    gpu_accelerated: true
+    
+  scalping:
+    timeframe: "1m"
+    min_spread_bps: 3
+    max_hold_seconds: 180
+    gpu_accelerated: true
+    
+  arbitrage:
+    min_spread_pct: 0.05
+    max_slippage_pct: 0.03
+    execution_timeout_ms: 500
+    gpu_accelerated: true
+    
+  # Strategy allocation (Zeus-optimized)
+  allocation:
+    method: "contextual_bandit"
+    update_frequency: "per_cycle"
+    exploration_rate: 0.1
+
+# =============================================================================
+# QUANTUM COMPUTING (CPU + Zeus hybrid)
+# =============================================================================
+quantum:
+  enabled: true
+  mode: "hybrid"  # CPU + Zeus GPU simulation
+  
+  # CPU quantum simulation
+  cpu_qubits: 24
+  
+  # Zeus-accelerated quantum simulation
+  zeus_quantum_enabled: true
+  zeus_max_qubits: 30  # 2^30 = 1B states on Zeus
+  zeus_parallel_circuits: 16
+  
+  # Quantum Singularity Engine
+  singularity_enabled: true
+  entanglement_qubits: 20
+  grover_iterations: 100
+  qpe_precision_bits: 16
+  
+  # Quantum Omega Engine
+  omega_enabled: true
+  logical_qubits: 24
+  physical_qubits: 96
+  superposition_strategies: 256
+  tunneling_enabled: true
+  error_correction_enabled: true
+  
+  # Performance (Zeus-accelerated)
+  shots_per_measurement: 65536
+  monte_carlo_samples: 1000000
+  parallel_quantum_circuits: 32
+
+# =============================================================================
+# MONITORING & ALERTS
+# =============================================================================
+monitoring:
+  # Prometheus metrics
+  prometheus_enabled: true
+  metrics_interval_seconds: 1
+  
+  # GPU monitoring
+  gpu_monitoring_enabled: true
+  gpu_metrics_interval_seconds: 5
+  gpu_temperature_alert_celsius: 85
+  gpu_memory_alert_percent: 90
+  
+  # Health checks
+  health_check_interval_seconds: 5
+  
+  # Alerts
+  telegram_enabled: true
+  discord_enabled: true
+  email_enabled: false
+  webhook_enabled: true
+  
+  # Performance tracking
+  track_cycle_times: true
+  track_latency: true
+  track_slippage: true
+  track_gpu_utilization: true
+  
+  # Dashboards
+  grafana_enabled: true
+  grafana_port: 3000
+
+# =============================================================================
+# ZEUS PERFORMANCE TARGETS
+# =============================================================================
+performance_targets:
+  # Latency targets
+  signal_generation_ms: 10
+  risk_calculation_ms: 50
+  var_calculation_ms: 100
+  ml_inference_ms: 5
+  
+  # Throughput targets
+  scenarios_per_second: 10000000
+  features_per_second: 100000
+  signals_per_second: 1000
+  
+  # Capacity targets
+  max_symbols: 100
+  max_concurrent_strategies: 20
+  max_order_book_levels: 100
+  historical_data_days: 730
+
+# =============================================================================
+# DEPLOYMENT
+# =============================================================================
+deployment:
+  # Docker
+  docker_enabled: true
+  container_name: "argus-zeus"
+  restart_policy: "always"
+  gpu_passthrough: true
+  
+  # Systemd
+  systemd_enabled: true
+  service_name: "argus-trading-zeus"
+  user: "argus"
+  group: "argus"
+  
+  # Resources
+  cpu_limit: "96"
+  memory_limit: "256G"
+  gpu_limit: "2"
+  disk_limit: "1000G"
+  
+  # GPU device mapping
+  gpu_devices:
+    - "/dev/zeus0:/dev/zeus0"
+    - "/dev/zeus1:/dev/zeus1"
+
+# =============================================================================
+# EXCHANGE CONFIGURATION
+# =============================================================================
+exchanges:
+  primary:
+    name: "kraken"
+    api_key_env: "KRAKEN_API_KEY"
+    api_secret_env: "KRAKEN_API_SECRET"
+    sandbox: false
+    websocket: true
+    rate_limit_ms: 100
+    
+  secondary:
+    name: "coinbase_advanced"
+    api_key_env: "COINBASE_API_KEY"
+    api_secret_env: "COINBASE_API_SECRET"
+    sandbox: false
+    websocket: true
+    rate_limit_ms: 100
+    
+  binance:
+    enabled: true
+    api_key_env: "BINANCE_API_KEY"
+    api_secret_env: "BINANCE_API_SECRET"
+    sandbox: false
+    websocket: true
+
+# =============================================================================
+# TRADING PAIRS (Expanded for Zeus capacity)
+# =============================================================================
+trading_pairs:
+  # Major
+  - "BTC/USD"
+  - "ETH/USD"
+  - "SOL/USD"
+  - "BNB/USD"
+  - "XRP/USD"
+  - "ADA/USD"
+  - "DOGE/USD"
+  - "DOT/USD"
+  - "AVAX/USD"
+  - "MATIC/USD"
+  - "LINK/USD"
+  - "UNI/USD"
+  - "ATOM/USD"
+  - "LTC/USD"
+  - "ARB/USD"
+  - "OP/USD"
+  
+  # Cross pairs
+  - "BTC/EUR"
+  - "ETH/EUR"
+  - "BTC/GBP"
+  - "ETH/GBP"
+  - "BTC/AUD"
+  - "ETH/AUD"
+  
+  # Total: 22 pairs (Zeus can handle 100+)

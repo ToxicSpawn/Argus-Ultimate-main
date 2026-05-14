@@ -1,0 +1,34 @@
+{
+  "signal_classifier": {
+    "train": 0.7207355630047234,
+    "test": 0.6700822794453756
+  },
+  "regime_classifier": {
+    "train": 0.7465,
+    "test": 0.7083
+  },
+  "position_sizer": {
+    "train_r2": 0.1943,
+    "test_r2": 0.1645
+  },
+  "volatility_model": {
+    "train_r2": 0.2533,
+    "test_r2": 0.0869
+  },
+  "trend_strength": {
+    "train_r2": 0.4047,
+    "test_r2": 0.3694
+  },
+  "signal_bear": {
+    "test": 0.4583,
+    "samples": 719
+  },
+  "signal_sideways": {
+    "test": 0.679,
+    "samples": 128299
+  },
+  "signal_bull": {
+    "test": 0.4543,
+    "samples": 2022
+  }
+}

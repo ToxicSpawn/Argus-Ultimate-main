@@ -1,0 +1,11 @@
+{
+  "config": {
+    "ladder_stage": "PAPER",
+    "manifest_hash": "regression-latency_spike",
+    "profile": "paper",
+    "runtime_path": "intent->liquidity->constitution->governance->route->submit->reconcile->attribute->replay_audit->proving_review",
+    "strict_governance": true
+  },
+  "config_hash": "sha256:431a9cca2d88c7cab5116d647d99c5e1735db52e2c9fbf8a8c600a9bb71da92a",
+  "run_id": "regression-latency_spike"
+}

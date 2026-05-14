@@ -1,0 +1,11 @@
+{
+  "config": {
+    "ladder_stage": "PAPER",
+    "manifest_hash": "run-1-regression-venue_desync",
+    "profile": "paper",
+    "runtime_path": "intent->liquidity->constitution->governance->route->submit->reconcile->attribute->replay_audit->proving_review",
+    "strict_governance": true
+  },
+  "config_hash": "sha256:40c279463d0a6a339ccb3ce8a3d9002aa75d26df2da287258357143bc0b594e9",
+  "run_id": "run-1-regression-venue_desync"
+}

@@ -1,0 +1,94 @@
+{
+  "timestamp": "2026-04-11T17:37:30.380892Z",
+  "n_benchmarks": 5,
+  "benchmarks": [
+    {
+      "algorithm": "QAOA",
+      "problem": "portfolio_optimization",
+      "n_assets": 4,
+      "quantum_method": "qaoa_in_repo_simulator",
+      "classical_baseline": "classical_scipy_fallback",
+      "quantum_sharpe": 1.292814357728735,
+      "classical_sharpe": 0.9184226823653499,
+      "quantum_time_ms": 444.6193999974639,
+      "classical_time_ms": 1.755999997840263,
+      "improvement_pct": 40.76463730176598,
+      "honest_notes": "QAOA found a marginally better discrete-subset solution than continuous Markowitz. This is the expected behavior on classical simulation. True quantum advantage requires fault-tolerant hardware."
+    },
+    {
+      "algorithm": "VQE",
+      "problem": "ising_ground_state",
+      "n_qubits": 3,
+      "quantum_method": "vqe_in_repo_simulator",
+      "classical_baseline": "exact_diagonalization",
+      "quantum_energy": -1.7724885615237638,
+      "classical_energy": -1.7724885615237638,
+      "energy_error_pct": 0.0,
+      "quantum_time_ms": 248.43240000336664,
+      "classical_time_ms": 0.03999999898951501,
+      "honest_notes": "VQE on classical simulation cannot beat exact diagonalization for n=3 qubits (8 states). Value is hardware-portability and architectural correctness."
+    },
+    {
+      "algorithm": "Grover",
+      "problem": "unstructured_search",
+      "n_qubits": 4,
+      "search_space": 16,
+      "n_marked": 1,
+      "quantum_method": "grover_in_repo_simulator_4q",
+      "classical_baseline": "linear_scan",
+      "quantum_iterations": 3,
+      "quantum_oracle_calls": 3,
+      "classical_oracle_calls": 16,
+      "oracle_call_speedup": 5.33,
+      "quantum_time_ms": 0.13889999536331743,
+      "classical_time_ms": 0.0011000010999850929,
+      "success_probability": 0.961319,
+      "honest_notes": "Grover gives O(sqrt(N/M)) QUERY complexity (3 vs 16 classical). Wall-clock simulation is O(N) per iteration, so it does NOT beat linear scan on a CPU. Hardware-portable structure."
+    },
+    {
+      "algorithm": "MLQAE",
+      "problem": "value_at_risk",
+      "n_returns": 500,
+      "quantum_method": "mlqae_in_repo",
+      "classical_baseline": "numpy_percentile",
+      "quantum_var_95": -0.040959668719825836,
+      "classical_var_95": -0.05099267351439673,
+      "error_pct": 19.675384919243903,
+      "quantum_time_ms": 7.587899999634828,
+      "classical_time_ms": 0.05900000542169437,
+      "variance_reduction_factor": 1.0,
+      "honest_notes": "MLQAE on classical simulation provably cannot beat classical Monte Carlo wall-clock \u2014 each oracle query is O(2^n). Value is framing/correctness/hardware-readiness, not speedup."
+    },
+    {
+      "algorithm": "Grover_arb_search",
+      "problem": "arbitrage_detection",
+      "n_venues": 2,
+      "n_symbols": 3,
+      "n_signals": 2,
+      "elapsed_ms": 0.18360000103712082,
+      "snapshot": {
+        "n_runs": 1,
+        "n_signals_emitted": 2,
+        "last_run_ts": 1775929050.3803928,
+        "threshold_multiplier": 1.2,
+        "min_edge_bps": 3.0
+      },
+      "top_signals": [
+        {
+          "symbol": "XRP/USD",
+          "buy@": "kraken",
+          "sell@": "coinbase",
+          "edge_bps": 79.50770760815632
+        },
+        {
+          "symbol": "BTC/USD",
+          "buy@": "kraken",
+          "sell@": "coinbase",
+          "edge_bps": 89.30249450254226
+        }
+      ],
+      "honest_notes": "Grover for arb detection: hardware-portable O(sqrt(N)) query complexity vs O(N) classical scan. Wall-clock on simulator is comparable since each iteration costs O(N)."
+    }
+  ],
+  "global_honest_notes": "All quantum algorithms in this suite run on the in-repo classical simulator. Quantum query complexity speedups are real on hardware but do NOT translate to wall-clock speedups in simulation. The value of these implementations is correctness, framing, and hardware-portability."
+}

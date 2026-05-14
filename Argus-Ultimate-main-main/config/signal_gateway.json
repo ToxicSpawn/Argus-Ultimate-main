@@ -1,0 +1,17 @@
+{
+  "consensus_threshold": 0.55,
+  "min_sources": 2,
+  "ttl_ms": 500,
+  "dedup_window_ms": 200,
+  "source_weights": {
+    "void_breaker": 2.0,
+    "rl_agent": 1.8,
+    "deeplob": 1.6,
+    "llm_overlay": 1.2,
+    "ofi_stream": 1.4,
+    "vpin_stream": 1.3,
+    "cross_asset": 1.1,
+    "funding_arb": 1.0
+  },
+  "enabled_sources": null
+}

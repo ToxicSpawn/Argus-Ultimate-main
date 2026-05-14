@@ -1,0 +1,61 @@
+{
+  "report_type": "MiFIDII_DAILY_TRANSACTION_REPORT",
+  "generated_at": "2026-04-21T11:01:05.042258+00:00",
+  "entity_name": "ARGUS Trading",
+  "reporting_date": "2026-04-21",
+  "trade_count": 1,
+  "rts25": {
+    "clock_synchronisation_status": "synchronised",
+    "timestamp_precision": "UTC ISO-8601",
+    "execution_speed_metrics": {
+      "average_latency_ms": 1000.0,
+      "max_latency_ms": 1000.0,
+      "min_latency_ms": 1000.0,
+      "p95_latency_ms": 1000.0
+    },
+    "event_count": 1
+  },
+  "venue_quality": {
+    "generated_at": "2026-04-21T11:01:05.042763+00:00",
+    "venue_count": 1,
+    "venues": {
+      "kraken": {
+        "trade_count": 1,
+        "volume": 100.0,
+        "average_total_cost": 1.02,
+        "average_price_improvement": 1.0,
+        "average_latency_ms": 1000.0,
+        "average_fill_ratio": 1.0,
+        "live_venue_score": 0.0,
+        "quality_score": 0.541449,
+        "quality_of_execution": "Execution quality is stable but should be monitored for incremental optimisation."
+      }
+    },
+    "ranking": [
+      "kraken"
+    ]
+  },
+  "reporting_completeness": {
+    "generated_at": "2026-04-21T11:01:05.042763+00:00",
+    "trade_count": 1,
+    "complete_trade_reports": 1,
+    "incomplete_trade_reports": 0,
+    "status": "complete",
+    "missing_records": []
+  },
+  "regulatory_submission": {
+    "schema": "RTS25_DAILY",
+    "submission_ready": true,
+    "payload": {
+      "entity_name": "ARGUS Trading",
+      "reporting_date": "2026-04-21",
+      "clock_sync_status": "synchronised",
+      "latency_metrics_ms": {
+        "average_latency_ms": 1000.0,
+        "max_latency_ms": 1000.0,
+        "min_latency_ms": 1000.0,
+        "p95_latency_ms": 1000.0
+      }
+    }
+  }
+}

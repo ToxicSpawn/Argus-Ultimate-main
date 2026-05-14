@@ -1,0 +1,5 @@
+F:\Argus-Ultimate-main\multilang\workers\csharp_worker\bin\csharp_worker.exe
+F:\Argus-Ultimate-main\multilang\workers\csharp_worker\bin\csharp_worker.dll
+F:\Argus-Ultimate-main\multilang\workers\csharp_worker\bin\csharp_worker.deps.json
+F:\Argus-Ultimate-main\multilang\workers\csharp_worker\bin\csharp_worker.runtimeconfig.json
+F:\Argus-Ultimate-main\multilang\workers\csharp_worker\bin\csharp_worker.pdb

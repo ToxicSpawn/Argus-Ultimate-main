@@ -1,0 +1,32 @@
+# Small Capital Configuration for Argus-Ultimate v5.0.0 (HFT-Pinnacle)
+# Optimized for ~$1k accounts to fix -2.3% ROI
+
+capital:
+  initial: 1000.0
+  min_reserve_pct: 0.05        # Keep 5% in reserve at all times
+
+thresholds:
+  min_trade_usd: 12.0          # Minimum trade size to overcome fee drag
+  min_profit_after_fees_usd: 0.10  # Minimum expected net profit per trade
+  max_position_pct: 0.15       # Max 15% of available capital per position
+
+fees:
+  maker_fee: 0.001             # 0.1% maker fee
+  taker_fee: 0.001             # 0.1% taker fee
+  max_fee_pct_of_trade: 0.003  # Max allowed round-trip fee as % of trade
+  slippage_estimate: 0.0005    # 0.05% estimated slippage
+
+bandit:
+  alpha: 1.5                   # UCB exploration parameter
+  beta: 1.0                    # Exploitation weight
+  min_samples: 10              # Minimum trades before full confidence
+  convergence_scale: 0.6       # Scale factor during exploration phase
+
+drawdown:
+  max_daily_drawdown_pct: 0.02  # Max 2% daily drawdown before halt
+  max_total_drawdown_pct: 0.05  # Max 5% total drawdown before halt
+
+logging:
+  level: INFO
+  log_trades: true
+  log_skipped: false           # Set true to debug skipped trades

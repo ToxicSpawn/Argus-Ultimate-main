@@ -1,0 +1,281 @@
+# Argus Ultimate — Helm values (Push 85)
+# Override any value with: helm install argus ./helm/argus -f my-values.yaml
+
+# ---------------------------------------------------------------------------
+# Global
+# ---------------------------------------------------------------------------
+global:
+  imageRegistry: ""
+  imagePullSecrets: []
+  storageClass: "local-path"  # k3s default
+
+# ---------------------------------------------------------------------------
+# Argus bot
+# ---------------------------------------------------------------------------
+argus:
+  replicaCount: 1
+
+  image:
+    repository: ghcr.io/toxicspawn/argus-ultimate
+    tag: "8.21.0"
+    pullPolicy: IfNotPresent
+
+  # Command to run (override for paper/live/godmode)
+  command: ["python", "run_ultimate.py"]
+  args: []
+
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "2000m"
+      memory: "2Gi"
+
+  # Liveness / readiness probes on the metrics endpoint
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 8080
+    initialDelaySeconds: 30
+    periodSeconds: 15
+    failureThreshold: 3
+
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: 8080
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 3
+
+  service:
+    type: ClusterIP
+    metricsPort: 8080
+
+  # Environment variables from Kubernetes secrets
+  # Secret must exist: kubectl create secret generic argus-secrets ...
+  envFrom:
+    - secretRef:
+        name: argus-secrets
+
+  # Additional env vars (non-secret)
+  env:
+    - name: ARGUS_ENV
+      value: "production"
+    - name: ARGUS_LOG_LEVEL
+      value: "INFO"
+    - name: PYTHONUNBUFFERED
+      value: "1"
+    - name: TZ
+      value: "Australia/Sydney"
+
+  # PVC for model/data persistence
+  persistence:
+    enabled: true
+    storageClass: "local-path"
+    accessMode: ReadWriteOnce
+    size: 10Gi
+    mountPath: /app/data
+
+  # Node scheduling
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+  # Pod disruption budget
+  podDisruptionBudget:
+    enabled: true
+    minAvailable: 1
+
+  # Security context
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    readOnlyRootFilesystem: false
+
+  # Annotations (e.g. for Prometheus scraping)
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
+
+  # Service account
+  serviceAccount:
+    create: true
+    name: ""
+    annotations: {}
+
+# ---------------------------------------------------------------------------
+# Prometheus (subchart)
+# ---------------------------------------------------------------------------
+prometheus:
+  enabled: true
+
+  server:
+    persistentVolume:
+      enabled: true
+      storageClass: "local-path"
+      size: 20Gi
+    retention: "15d"
+    resources:
+      requests:
+        cpu: "200m"
+        memory: "512Mi"
+      limits:
+        cpu: "1000m"
+        memory: "2Gi"
+
+    # Mount custom alert + recording rules
+    extraVolumes:
+      - name: argus-rules
+        configMap:
+          name: argus-prometheus-rules
+    extraVolumeMounts:
+      - name: argus-rules
+        mountPath: /etc/prometheus/alerts
+        readOnly: true
+
+    extraFlags:
+      - "--storage.tsdb.wal-compression"
+
+  alertmanager:
+    enabled: true
+    persistence:
+      enabled: true
+      storageClass: "local-path"
+      size: 2Gi
+    config:
+      global:
+        resolve_timeout: 5m
+      route:
+        group_by: [alertname, strategy]
+        group_wait: 10s
+        group_interval: 5m
+        repeat_interval: 1h
+        receiver: telegram-critical
+        routes:
+          - matchers:
+              - severity = critical
+            receiver: telegram-critical
+            group_wait: 0s
+            repeat_interval: 15m
+          - matchers:
+              - severity = warning
+            receiver: telegram-warning
+            group_wait: 5m
+            repeat_interval: 4h
+      receivers:
+        - name: telegram-critical
+          telegram_configs:
+            - bot_token: "${ARGUS_TELEGRAM_BOT_TOKEN}"
+              chat_id: "${ARGUS_TELEGRAM_CHAT_ID}"
+              message: "\U0001f6a8 *ARGUS CRITICAL*\n*{{ .GroupLabels.alertname }}*\n{{ range .Alerts }}\u2022 {{ .Annotations.summary }}\n{{ end }}"
+              parse_mode: Markdown
+              send_resolved: true
+        - name: telegram-warning
+          telegram_configs:
+            - bot_token: "${ARGUS_TELEGRAM_BOT_TOKEN}"
+              chat_id: "${ARGUS_TELEGRAM_CHAT_ID}"
+              message: "\u26a0\ufe0f *ARGUS WARNING*\n*{{ .GroupLabels.alertname }}*\n{{ range .Alerts }}\u2022 {{ .Annotations.summary }}\n{{ end }}"
+              parse_mode: Markdown
+              send_resolved: true
+      inhibit_rules:
+        - source_matchers:
+            - alertname = DrawdownBreachCritical
+          target_matchers:
+            - alertname = DrawdownBreachWarning
+          equal: [strategy]
+        - source_matchers:
+            - alertname = ArgusProcessDown
+          target_matchers:
+            - severity = warning
+
+  nodeExporter:
+    enabled: true
+
+  pushgateway:
+    enabled: false
+
+# ---------------------------------------------------------------------------
+# Grafana (subchart)
+# ---------------------------------------------------------------------------
+grafana:
+  enabled: true
+
+  adminUser: admin
+  adminPassword: argus-admin  # override via secret in production
+
+  persistence:
+    enabled: true
+    storageClass: "local-path"
+    size: 5Gi
+
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+  service:
+    type: ClusterIP
+    port: 3000
+
+  # Auto-provision dashboards from ConfigMap
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+      folder: /tmp/dashboards
+      searchNamespace: ALL
+    datasources:
+      enabled: true
+      label: grafana_datasource
+      labelValue: "1"
+
+  grafana.ini:
+    server:
+      root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
+      serve_from_sub_path: true
+    auth.anonymous:
+      enabled: false
+    analytics:
+      reporting_enabled: false
+
+# ---------------------------------------------------------------------------
+# Ingress (optional — Traefik is k3s default)
+# ---------------------------------------------------------------------------
+ingress:
+  enabled: false
+  className: "traefik"
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+  hosts:
+    - host: argus.yourdomain.com
+      paths:
+        - path: /grafana
+          pathType: Prefix
+          service: grafana
+          port: 3000
+        - path: /metrics
+          pathType: Prefix
+          service: argus
+          port: 8080
+  tls:
+    - secretName: argus-tls
+      hosts:
+        - argus.yourdomain.com
+
+# ---------------------------------------------------------------------------
+# NetworkPolicy
+# ---------------------------------------------------------------------------
+networkPolicy:
+  enabled: true
+  # Argus can reach Binance WS/REST, Prometheus can scrape Argus
+  allowEgressInternet: true

@@ -1,0 +1,22 @@
+{
+  "regime_classifier": {
+    "train_accuracy": 0.5837655601659751,
+    "test_accuracy": 0.4196799051570836
+  },
+  "signal_classifier": {
+    "train_accuracy": 0.6482291049199763,
+    "test_accuracy": 0.4939241256668643
+  },
+  "position_sizer": {
+    "train_r2": 0.22220935403544673,
+    "test_r2": 0.12422711653755425
+  },
+  "volatility_model": {
+    "train_r2": 0.3447819985686503,
+    "test_r2": 0.20050000834272463
+  },
+  "trend_strength": {
+    "train_r2": 0.443612898129931,
+    "test_r2": 0.36925735597582376
+  }
+}

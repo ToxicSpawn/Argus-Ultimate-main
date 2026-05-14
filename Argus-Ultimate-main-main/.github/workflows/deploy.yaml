@@ -1,0 +1,188 @@
+# GitHub Actions CI/CD Pipeline for Argus
+# =========================================
+# Automated testing, building, and deployment
+
+name: Argus CI/CD
+
+on:
+  push:
+    branches: [main, production]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: '3.12'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # ============================================
+  # JOB 1: Test
+  # ============================================
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov pytest-asyncio
+    
+    - name: Run unit tests
+      run: |
+        pytest tests/ -v --cov=. --cov-report=xml --cov-report=html
+    
+    - name: Upload coverage report
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+    
+    - name: Run type checking
+      run: |
+        pip install pyright
+        pyright . || true  # Don't fail on type errors yet
+
+  # ============================================
+  # JOB 2: Build Docker Image
+  # ============================================
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Login to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=sha,prefix=
+          type=ref,event=branch
+          type=semver,pattern={{version}}
+          latest
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # ============================================
+  # JOB 3: Deploy to Staging
+  # ============================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+    
+    - name: Configure kubectl
+      uses: azure/k8s-set-context@v3
+      with:
+        kubeconfig: ${{ secrets.KUBE_CONFIG_STAGING }}
+    
+    - name: Deploy to staging
+      run: |
+        kubectl apply -f deploy/kubernetes/ -n trading-staging
+        kubectl rollout status deployment/argus-trading -n trading-staging --timeout=300s
+    
+    - name: Run smoke tests
+      run: |
+        # Wait for service to be ready
+        sleep 30
+        # Test dashboard endpoint
+        STAGING_URL=$(kubectl get svc argus-dashboard -n trading-staging -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+        curl -f http://$STAGING_URL/api/status || exit 1
+        echo "Staging deployment successful!"
+
+  # ============================================
+  # JOB 4: Deploy to Production
+  # ============================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    environment: production
+    if: github.ref == 'refs/heads/production'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+    
+    - name: Configure kubectl
+      uses: azure/k8s-set-context@v3
+      with:
+        kubeconfig: ${{ secrets.KUBE_CONFIG_PRODUCTION }}
+    
+    - name: Deploy to production
+      run: |
+        kubectl apply -f deploy/kubernetes/ -n trading
+        kubectl rollout status deployment/argus-trading -n trading --timeout=300s
+    
+    - name: Verify deployment
+      run: |
+        # Verify pods are running
+        kubectl get pods -n trading -l app=argus
+        
+        # Test health endpoint
+        PROD_URL=$(kubectl get svc argus-dashboard -n trading -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+        curl -f http://$PROD_URL/api/status || exit 1
+        
+        echo "Production deployment successful!"
+    
+    - name: Notify on success
+      if: success()
+      run: |
+        echo "✅ Argus deployed to production successfully"
+        # Add Discord/Slack notification here
+    
+    - name: Notify on failure
+      if: failure()
+      run: |
+        echo "❌ Production deployment failed!"
+        # Add Discord/Slack alert here

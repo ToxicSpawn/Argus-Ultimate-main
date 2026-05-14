@@ -1,0 +1,21 @@
+# Argus Ultimate — docker-compose.dev.yml
+# Push 64: Container-Deploy
+# Override for hot-reload development.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  argus:
+    build:
+      dockerfile: Dockerfile.dev
+      target: ""       # single-stage dev image
+    image: argus-ultimate:dev
+    volumes:
+      # Mount source for live reload
+      - .:/app
+      - /app/__pycache__
+    environment:
+      ARGUS_ENV: paper
+      ARGUS_LOG_LEVEL: DEBUG
+      ARGUS_EXCHANGE_TESTNET: "true"
+    # Run pytest instead of starting bot
+    command: ["pytest", "tests/", "-v", "--tb=short"]

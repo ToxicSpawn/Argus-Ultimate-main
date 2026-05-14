@@ -1,0 +1,159 @@
+# Grafana Unified Alerting — Latency Budget Alerts
+# Push 99 — RegimeGrafana
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: argus-latency-budget
+    folder: Argus Alerts
+    interval: 1m
+    rules:
+      - uid: latency-p99-breach
+        title: "Argus p99 Latency Budget Breach"
+        condition: C
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: prometheus
+            model:
+              expr: "histogram_quantile(0.99, sum(rate(argus_order_latency_ms_bucket[1m])) by (le))"
+              intervalMs: 15000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            queryType: ""
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: prometheus
+            model:
+              expr: "argus_latency_budget_ms"
+              intervalMs: 15000
+              maxDataPoints: 43200
+              refId: B
+          - refId: C
+            queryType: ""
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: "__expr__"
+            model:
+              conditions:
+                - evaluator: { params: [0], type: gt }
+                  operator: { type: and }
+                  query: { params: [C] }
+                  reducer: { params: [], type: last }
+                  type: query
+              datasource: { type: __expr__, uid: __expr__ }
+              expression: "$A - $B"
+              hide: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: math
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        annotations:
+          summary: "p99 order latency exceeds budget"
+          description: "p99={{ $values.A.Value }}ms budget={{ $values.B.Value }}ms delta={{ $values.C.Value }}ms on {{ $labels.instance }}"
+          runbook_url: "https://github.com/ToxicSpawn/Argus-Ultimate-main/blob/main/UNIFIED_RUNBOOK.md#latency-budget"
+        labels:
+          severity: critical
+          team: argus
+
+      - uid: latency-p95-warn
+        title: "Argus p95 Latency Warning"
+        condition: C
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: prometheus
+            model:
+              expr: "histogram_quantile(0.95, sum(rate(argus_order_latency_ms_bucket[2m])) by (le))"
+              intervalMs: 15000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            queryType: ""
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: prometheus
+            model:
+              expr: "argus_latency_budget_ms * 0.8"
+              intervalMs: 15000
+              maxDataPoints: 43200
+              refId: B
+          - refId: C
+            queryType: ""
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: "__expr__"
+            model:
+              conditions:
+                - evaluator: { params: [0], type: gt }
+                  operator: { type: and }
+                  query: { params: [C] }
+                  reducer: { params: [], type: last }
+                  type: query
+              datasource: { type: __expr__, uid: __expr__ }
+              expression: "$A - $B"
+              hide: false
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: C
+              type: math
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: "p95 order latency approaching budget (80% threshold)"
+          description: "p95={{ $values.A.Value }}ms warn_threshold={{ $values.B.Value }}ms on {{ $labels.instance }}"
+          runbook_url: "https://github.com/ToxicSpawn/Argus-Ultimate-main/blob/main/UNIFIED_RUNBOOK.md#latency-budget"
+        labels:
+          severity: warning
+          team: argus
+
+      - uid: regime-transition-storm
+        title: "Argus Regime Transition Storm"
+        condition: A
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange: { from: 300, to: 0 }
+            datasourceUid: prometheus
+            model:
+              expr: "increase(argus_regime_transitions_total[5m]) > 10"
+              intervalMs: 15000
+              maxDataPoints: 43200
+              refId: A
+        noDataState: NoData
+        execErrState: Error
+        for: 0s
+        annotations:
+          summary: "Abnormal regime transition rate detected"
+          description: "{{ $values.A.Value }} regime transitions in 5m — possible data feed anomaly or strategy instability"
+          runbook_url: "https://github.com/ToxicSpawn/Argus-Ultimate-main/blob/main/UNIFIED_RUNBOOK.md#regime-storm"
+        labels:
+          severity: warning
+          team: argus
+
+      - uid: bandit-arm-collapse
+        title: "Argus Bandit Arm Collapse"
+        condition: A
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange: { from: 600, to: 0 }
+            datasourceUid: prometheus
+            model:
+              expr: "count(rate(argus_bandit_arm_pulls_total[5m]) == 0) >= count(rate(argus_bandit_arm_pulls_total[5m])) - 1"
+              intervalMs: 15000
+              maxDataPoints: 43200
+              refId: A
+        noDataState: NoData
+        execErrState: Error
+        for: 3m
+        annotations:
+          summary: "Bandit has collapsed to a single arm"
+          description: "All bandit arms except one have zero pulls — greedy convergence or exploration failure"
+          runbook_url: "https://github.com/ToxicSpawn/Argus-Ultimate-main/blob/main/UNIFIED_RUNBOOK.md#bandit-collapse"
+        labels:
+          severity: warning
+          team: argus

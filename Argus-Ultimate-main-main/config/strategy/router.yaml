@@ -1,0 +1,167 @@
+# ============================================================================
+# ARGUS ULTIMATE — STRATEGY: ROUTER
+# Authoritative source for: strategy router, whitelist, allocator weights,
+# evaluation engine, champion/challenger, meta-engine, regime filters.
+# Do NOT set these in unified_config.yaml (legacy).
+# ============================================================================
+
+# ── Strategy whitelist (only these may emit signals) ─────────────────────
+strategy_whitelist:
+  - "mean_reversion"
+  - "momentum"
+  - "funding_rate_harvester"
+  - "regime_aligned"
+  - "macd_trend"
+
+# ── Active strategies ─────────────────────────────────────────────────────
+strategies:
+  enabled:
+    - "hunter"
+    - "shadow"
+    - "momentum"
+    - "mean_reversion"
+    - "trend_following"
+    - "quantum_momentum_elite"
+    - "quantum_mean_reversion_elite"
+    - "quantum_trend_following_elite"
+  max_extra_signals: 2
+  use_regime_lstm_boost: true
+  use_volatility_regime_scale: true
+  volatility_regime_high_threshold: 0.02
+  use_funding_rate_filter: true
+  funding_rate_skip_long_threshold: 0.0001
+  regime_filter_enabled: true
+  regime_filter_trend_strategies: ["momentum"]
+  regime_filter_mr_strategies: ["mean_reversion"]
+
+# ── Strategy router (central dispatcher) ─────────────────────────────────
+strategy_router:
+  enabled: true
+  timeout_per_strategy_s: 5.0
+  strategies:
+    # Core 3: regime-switched with documented edge
+    mean_reversion:          {enabled: true}
+    momentum:                {enabled: true}
+    funding_rate_harvester:  {enabled: true}
+    # Confirmation filters
+    macro_event_filter:      {enabled: true}
+    mtf_confluence:          {enabled: true}
+    # Enabled alpha sources
+    peak_alpha:              {enabled: true}
+    breakout:                {enabled: true}
+    scalping:                {enabled: true}
+    session_effect_strat:    {enabled: true}
+    stat_arb_cointegration:  {enabled: true}
+    cross_exchange_arb:      {enabled: true}
+    liquidation_cascade:     {enabled: true}
+    # Disabled: need Bybit perps / Deribit / deeper capital
+    futures_basis_arb:       {enabled: false}
+    delta_neutral_perp_arb:  {enabled: false}
+    volatility_arb:          {enabled: false}
+    market_maker:            {enabled: false}
+    deribit_options:         {enabled: false}
+
+# ── Paper trading disabled strategies ─────────────────────────────────────
+paper_trading_disabled_strategies:
+  - "farmer"
+  - "high_freq_grid"
+  - "apeiron_tier"
+  - "ultimate"
+  - "hft_obi_pressure"
+
+paper_trading_quality_threshold: 0.45
+
+# ── Strategy evaluation engine ────────────────────────────────────────────
+strategy_evaluation_engine:
+  enabled: true
+  persist_interval_cycles: 10
+  min_trades_for_ranking: 5
+  use_regime_scoped_metrics: true
+  sharpe_like_min_trades: 5
+  max_metrics_history_points: 500
+  halt_on_error: false
+  db_path: "data/strategy_metrics.db"
+
+# ── Self-optimizing meta engine ───────────────────────────────────────────
+self_optimizing_meta_engine:
+  enabled: true
+  advisory_only: false
+  update_interval_cycles: 10
+  min_trades_for_reweighting: 5
+  meta_alpha: 0.2
+  max_weight_change_per_update: 0.10
+  min_weight_per_strategy: 0.05
+  max_weight_per_strategy: 0.45
+  baseline_weight_mode: "equal"
+  db_path: "data/meta_weights.db"
+  score_weights:
+    expectancy: 1.0
+    sharpe_like: 1.0
+    profit_factor: 0.75
+    drawdown_penalty: 1.0
+    fee_penalty: 0.5
+    slippage_penalty: 0.5
+  regime_multipliers:
+    trend:
+      momentum: 1.15
+      breakout: 1.10
+    range:
+      mean_reversion: 1.15
+
+# ── Champion / challenger ─────────────────────────────────────────────────
+champion_challenger:
+  enabled: true
+  advisory_only: true
+  min_trades_for_promotion: 10
+  max_drawdown_pct_for_promotion: 0.12
+  require_expectancy_improvement: true
+  require_profit_factor_improvement: false
+  require_sharpe_like_improvement: true
+  persist_interval_cycles: 10
+  db_path: "data/champion_challenger.db"
+  artifacts_dir: "deploy/promotions"
+  promotion_weights:
+    net_pnl: 1.0
+    expectancy: 1.0
+    profit_factor: 0.75
+    sharpe_like: 1.0
+    drawdown_penalty: 1.25
+    fee_penalty: 0.5
+
+# ── Edge-cost gate ────────────────────────────────────────────────────────
+edge_cost_gate:
+  enabled: true
+  modes: ["paper", "backtest", "live"]
+  min_edge_pct: 0.50
+  buffer_mult: 1.5
+  live_min_edge_pct: 0.65
+  live_buffer_mult: 1.8
+  fee_mult: 2.0
+  slippage_mult: 2.0
+
+# ── Continuous scanner ────────────────────────────────────────────────────
+continuous_scan:
+  enabled: true
+  interval_seconds: 10.0
+  top_n: 4
+  use_cached_best: true
+  max_age_seconds: 30.0
+  parallel_sources: true
+  use_liquidity_boost: true
+  liquidity_spread_pct_cap: 0.05
+  diversity_max_per_symbol: 2
+  diversity_max_per_strategy: 2
+  adaptive_interval_enabled: true
+  min_interval_seconds: 5.0
+  max_interval_seconds: 30.0
+  max_symbols_per_scan: 25
+  signal_multi_timeframe_enabled: false
+  signal_primary_timeframe: "1h"
+  signal_entry_timeframe: "15m"
+  external_alpha_enabled: false
+  external_alpha_url: ""
+  external_alpha_timeout_seconds: 5.0
+  strategy_plugin_modules: []
+  dynamic_universe_enabled: false
+  dynamic_universe_interval_cycles: 100
+  dynamic_universe_top_n: 15
