@@ -25,4 +25,4 @@ py-spy>=0.4.2
 line-profiler>=4.1
 
 # Load testing
-locust>=2.24
+locust>=2.44.0
