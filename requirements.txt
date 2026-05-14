@@ -85,7 +85,7 @@ cryptography==42.0.7      # HMAC / TLS utils
 pytest==8.2.0
 pytest-asyncio==0.23.6
 pytest-cov==5.0.0
-pytest-mock==3.14.0
+pytest-mock==3.15.1
 freezegun==1.5.0          # time mocking
 hypothesis==6.100.2       # property-based testing
 
@@ -93,10 +93,10 @@ hypothesis==6.100.2       # property-based testing
 # Code quality
 # -----------------------------------------------------------------------
 black==24.4.2
-ruff==0.4.4
+ruff==0.15.12
 mypy==1.10.0
 pre-commit==3.7.1
-bandit==1.7.8             # security linting
+bandit==1.9.4             # security linting
 
 # -----------------------------------------------------------------------
 # Quantum and Causal Inference (NEW)
