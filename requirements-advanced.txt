@@ -14,7 +14,7 @@ torch-sparse==0.6.0       # Sparse tensor support
 # -----------------------------------------------------------------------
 # NLP & LLM (Sentiment Analysis)
 # -----------------------------------------------------------------------
-transformers==4.35.0      # Hugging Face transformers (FinBERT)
+transformers==5.8.1      # Hugging Face transformers (FinBERT)
 sentencepiece==0.1.99     # Tokenizer for transformer models
 accelerate==0.25.0        # Model acceleration
 
