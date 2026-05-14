@@ -8,7 +8,7 @@
 # -----------------------------------------------------------------------
 torch==2.3.0              # PyTorch for neural networks (matching main requirements)
 torch-geometric==2.5.0    # Graph Neural Networks (GNN)
-torch-scatter==2.1.0      # Scatter operations for GNN
+torch-scatter==2.1.2      # Scatter operations for GNN
 torch-sparse==0.6.0       # Sparse tensor support
 
 # -----------------------------------------------------------------------
